@@ -134,8 +134,8 @@ GameBoard.prototype.updateScoreBoard = function () {
     scoreText += "</br>Total Move Count: " + scoreboard.totalMoveCount;
     $('.scoreboard').html(scoreText);
   }
-  if ((scoreboard.totalTime-Math.floor(scoreboard.totalTime))*100 % 10 <= 5 && (scoreboard.red.timePerLastMove || scoreboard.white.timePerLastMove)) {
-    $('.scoreboard_wrapper span').html("</br>Total Time: " + scoreboard.totalTime + "s");
+  if (scoreboard.red.timePerLastMove || scoreboard.white.timePerLastMove || scoreboard.red.lastMoveStarted || scoreboard.white.lastMoveStarted) {
+    $('.scoreboard_wrapper span').html((scoreboard.totalTime).toFixed(2) + "s");
   }
 }
 
