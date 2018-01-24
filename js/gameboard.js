@@ -28,6 +28,20 @@ var game = {
   "whiteTeamColor" : "lightgrey"
 };
 
+// Global object literal for keeping track of scoring and turns
+var scoreboard = {
+  "red" : {"moveCount" : 0,
+           "pieceCount" : game.teamPieceCount,
+           "kingCount" : 0,
+           "lastMoveStarted" : 0,
+           "timePerLastMove" : 0},
+  "white" : {"moveCount" : 0,
+          "pieceCount" : game.teamPieceCount,
+          "kingCount" : 0,
+          "lastMoveStarted" : 0,
+          "timePerLastMove" : 0}
+};
+
 // Main "class"/start function
 function GameBoard(div) {
   if (!div)
@@ -68,8 +82,54 @@ GameBoard.prototype.refreshBoard = function () {
   this.drawTeam(game.redPieces, game.redTeamColor);
   this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-  // Make red team controllable by human
-  this.playerController("red");
+  this.moveController();
+
+  this.updateScoreBoard();
+}
+
+GameBoard.prototype.updateScoreBoard = function () {
+  // temp vars to hold count
+  var redCount = 0;
+  var redKings = 0;
+  var whiteCount = 0;
+  var whiteKings = 0;
+
+  // iterate through all pieces and check if alive and if king
+  for (var i = 0; i < game.teamPieceCount; ++i) {
+    if (game.redPieces[i].alive)
+      ++redCount;
+    if (game.redPieces[i].isKing)
+      ++redKings;
+    if (game.whitePieces[i].alive)
+      ++whiteCount;
+    if (game.whitePieces[i].isKing)
+      ++whiteKings;
+  }
+
+  // update scoreboard object based on team counts
+  scoreboard.red.pieceCount = redCount;
+  scoreboard.white.pieceCount = whiteCount;
+  scoreboard.red.kingCount = 0;
+  scoreboard.white.kingCount = 0;
+
+  var scoreText = "SCOREBOARD:</br></br>Red:<p>Piece Count: " + scoreboard.red.pieceCount;
+  scoreText += "</br>King Count: " + scoreboard.red.kingCount;
+  scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
+  scoreText += "</p></br>White:<p>Piece Count: " + scoreboard.white.pieceCount;
+  scoreText += "</br>King Count: " + scoreboard.white.kingCount;
+  scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove*100, 0.01)/100 + "s</p>";
+  $('.scoreboard').html(scoreText);
+}
+
+// Start team based gameplay
+GameBoard.prototype.moveController = function () {
+  // red's turn if red and white have same number of total moves
+  if (scoreboard.red.moveCount == scoreboard.white.moveCount) {
+    this.playerController("red");
+  }
+  else {
+    this.playerController("white");
+  }
 }
 
 // Update selected teams pieces based on mouse click events
@@ -77,6 +137,7 @@ GameBoard.prototype.playerController = function (color) {
   // Store both team arrays by reference
   var teamArr = (color == "red" ? game.redPieces : game.whitePieces);
   var teamOpp = (color == "red" ? game.whitePieces : game.redPieces);
+  var teamScore = (color == "red" ? scoreboard.red : scoreboard.white);
 
   // Use x position of last mouse click as a way to check if playerController has already been called
   if (game.lastMouseClick.x != -1) {
@@ -97,14 +158,24 @@ GameBoard.prototype.playerController = function (color) {
       // reset states so unnecessary work isn't done and piece stops being highlighted after placed
       game.lastMouseClick.x = -1;
       game.selectedSquare.index = -1;
+
+      // Update scoreboard
+      ++teamScore.moveCount;
+        teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
+        teamScore.lastMoveStarted = 0;
     }
 
     // If player selected one of their color pieces, highlight the tile and store its array index
-    if (selected != -1) {
+    // Only perform check if move isn't in progress
+    if (selected != -1 && !teamScore.lastMoveStarted) {
       teamArr[selected].highlight = true;
+      // deselect previously selected square if there was one
       if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected) {
         teamArr[game.selectedSquare.index].highlight = false;
       }
+      // Log start of move
+      teamScore.lastMoveStarted = performance.now() / 1000;
+
       game.selectedSquare.index = selected;
     }
   }
@@ -137,6 +208,10 @@ GameBoard.prototype.drawBackground = function () {
 
 // draws a checker piece based on information stored in object
 GameBoard.prototype.drawPiece = function (col, row, color, king, highlight) {
+  // Prevent out of bounds errors
+  if (col < 0 || row < 0 || col >= game.tileDim || row >= game.tileDim)
+    return;
+
   var radius = width/(2*game.tileDim + 2);
   ctx.beginPath();
   ctx.arc(width/(2 * game.tileDim) + width/game.tileDim * col, width/(2 * game.tileDim) + width/game.tileDim * row, radius, 0, 2 * Math.PI, false);
@@ -169,13 +244,13 @@ GameBoard.prototype.generateTeams = function () {
     var row = Math.floor((i*2)/game.tileDim);
     if (row % 2 == 1)
       ++col;
-    game.redPieces.push({"col" : col, "row" : row, "isKing" : false, "highlight" : false});
+    game.redPieces.push({"col" : col, "row" : row, "isKing" : false, "highlight" : false, "alive" : true});
     if (row % 2 == 0)
       ++col;
     else {
       --col;
     }
-    game.whitePieces.push({"col" : col, "row" : row + game.tileDim - game.teamPieceCount/(Math.floor(game.tileDim/2)), "isKing" : false, "highlight" : false});
+    game.whitePieces.push({"col" : col, "row" : row + game.tileDim - game.teamPieceCount/(Math.floor(game.tileDim/2)), "isKing" : false, "highlight" : false, "alive" : true});
   }
 }
 

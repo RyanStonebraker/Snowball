@@ -22,6 +22,25 @@ body {
   border-radius: @board-radius;
 }
 
+p {
+  font: 18px Verdana;
+}
+
+.scoreboard {
+  padding-top: 1%;
+  padding-bottom: 2%;
+  text-align: center;
+  font: 20px Verdana;
+  font-weight: bold;
+  background-color: white;
+  width: 25%;
+  position: absolute;
+  right: 2%;
+  border-radius: @board-radius;
+  .box-shadow(0, 0, 15px, rgba(0, 0, 0, 0.5));
+  top: 15%;
+}
+
 .board-wrapper {
   position: relative;
   width: @scale;
@@ -32,4 +51,17 @@ body {
   border: -5px solid black;
   border-radius: @board-radius;
   .box-shadow(0, 0, 15px, rgba(0, 0, 0, 1));
+}
+
+@media screen and (max-width: 1125px) {
+  .scoreboard {
+    position: absolute;
+    text-align: center;
+    right: 50%;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 95%;
+    width: 50%;
+    margin-bottom: 2%;
+  }
 }
