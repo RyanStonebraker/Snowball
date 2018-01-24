@@ -113,10 +113,13 @@ GameBoard.prototype.updateScoreBoard = function () {
   scoreboard.white.kingCount = 0;
 
   // replace text for scoreboard section
-  var scoreText = "SCOREBOARD:</br></br>Red:<p>Piece Count: " + scoreboard.red.pieceCount;
+  var scoreText = "SCOREBOARD:</br></br>";
+  scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
+  scoreText += "Piece Count: " + scoreboard.red.pieceCount;
   scoreText += "</br>King Count: " + scoreboard.red.kingCount;
   scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
-  scoreText += "</p></br>White:<p>Piece Count: " + scoreboard.white.pieceCount;
+  scoreText += (scoreboard.red.moveCount != scoreboard.white.moveCount) ? "</p></br><h2>White (ACTIVE TURN):</h2>" : "</p></br>White:";
+  scoreText += "<p>Piece Count: " + scoreboard.white.pieceCount;
   scoreText += "</br>King Count: " + scoreboard.white.kingCount;
   scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove*100, 0.01)/100 + "s</p>";
   $('.scoreboard').html(scoreText);
@@ -133,7 +136,7 @@ GameBoard.prototype.moveController = function () {
   }
 }
 
-GamBoard.prototype.fileInputController = function () {
+GameBoard.prototype.fileInputController = function () {
   // TODO: Decide on File I/0 Standard
 }
 
@@ -171,15 +174,15 @@ GameBoard.prototype.playerController = function (color) {
     }
 
     // If player selected one of their color pieces, highlight the tile and store its array index
-    // Only perform check if move isn't in progress
-    if (selected != -1 && !teamScore.lastMoveStarted) {
+    if (selected != -1) {
       teamArr[selected].highlight = true;
       // deselect previously selected square if there was one
       if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected) {
         teamArr[game.selectedSquare.index].highlight = false;
       }
-      // Log start of move
-      teamScore.lastMoveStarted = performance.now() / 1000;
+      // Log start of move if not in middle of move
+      if (!teamScore.lastMoveStarted)
+        teamScore.lastMoveStarted = performance.now() / 1000;
 
       game.selectedSquare.index = selected;
     }
@@ -255,7 +258,7 @@ GameBoard.prototype.generateTeams = function () {
     else {
       --col;
     }
-    game.whitePieces.push({"col" : col, "row" : row + game.tileDim - game.teamPieceCount/(Math.floor(game.tileDim/2)), "isKing" : false, "highlight" : false, "alive" : true});
+    game.whitePieces.push({"col" : col, "row" : row + game.tileDim - game.teamPieceCount/(Math.ceil(game.tileDim/2)), "isKing" : false, "highlight" : false, "alive" : true});
   }
 }
 
