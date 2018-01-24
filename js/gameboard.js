@@ -25,7 +25,8 @@ var game = {
   "highlightColor" : "yellow",
   "highlightOpacity" : 0.5,
   "redTeamColor" : "red",
-  "whiteTeamColor" : "lightgrey"
+  "whiteTeamColor" : "lightgrey",
+  "pause" : false
 };
 
 // Global object literal for keeping track of scoring and turns
@@ -66,6 +67,7 @@ function GameBoard(div) {
 
   // Watch mouse click events on HTML5 canvas
   canvas.addEventListener("mousedown", this.mouseEventHandler.bind(this), false);
+  window.addEventListener("keydown", this.keyEventHandler.bind(this), true);
 }
 
 // If mouse clicked, log location
@@ -73,6 +75,15 @@ GameBoard.prototype.mouseEventHandler = function(evt) {
   var screen = canvas.getBoundingClientRect();
   game.lastMouseClick.x = evt.clientX - screen.left;
   game.lastMouseClick.y = evt.clientY - screen.top;
+}
+
+GameBoard.prototype.keyEventHandler = function (evt) {
+  switch (evt.keyCode) {
+    case " ".charCodeAt():
+    case "P".charCodeAt():
+      game.pause = (game.pause ? false : true);
+      break;
+  }
 }
 
 // Update function to constantly redraw board
@@ -87,9 +98,11 @@ GameBoard.prototype.refreshBoard = function () {
   this.drawTeam(game.redPieces, game.redTeamColor);
   this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-  this.moveController();
+  if (!game.pause) {
+    this.moveController();
 
-  this.updateScoreBoard();
+    this.updateScoreBoard();
+  }
 }
 
 GameBoard.prototype.updateScoreBoard = function () {
