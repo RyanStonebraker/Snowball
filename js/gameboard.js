@@ -112,6 +112,7 @@ GameBoard.prototype.updateScoreBoard = function () {
   scoreboard.red.kingCount = 0;
   scoreboard.white.kingCount = 0;
 
+  // replace text for scoreboard section
   var scoreText = "SCOREBOARD:</br></br>Red:<p>Piece Count: " + scoreboard.red.pieceCount;
   scoreText += "</br>King Count: " + scoreboard.red.kingCount;
   scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
@@ -130,6 +131,10 @@ GameBoard.prototype.moveController = function () {
   else {
     this.playerController("white");
   }
+}
+
+GamBoard.prototype.fileInputController = function () {
+  // TODO: Decide on File I/0 Standard
 }
 
 // Update selected teams pieces based on mouse click events
