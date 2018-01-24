@@ -39,7 +39,10 @@ var scoreboard = {
           "pieceCount" : game.teamPieceCount,
           "kingCount" : 0,
           "lastMoveStarted" : 0,
-          "timePerLastMove" : 0}
+          "timePerLastMove" : 0},
+  "totalMoveCount" : 0,
+  "startTime" : 0,
+  "totalTime" : 0
 };
 
 // Main "class"/start function
@@ -55,6 +58,8 @@ function GameBoard(div) {
 
   // Set initial location states for pieces
   this.generateTeams();
+
+  scoreboard.startTime = performance.now();
 
   // Check board for update conditions
   this.refreshBoard();
@@ -111,18 +116,27 @@ GameBoard.prototype.updateScoreBoard = function () {
   scoreboard.white.pieceCount = whiteCount;
   scoreboard.red.kingCount = 0;
   scoreboard.white.kingCount = 0;
+  scoreboard.totalTime = Math.round((performance.now() - scoreboard.startTime)/10)/100;
 
   // replace text for scoreboard section
-  var scoreText = "SCOREBOARD:</br></br>";
-  scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
-  scoreText += "Piece Count: " + scoreboard.red.pieceCount;
-  scoreText += "</br>King Count: " + scoreboard.red.kingCount;
-  scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
-  scoreText += (scoreboard.red.moveCount != scoreboard.white.moveCount) ? "</p></br><h2>White (ACTIVE TURN):</h2>" : "</p></br>White:";
-  scoreText += "<p>Piece Count: " + scoreboard.white.pieceCount;
-  scoreText += "</br>King Count: " + scoreboard.white.kingCount;
-  scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove*100, 0.01)/100 + "s</p>";
-  $('.scoreboard').html(scoreText);
+  if (scoreboard.red.moveCount + scoreboard.white.moveCount != scoreboard.totalMoveCount || scoreboard.totalTime < 0.01) {
+    scoreboard.totalMoveCount = scoreboard.red.moveCount + scoreboard.white.moveCount;
+    var scoreText = "SCOREBOARD:</br></br>";
+    scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
+    scoreText += "Piece Count: " + scoreboard.red.pieceCount;
+    scoreText += "</br>King Count: " + scoreboard.red.kingCount;
+    scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
+    scoreText += (scoreboard.red.moveCount != scoreboard.white.moveCount) ? "</p></br><h2>White (ACTIVE TURN):</h2>" : "</p></br>White:";
+    scoreText += "<p>Piece Count: " + scoreboard.white.pieceCount;
+    scoreText += "</br>King Count: " + scoreboard.white.kingCount;
+    scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove*100, 0.01)/100 + "s</p>";
+
+    scoreText += "</br>Total Move Count: " + scoreboard.totalMoveCount;
+    $('.scoreboard').html(scoreText);
+  }
+  if ((scoreboard.totalTime-Math.floor(scoreboard.totalTime))*100 % 10 <= 5 && (scoreboard.red.timePerLastMove || scoreboard.white.timePerLastMove)) {
+    $('.scoreboard_wrapper span').html("</br>Total Time: " + scoreboard.totalTime + "s");
+  }
 }
 
 // Start team based gameplay
@@ -169,8 +183,9 @@ GameBoard.prototype.playerController = function (color) {
 
       // Update scoreboard
       ++teamScore.moveCount;
-        teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
-        teamScore.lastMoveStarted = 0;
+      teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
+      teamScore.lastMoveStarted = 0;
+
     }
 
     // If player selected one of their color pieces, highlight the tile and store its array index
