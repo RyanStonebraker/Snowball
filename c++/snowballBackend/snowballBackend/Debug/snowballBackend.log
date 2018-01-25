@@ -1,0 +1,12 @@
+﻿  backendMain.cpp
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(35): warning C4018: '<': signed/unsigned mismatch
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(38): warning C4244: 'argument': conversion from 'unsigned __int64' to 'const unsigned int', possible loss of data
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(44): warning C4154: deletion of an array expression; conversion to pointer supplied
+  Generating Code...
+  Compiling...
+  inputHandler.cpp
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(35): warning C4018: '<': signed/unsigned mismatch
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(38): warning C4244: 'argument': conversion from 'unsigned __int64' to 'const unsigned int', possible loss of data
+c:\users\grubs\desktop\git repositories\snowball\c++\snowballbackend\snowballbackend\board.h(44): warning C4154: deletion of an array expression; conversion to pointer supplied
+  Generating Code...
+  snowballBackend.vcxproj -> C:\Users\Grubs\Desktop\Git Repositories\Snowball\c++\snowballBackend\Debug\snowballBackend.exe
