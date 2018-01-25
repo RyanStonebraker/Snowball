@@ -26,7 +26,8 @@ var game = {
   "highlightOpacity" : 0.5,
   "redTeamColor" : "red",
   "whiteTeamColor" : "lightgrey",
-  "pause" : false
+  "pause" : false,
+  "fileBoardState" : ""
 };
 
 // Global object literal for keeping track of scoring and turns
@@ -72,9 +73,11 @@ function GameBoard(div) {
 
 // If mouse clicked, log location
 GameBoard.prototype.mouseEventHandler = function(evt) {
-  var screen = canvas.getBoundingClientRect();
-  game.lastMouseClick.x = evt.clientX - screen.left;
-  game.lastMouseClick.y = evt.clientY - screen.top;
+  if (!game.pause) {
+    var screen = canvas.getBoundingClientRect();
+    game.lastMouseClick.x = evt.clientX - screen.left;
+    game.lastMouseClick.y = evt.clientY - screen.top;
+  }
 }
 
 GameBoard.prototype.keyEventHandler = function (evt) {
@@ -103,8 +106,21 @@ GameBoard.prototype.refreshBoard = function () {
 
     this.updateScoreBoard();
   }
+  else {
+    this.drawPause();
+  }
 }
 
+// draws the pause icon on the screen
+GameBoard.prototype.drawPause = function () {
+  ctx.fillStyle = "blue";
+  var pauseBarWidth = 80;
+  var pauseBarHeight = 200;
+  ctx.fillRect(width/2 - 1.25 * pauseBarWidth, height/2 - 0.5 * pauseBarHeight, pauseBarWidth, pauseBarHeight);
+  ctx.fillRect(width/2 + 0.25 * pauseBarWidth, height/2 - 0.5 * pauseBarHeight, pauseBarWidth, pauseBarHeight);
+}
+
+// Check game state and write stats
 GameBoard.prototype.updateScoreBoard = function () {
   // temp vars to hold count
   var redCount = 0;
@@ -129,10 +145,12 @@ GameBoard.prototype.updateScoreBoard = function () {
   scoreboard.white.pieceCount = whiteCount;
   scoreboard.red.kingCount = 0;
   scoreboard.white.kingCount = 0;
+  // Get precision timing
   scoreboard.totalTime = Math.round((performance.now() - scoreboard.startTime)/10)/100;
 
   // replace text for scoreboard section
   if (scoreboard.red.moveCount + scoreboard.white.moveCount != scoreboard.totalMoveCount || scoreboard.totalTime < 0.01) {
+    // update total move count
     scoreboard.totalMoveCount = scoreboard.red.moveCount + scoreboard.white.moveCount;
     var scoreText = "SCOREBOARD:</br></br>";
     scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
@@ -160,11 +178,78 @@ GameBoard.prototype.moveController = function () {
   }
   else {
     this.playerController("white");
+    // this.fileInputController("white");
   }
 }
 
-GameBoard.prototype.fileInputController = function () {
-  // TODO: Decide on File I/0 Standard
+GameBoard.prototype.fileInputController = function (color) {
+  // STANDARD: 0 = empty
+  //           1 = red
+  //           2 = black
+  //           3 = red king
+  //           4 = black king
+
+  // Shadow State Standard:
+  //        Line Number = checker piece number (1-32)
+  //        First Number = STANDARD type (0,1,2,3,4)
+  //        Second Number: 0 = Top left
+  //                       1 = Top right
+  //                       2 = Bottom left
+  //                       3 = Bottom right
+  //        Example: (Line 0) -> 1 01
+
+  var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
+  $.get("../comm/boardstate.txt", function(input) {
+    var currRed = 0;
+    var currWhite = 0;
+
+    if (input != game.fileBoardState) {
+      // game.fileBoardState = input;
+      ++teamScoreBoard.moveCount;
+
+      for (var spot = 0; spot < 32; ++spot) {
+        var row = Math.floor(2 * spot / game.tileDim);
+        var col = (2 * spot) % 8;
+
+        switch (input[spot]) {
+          case 1:
+            game.redPieces[currRed].row = row;
+            game.redPieces[currRed].col = col;
+            game.redPieces[currRed].isKing = false;
+            game.redPieces[currRed].highlight = false;
+            ++currRed;
+            break;
+          case 2:
+            game.whitePieces[currWhite].row = row;
+            game.whitePieces[currWhite].col = col;
+            game.whitePieces[currWhite].isKing = false;
+            game.whitePieces[currWhite].highlight = false;
+            ++currWhite;
+            break;
+          case 3:
+            game.redPieces[currRed].row = row;
+            game.redPieces[currRed].col = col;
+            game.redPieces[currRed].isKing = true;
+            game.redPieces[currRed].highlight = false;
+            ++currRed;
+            break;
+          case 4:
+            game.whitePieces[currWhite].row = row;
+            game.whitePieces[currWhite].col = col;
+            game.whitePieces[currWhite].isKing = true;
+            game.whitePieces[currWhite].highlight = false;
+            ++currWhite;
+            break;
+        }
+        // for (;currRed < game.teamPieceCount; ++currRed) {
+        //   game.redPieces[currRed].alive = false;
+        // }
+        // for (;currWhite < game.teamPieceCount; ++currWhite) {
+        //   game.whitePieces[currWhite].alive = false;
+        // }
+      }
+    }
+  });
 }
 
 // Update selected teams pieces based on mouse click events
