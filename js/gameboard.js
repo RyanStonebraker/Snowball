@@ -41,11 +41,13 @@ var scoreboard = {
   "red" : {"moveCount" : 0,
            "pieceCount" : game.teamPieceCount,
            "kingCount" : 0,
+           "enemyCaptured" : 0,
            "lastMoveStarted" : 0,
            "timePerLastMove" : 0},
   "white" : {"moveCount" : 0,
           "pieceCount" : game.teamPieceCount,
           "kingCount" : 0,
+          "enemyCaptured" : 0,
           "lastMoveStarted" : 0,
           "timePerLastMove" : 0},
   "totalMoveCount" : 0,
@@ -209,10 +211,12 @@ GameBoard.prototype.updateScoreBoard = function () {
     scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
     scoreText += "Piece Count: " + scoreboard.red.pieceCount;
     scoreText += "</br>King Count: " + scoreboard.red.kingCount;
+    scoreText += "</br>Enemies Captured: " + scoreboard.red.enemyCaptured;
     scoreText += "</br>Last Move Time: " + Math.round(scoreboard.red.timePerLastMove*100, 0.01)/100 + "s";
     scoreText += (scoreboard.red.moveCount != scoreboard.white.moveCount) ? "</p></br><h2>White (ACTIVE TURN):</h2>" : "</p></br>White:";
     scoreText += "<p>Piece Count: " + scoreboard.white.pieceCount;
     scoreText += "</br>King Count: " + scoreboard.white.kingCount;
+    scoreText += "</br>Enemies Captured: " + scoreboard.red.enemyCaptured;
     scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove*100, 0.01)/100 + "s</p>";
 
     scoreText += "</br>Total Move Count: " + scoreboard.totalMoveCount;
@@ -236,22 +240,6 @@ GameBoard.prototype.moveController = function () {
 }
 
 GameBoard.prototype.fileInputController = function (color) {
-  // STANDARD: 0 = empty
-  //           1 = red
-  //           2 = black
-  //           3 = red king
-  //           4 = black king
-
-  // Shadow State Standard:
-  //        Line Number = checker piece number (1-32)
-  //        First Number = STANDARD type (0,1,2,3,4)
-  //        Second Number: 0 = Top left
-  //                       1 = Top right
-  //                       2 = Bottom left
-  //                       3 = Bottom right
-  //                      -1 = NO VALID MOVE
-  //        Example: (Line 0) -> 1 01
-
   var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
 
   teamScoreBoard.lastMoveStarted = performance.now();
@@ -269,10 +257,14 @@ GameBoard.prototype.fileInputController = function (color) {
       for (var spot = 0; spot < 32; ++spot) {
         var row = Math.floor(2 * spot / game.tileDim);
         var col = (2 * spot) % 8 + row % 2;
-        // if ((currRed >= 12 && game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3))
-        //   continue;
-        // else if ((currWhite >= 12 && game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4))
-        //   continue;
+        if (currRed >= 12 && (game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3)) {
+          console.log("Too many Red pieces in boardstate! Ignoring future moves...");
+          continue;
+        }
+        else if (currWhite >= 12 && (game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4)) {
+          console.log("Too many White pieces in boardstate! Ignoring future moves...");
+          continue;
+        }
         switch (game.fileBoardState[spot]) {
           case "1":
             game.redPieces[currRed].row = row;
@@ -347,6 +339,9 @@ GameBoard.prototype.playerController = function (color) {
 
     // If player selected an empty tile and they previously selected their color piece, move piece here
     if (selected == -1 && oppselect == -1 && game.selectedSquare.index != -1) {
+      if (Math.abs(teamArr[game.selectedSquare.index].row - game.selectedSquare.row) > 1 || Math.abs(teamArr[game.selectedSquare.index].col - game.selectedSquare.col) > 1) {
+        ++teamScore.enemyCaptured;
+      }
       teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
       teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
       teamArr[game.selectedSquare.index].highlight = false;
