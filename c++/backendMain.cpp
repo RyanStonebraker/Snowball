@@ -30,6 +30,8 @@ called from here to keep things organized.
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <random>
 
 //std::string binaryConvert(unsigned long long int value)
 //{
@@ -49,17 +51,25 @@ called from here to keep things organized.
 //	return binaryConvert(b.getBoardStateBits()._64a);
 //}
 
-bool canMove(int position, int nextPosition, int piece, std::string boardString)
+bool indexIsValid(int position)
+{
+	return (position <= 31 && position >= 0);
+}
+
+bool canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack = false)
 {
 	bool isSide = position == 0 || position == 8 || position == 16 || position == 24 ||
 		position == 7 || position == 15 || position == 23 || position == 31;
 
-	if (nextPosition > 31 || nextPosition < 0)
+	if (!indexIsValid(nextPosition))
 		return false;
 
 	int nextLocationState = boardString[nextPosition] - '0';
 
-	if (isSide && std::abs(position - nextPosition) != 4)
+	if (isSideAttack)
+		return std::abs(position - nextPosition) == 7 || std::abs(position - nextPosition) == 9;
+
+	else if (isSide && std::abs(position - nextPosition) != 4)
 		return false;
 
 	if (piece == BLACK) //TO DO: side checks in here
@@ -73,50 +83,44 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString)
 		
 }
 
-std::string checkKill(int position, const board & currentBoard, std::string & visited)
+std::string checkKill(int position, const board & currentBoard, std::string & visited, std::string & updateVisited)
 {
 	std::string nextBoard = currentBoard.getBoardStateString();
 
-	bool leftKillCondition = (canMove(position, position - 9, currentBoard[position], nextBoard)) &&
-							 (visited[position - 9] != 'x') &&
-							 (currentBoard[position - 4] == RED ||
-							 currentBoard[position - 4] == RED_KING);
+	bool isLeftSide = position == 0 || position == 8 || position == 16 || position == 24;
+	bool isRightSide = position == 7 || position == 15 || position == 23 || position == 31;
+	bool isSide = isLeftSide || isRightSide;
 
-	bool rightKillCondition = (canMove(position, position - 7, currentBoard[position], nextBoard)) &&
-							  (visited[position - 7] != 'x') &&
-							  (currentBoard[position - 3] == RED ||
-							  currentBoard[position - 3] == RED_KING);
+	int leftShift = ((position / 4) % 2) == 0 ? position - 5 : position - 4;
+	int rightShift = ((position / 4) % 2) == 0 ? position - 4 : position - 3;
+	int backLeftShift = ((position / 4) % 2) == 0 ? position + 3 : position + 4;
+	int backRightShift = ((position / 4) % 2) == 0 ? position + 4 : position + 5;
 
-	bool backLeftKillCondition = (canMove(position, position + 7, currentBoard[position], nextBoard)) &&
-							  (visited[position + 7] != 'x') &&
-							  (currentBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] == RED ||
-							  currentBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] == RED_KING);
+	bool leftKillCondition = (indexIsValid(leftShift) ? (currentBoard[leftShift] == RED || currentBoard[leftShift] == RED_KING) : false) ?
+							 (canMove(position, position - 9, currentBoard[position], nextBoard) ? (visited[position - 9] != 'x') : false) : false;
 
-	bool backRightKillCondition = (canMove(position, position + 9, currentBoard[position], nextBoard)) &&
-							  (visited[position + 9] != 'x') &&
-							  (currentBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] == RED ||
-							  currentBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] == RED_KING);
+	bool rightKillCondition = (indexIsValid(rightShift) ? (currentBoard[rightShift] == RED || currentBoard[rightShift] == RED_KING) : false) ?
+							  (canMove(position, position - 7, currentBoard[position], nextBoard) ? (visited[position - 7] != 'x') : false) : false;
+							  
+
+	bool backLeftKillCondition = (indexIsValid(backLeftShift) ? (currentBoard[backLeftShift] == RED || currentBoard[backLeftShift] == RED_KING) : false) ?
+								 (canMove(position, position + 7, currentBoard[position], nextBoard, isSide) ? (visited[position + 7] != 'x') : false) : false;
+
+	bool backRightKillCondition = (indexIsValid(backRightShift) ? (currentBoard[backRightShift] == RED || currentBoard[backRightShift] == RED_KING) : false) ?
+								  (canMove(position, position + 9, currentBoard[position], nextBoard, isSide) ? (visited[position + 9] != 'x') : false) : false;
 
 	if (!((leftKillCondition && rightKillCondition) || (leftKillCondition && backLeftKillCondition) ||
 		  (leftKillCondition && backRightKillCondition) || (rightKillCondition && backLeftKillCondition) ||
 		  (rightKillCondition && backRightKillCondition) || (backLeftKillCondition && backRightKillCondition)))
-		visited[position] = 'x';
+		  updateVisited[position] = 'x'; //might change ***
 	
-
+	
 	if (leftKillCondition) //left kill condition
 	{
 		std::swap(nextBoard[position], nextBoard[position - 9]);
-		nextBoard[position - 4] = '0';
+		nextBoard[((position / 4) % 2) == 0 ? position - 5 : position - 4] = '0';
 
-		return checkKill(position - 9, { nextBoard }, visited);
-	}
-
-	if (rightKillCondition) //right kill condition
-	{
-		std::swap(nextBoard[position], nextBoard[position - 7]);
-		nextBoard[position - 3] = '0';
-		
-		return checkKill(position - 7, { nextBoard }, visited);
+		return checkKill(position - 9, { nextBoard }, visited, updateVisited);
 	}
 
 	if (backLeftKillCondition) //back left kill condition
@@ -124,7 +128,17 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 		std::swap(nextBoard[position], nextBoard[position + 7]);
 		nextBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] = '0';
 
-		return checkKill(position + 7, { nextBoard }, visited);
+		return checkKill(position + 7, { nextBoard }, visited, updateVisited);
+	}
+	
+
+	
+	if (rightKillCondition) //right kill condition
+	{
+		std::swap(nextBoard[position], nextBoard[position - 7]);
+		nextBoard[((position / 4) % 2) == 0 ? position - 4 : position - 3] = '0';
+
+		return checkKill(position - 7, { nextBoard }, visited, updateVisited);
 	}
 
 	if (backRightKillCondition) //back right kill condition
@@ -132,63 +146,72 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 		std::swap(nextBoard[position], nextBoard[position + 9]);
 		nextBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] = '0';
 
-		return checkKill(position + 9, { nextBoard }, visited);
+		return checkKill(position + 9, { nextBoard }, visited, updateVisited);
 	}
+	
 
 	return nextBoard;
 
 }
 
-void workhorse(int position, const board & currentBoard, std::vector<board> & validMoves, std::string visited)
+std::string workhorse(int position, const board & currentBoard, std::vector<board> & validMoves, std::string visited)
 {
+	std::string updateVisited = visited; //might remove ***
 	while (true)
 	{
-		std::string nextBoard = checkKill(position, currentBoard, visited);
+		std::string nextBoard = checkKill(position, currentBoard, visited, updateVisited);
+		visited = updateVisited; //might remove ***
 
 		if (nextBoard == currentBoard.getBoardStateString())
 			break;
 
 		validMoves.push_back({ nextBoard });
 	}
+
+	return visited;
 }
 
 std::vector<board> generateRandomMoves(board currentBoard)
 {
 	std::vector<board> validMoves;
+	std::string visited = currentBoard.getBoardStateString();
 
 	for (int position = 0; position < currentBoard.getBoardStateString().length(); position++)
 	{
 		std::string nextBoard = currentBoard.getBoardStateString();
+		int leftShift = ((position / 4) % 2) == 0 ? position - 5 : position - 4;
+		int rightShift = ((position / 4) % 2) == 0 ? position - 4 : position - 3;
 
 		if (currentBoard[position] == BLACK)
 		{
-			if (canMove(position, position - 4, currentBoard[position], nextBoard)) //can we move left?
+			if (canMove(position, leftShift, currentBoard[position], nextBoard)) //can we move left?
 			{
-				std::swap(nextBoard[position], nextBoard[position - 4]);
+				
+				std::swap(nextBoard[position], nextBoard[leftShift]);
 
-				if (position == 0 || position == 1 || position == 2 || position == 3) //will this move make a king?
-					nextBoard[position - 4] = '3';
+				if (leftShift == 0 || leftShift == 1 || leftShift == 2 || leftShift == 3) //will this move make a king?
+					nextBoard[leftShift] = '3';
 			
 				validMoves.push_back({ nextBoard });
 			}
-			else
+			else if(!(position == 0 || position == 8 || position == 16 || position == 24))
 			{
-				workhorse(position, currentBoard, validMoves, currentBoard.getBoardStateString());
+				visited = workhorse(position, currentBoard, validMoves, visited);
 			}
 
-			if (canMove(position, position - 3, currentBoard[position], nextBoard)) //can we move right?
+			if (canMove(position, rightShift, currentBoard[position], nextBoard)) //can we move right?
 			{
 				nextBoard = currentBoard.getBoardStateString();
-				std::swap(nextBoard[position], nextBoard[position - 3]);
+				std::swap(nextBoard[position], nextBoard[rightShift]);
 
-				if (position == 0 || position == 1 || position == 2 || position == 3) //will this move make a king?
-					nextBoard[position - 4] = '3';
+				if (rightShift == 0 || rightShift == 1 || rightShift == 2 || rightShift == 3) //will this move make a king?
+					nextBoard[rightShift] = '3';
 
 				validMoves.push_back({ nextBoard });
 			}
-			else
+			else if(!(position == 7 || position == 15 || position == 23 || position == 31))
 			{
-				workhorse(position, currentBoard, validMoves, currentBoard.getBoardStateString());
+				visited = workhorse(position, currentBoard, validMoves, visited);
 			}
 		}
 
@@ -201,12 +224,26 @@ int main()
 {
 	board b(readBoardState());
 	std::vector<board> validMoves = generateRandomMoves(b);
-	
+
+	std::ofstream shadowOutFile("..\\..\\..\\comm\\shadowstate.txt");
+	std::ofstream boardStateOutFile("..\\..\\..\\comm\\boardstate.txt" , std::ofstream::trunc);
+
 	std::cout << "Black Center Move Generations: \n" << std::endl;
 	for (const auto & n : validMoves)
 	{
 		std::cout << n << std::endl;
+		shadowOutFile << n.getBoardStateString() << std::endl;
 	}
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(0, validMoves.size() - 1);
+
+	int choice = dis(gen);
+
+	std::cout << "I chose to use index: " << choice << " with move string: " << validMoves[choice].getBoardStateString() << std::endl;
+
+	boardStateOutFile << validMoves[choice].getBoardStateString() << std::endl;
 
 	std::cin.get();
 	return 0;
