@@ -10,8 +10,6 @@ var width = 500;
 var height = 500;
 // ** End Global
 
-// var remote = require('remote');
-// var dialog = remote.require('dialog');
 var fs = require('fs');
 
 // Global object literal to store various game state info
@@ -102,15 +100,18 @@ GameBoard.prototype.refreshBoard = function () {
   var self = this;
   requestAnimationFrame(function(){self.refreshBoard();});
 
+
+  // ******** This Ajax Request would make update work normally in web browser *********
   // $.ajax({
   //   crossDomain: true,
-  //   async:false,
+  //   async:true,
   //   url: 'comm/boardstate.txt',
   //   dataType: "text",
   //   success: function(data){
   //     game.fileBoardState = data;
   //   }
   // });
+
   fs.readFile("comm/boardstate.txt", 'utf-8', (err, data) => {
       if(err){
           alert("BoardState Read Error:" + err.message);
@@ -258,7 +259,7 @@ GameBoard.prototype.fileInputController = function (color) {
     var currRed = 0;
     var currWhite = 0;
 
-    if (game.fileBoardPrevState.toString().substring(0, 32) != game.fileBoardState.toString().substring(0,32) && game.fileBoardState.toString().length >= 32) {
+    if (game.fileBoardPrevState.toString().substring(0, 32) != game.fileBoardState.toString().substring(0,32) && game.fileBoardState.toString().length >= 32 && game.fileBoardState.toString().substring(0, 32) != game.playerBoardState.toString().substring(0,32)) {
 
       game.playerBoardState = game.fileBoardState;
       game.fileBoardPrevState = game.fileBoardState;
@@ -352,6 +353,8 @@ GameBoard.prototype.playerController = function (color) {
 
       // Player made move, update string
       this.boardToString();
+
+      fs.writeFileSync("comm/boardstate.txt", game.playerBoardState);
 
       // reset states so unnecessary work isn't done and piece stops being highlighted after placed
       game.lastMouseClick.x = -1;

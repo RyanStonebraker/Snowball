@@ -15,7 +15,7 @@ class ServerMain(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.send_header('Allow', 'GET, POST, OPTIONS')
-        self.send_header('')
+        self.send_header('charset', 'utf-8')
         self.send_header("Content-Type", "text/html")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Headers", "*")
