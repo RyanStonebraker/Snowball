@@ -1,5 +1,5 @@
 ﻿/*
-main.cpp
+backendMain.cpp
 Snowball AI
 CS 405 - Dr. Genetti
 All main functions that pertain to generating valid moves will be
@@ -21,17 +21,15 @@ called from here to keep things organized.
 	|  |28|  |29|  |30|  |31|
 	‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+	//left side: 0 (SPECIAL), 8, 16, 24
+	//right side: 7, 15, 23, 31
 */
 
 #include "backend.h"
 #include "board.h"
 #include <iostream>
 #include <vector>
-
-#define RED				1
-#define BLACK			2
-#define RED_KING		3
-#define BLACK_KING		4
+#include <cmath>
 
 //std::string binaryConvert(unsigned long long int value)
 //{
@@ -56,14 +54,21 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString)
 	bool isSide = position == 0 || position == 8 || position == 16 || position == 24 ||
 		position == 7 || position == 15 || position == 23 || position == 31;
 
+	if (nextPosition > 31 || nextPosition < 0)
+		return false;
+
 	int nextLocationState = boardString[nextPosition] - '0';
 
-	if (isSide || nextPosition > 31 || nextPosition < 0)
+	if (isSide && std::abs(position - nextPosition) != 4)
 		return false;
 
 	if (piece == BLACK) //TO DO: side checks in here
 	{
 		return nextLocationState == 0;
+	}
+	else //BLACK_KING
+	{
+
 	}
 		
 }
@@ -82,7 +87,19 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 							  (currentBoard[position - 3] == RED ||
 							  currentBoard[position - 3] == RED_KING);
 
-	if (!(leftKillCondition && rightKillCondition))
+	bool backLeftKillCondition = (canMove(position, position + 7, currentBoard[position], nextBoard)) &&
+							  (visited[position + 7] != 'x') &&
+							  (currentBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] == RED ||
+							  currentBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] == RED_KING);
+
+	bool backRightKillCondition = (canMove(position, position + 9, currentBoard[position], nextBoard)) &&
+							  (visited[position + 9] != 'x') &&
+							  (currentBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] == RED ||
+							  currentBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] == RED_KING);
+
+	if (!((leftKillCondition && rightKillCondition) || (leftKillCondition && backLeftKillCondition) ||
+		  (leftKillCondition && backRightKillCondition) || (rightKillCondition && backLeftKillCondition) ||
+		  (rightKillCondition && backRightKillCondition) || (backLeftKillCondition && backRightKillCondition)))
 		visited[position] = 'x';
 	
 
@@ -91,9 +108,6 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 		std::swap(nextBoard[position], nextBoard[position - 9]);
 		nextBoard[position - 4] = '0';
 
-		/*if(!rightKillCondition)
-			visited[position - 9] = 'x';*/
-
 		return checkKill(position - 9, { nextBoard }, visited);
 	}
 
@@ -101,11 +115,24 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 	{
 		std::swap(nextBoard[position], nextBoard[position - 7]);
 		nextBoard[position - 3] = '0';
-
-		/*if(!leftKillCondition)
-			visited[position - 7] = 'x';*/
 		
 		return checkKill(position - 7, { nextBoard }, visited);
+	}
+
+	if (backLeftKillCondition) //back left kill condition
+	{
+		std::swap(nextBoard[position], nextBoard[position + 7]);
+		nextBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] = '0';
+
+		return checkKill(position + 7, { nextBoard }, visited);
+	}
+
+	if (backRightKillCondition) //back right kill condition
+	{
+		std::swap(nextBoard[position], nextBoard[position + 9]);
+		nextBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] = '0';
+
+		return checkKill(position + 9, { nextBoard }, visited);
 	}
 
 	return nextBoard;
@@ -127,9 +154,6 @@ void workhorse(int position, const board & currentBoard, std::vector<board> & va
 
 std::vector<board> generateRandomMoves(board currentBoard)
 {
-	//left side: 0, 8, 16, 24
-	//right side: 7, 15, 23, 31
-
 	std::vector<board> validMoves;
 
 	for (int position = 0; position < currentBoard.getBoardStateString().length(); position++)
@@ -141,6 +165,10 @@ std::vector<board> generateRandomMoves(board currentBoard)
 			if (canMove(position, position - 4, currentBoard[position], nextBoard)) //can we move left?
 			{
 				std::swap(nextBoard[position], nextBoard[position - 4]);
+
+				if (position == 0 || position == 1 || position == 2 || position == 3) //will this move make a king?
+					nextBoard[position - 4] = '3';
+			
 				validMoves.push_back({ nextBoard });
 			}
 			else
@@ -152,6 +180,10 @@ std::vector<board> generateRandomMoves(board currentBoard)
 			{
 				nextBoard = currentBoard.getBoardStateString();
 				std::swap(nextBoard[position], nextBoard[position - 3]);
+
+				if (position == 0 || position == 1 || position == 2 || position == 3) //will this move make a king?
+					nextBoard[position - 4] = '3';
+
 				validMoves.push_back({ nextBoard });
 			}
 			else

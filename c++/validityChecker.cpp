@@ -7,7 +7,12 @@ validity of the proposed move is checked here
 */
 
 #include "backend.h"
+#include "board.h"
 #include <string>
 using std::string;
 
-bool isMoveValid() { return true; }
+bool validateMove(const board & previousBoard, const board & currentBoard) 
+{ 
+	
+	return true;
+}
