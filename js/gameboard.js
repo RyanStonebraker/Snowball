@@ -10,6 +10,8 @@ var width = 500;
 var height = 500;
 // ** End Global
 
+var fs = require('fs');
+
 // Global object literal to store various game state info
 var game = {
   "tileDim" : 8,
@@ -27,7 +29,11 @@ var game = {
   "redTeamColor" : "red",
   "whiteTeamColor" : "lightgrey",
   "pause" : false,
-  "fileBoardState" : ""
+  "fileBoardState" : "",
+
+  "fileBoardPrevState" : "",
+  "fileServer" : "localhost:3000",
+  "playerBoardState" : ""
 };
 
 // Global object literal for keeping track of scoring and turns
@@ -94,6 +100,30 @@ GameBoard.prototype.refreshBoard = function () {
   var self = this;
   requestAnimationFrame(function(){self.refreshBoard();});
 
+
+  // ******** This Ajax Request would make update work normally in web browser *********
+  // $.ajax({
+  //   crossDomain: true,
+  //   async:true,
+  //   url: 'comm/boardstate.txt',
+  //   dataType: "text",
+  //   success: function(data){
+  //     game.fileBoardState = data;
+  //   }
+  // });
+
+  fs.readFile("comm/boardstate.txt", 'utf-8', (err, data) => {
+      if(err){
+          alert("BoardState Read Error:" + err.message);
+          game.pause = true;
+          return;
+      }
+      if (data.toString().length >= 32)
+        game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
+      else
+        console.log("Error - BoardState Not Valid: " + data);
+  });
+
   // Draw checkerboard
   this.drawBackground();
 
@@ -109,6 +139,29 @@ GameBoard.prototype.refreshBoard = function () {
   else {
     this.drawPause();
   }
+}
+
+GameBoard.prototype.boardToString = function () {
+  var board = []
+
+  for (var i = 0; i < 32; ++i) {
+    board[i] = 0;
+  }
+
+  for (var i = 0; i < 12; ++i) {
+    var tile = Math.floor((game.redPieces[i].row * game.tileDim + game.redPieces[i].col)/2);
+    board[tile] = (game.redPieces[i].isKing ? 3 : 1);
+    board[tile] = (game.redPieces[i].alive ? board[tile] : 0);
+
+    var wtile = Math.floor((game.whitePieces[i].row * game.tileDim + game.whitePieces[i].col)/2);
+    board[wtile] = (game.whitePieces[i].isKing ? 4 : 2);
+    board[wtile] = (game.whitePieces[i].alive ? board[wtile] : 0);
+  }
+  var bState = ""
+  for (var i = 0; i < 32; ++i) {
+    bState += board[i].toString();
+  }
+  game.playerBoardState = bState;
 }
 
 // draws the pause icon on the screen
@@ -177,8 +230,8 @@ GameBoard.prototype.moveController = function () {
     this.playerController("red");
   }
   else {
-    this.playerController("white");
-    // this.fileInputController("white");
+    // this.playerController("white");
+    this.fileInputController("white");
   }
 }
 
@@ -196,60 +249,83 @@ GameBoard.prototype.fileInputController = function (color) {
   //                       1 = Top right
   //                       2 = Bottom left
   //                       3 = Bottom right
+  //                      -1 = NO VALID MOVE
   //        Example: (Line 0) -> 1 01
 
   var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
-  $.get("../comm/boardstate.txt", function(input) {
+
+  teamScoreBoard.lastMoveStarted = performance.now();
+
     var currRed = 0;
     var currWhite = 0;
 
-    if (input != game.fileBoardState) {
-      // game.fileBoardState = input;
+    if (game.fileBoardPrevState.toString().substring(0, 32) != game.fileBoardState.toString().substring(0,32) && game.fileBoardState.toString().length >= 32 && game.fileBoardState.toString().substring(0, 32) != game.playerBoardState.toString().substring(0,32)) {
+
+      game.playerBoardState = game.fileBoardState;
+      game.fileBoardPrevState = game.fileBoardState;
+
       ++teamScoreBoard.moveCount;
 
       for (var spot = 0; spot < 32; ++spot) {
         var row = Math.floor(2 * spot / game.tileDim);
-        var col = (2 * spot) % 8;
-
-        switch (input[spot]) {
-          case 1:
+        var col = (2 * spot) % 8 + row % 2;
+        // if ((currRed >= 12 && game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3))
+        //   continue;
+        // else if ((currWhite >= 12 && game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4))
+        //   continue;
+        switch (game.fileBoardState[spot]) {
+          case "1":
             game.redPieces[currRed].row = row;
             game.redPieces[currRed].col = col;
             game.redPieces[currRed].isKing = false;
             game.redPieces[currRed].highlight = false;
+            game.redPieces[currRed].alive = true;
             ++currRed;
             break;
-          case 2:
+          case "2":
             game.whitePieces[currWhite].row = row;
             game.whitePieces[currWhite].col = col;
             game.whitePieces[currWhite].isKing = false;
             game.whitePieces[currWhite].highlight = false;
+            game.whitePieces[currWhite].alive = true;
             ++currWhite;
             break;
-          case 3:
+          case "3":
             game.redPieces[currRed].row = row;
             game.redPieces[currRed].col = col;
             game.redPieces[currRed].isKing = true;
             game.redPieces[currRed].highlight = false;
+            game.redPieces[currRed].alive = true;
             ++currRed;
             break;
-          case 4:
+          case "4":
             game.whitePieces[currWhite].row = row;
             game.whitePieces[currWhite].col = col;
             game.whitePieces[currWhite].isKing = true;
             game.whitePieces[currWhite].highlight = false;
+            game.whitePieces[currWhite].alive = true;
             ++currWhite;
             break;
+          default:
+            break;
         }
-        // for (;currRed < game.teamPieceCount; ++currRed) {
-        //   game.redPieces[currRed].alive = false;
-        // }
-        // for (;currWhite < game.teamPieceCount; ++currWhite) {
-        //   game.whitePieces[currWhite].alive = false;
-        // }
+      }
+      for (currRed; currRed < game.teamPieceCount; ++currRed) {
+        game.redPieces[currRed].row = row;
+        game.redPieces[currRed].col = col;
+        game.redPieces[currRed].isKing = false;
+        game.redPieces[currRed].highlight = false;
+        game.redPieces[currRed].alive = false;
+      }
+      for (currRed; currWhite < game.teamPieceCount; ++currWhite) {
+        game.whitePieces[currWhite].row = row;
+        game.whitePieces[currWhite].col = col;
+        game.whitePieces[currWhite].isKing = false;
+        game.whitePieces[currWhite].highlight = false;
+        game.whitePieces[currWhite].alive = false;
       }
     }
-  });
+  teamScoreBoard.timePerLastMove = performance.now() - teamScoreBoard.lastMoveStarted;
 }
 
 // Update selected teams pieces based on mouse click events
@@ -274,6 +350,11 @@ GameBoard.prototype.playerController = function (color) {
       teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
       teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
       teamArr[game.selectedSquare.index].highlight = false;
+
+      // Player made move, update string
+      this.boardToString();
+
+      fs.writeFileSync("comm/boardstate.txt", game.playerBoardState);
 
       // reset states so unnecessary work isn't done and piece stops being highlighted after placed
       game.lastMouseClick.x = -1;
@@ -361,10 +442,9 @@ GameBoard.prototype.generateTeams = function () {
   game.whitePieces = []
 
   for (var i = 0; i < game.teamPieceCount; ++i) {
-    var col = (i * 2) % game.tileDim;
     var row = Math.floor((i*2)/game.tileDim);
-    if (row % 2 == 1)
-      ++col;
+    var col = (i * 2) % game.tileDim + row % 2;
+
     game.redPieces.push({"col" : col, "row" : row, "isKing" : false, "highlight" : false, "alive" : true});
     if (row % 2 == 0)
       ++col;
@@ -379,6 +459,7 @@ GameBoard.prototype.generateTeams = function () {
 GameBoard.prototype.drawTeam = function (pieceArr, color) {
   var self = this;
   pieceArr.forEach(function (piece) {
-    self.drawPiece(piece.col, piece.row, color, piece.isKing, piece.highlight);
+    if (piece.alive)
+      self.drawPiece(piece.col, piece.row, color, piece.isKing, piece.highlight);
   });
 }
