@@ -13,6 +13,6 @@ using std::string;
 
 bool validateMove(const board & previousBoard, const board & currentBoard) 
 { 
-	
+	//a very sophisticated validation function
 	return true;
 }
