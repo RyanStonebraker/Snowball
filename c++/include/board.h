@@ -20,10 +20,10 @@ struct _96Bit{
 	unsigned long long int _64b = 0;
 };
 
-class board
+class Board
 {
 
-friend std::ostream & operator<< (std::ostream & output, const board & b)
+friend std::ostream & operator<< (std::ostream & output, const Board & b)
 {
 	output << "High Level String: " << b._boardStateString << " Bit String - a: " << b._boardStateBits._64a << " Bit String - b: " << b._boardStateBits._64b;
 	return output;
@@ -31,12 +31,12 @@ friend std::ostream & operator<< (std::ostream & output, const board & b)
 
 public:
 
-	board(const std::string & boardState) : _boardStateString(boardState)
+	Board(const std::string & boardState) : _boardStateString(boardState)
 	{
 		updateBoard();
 	}
 
-	~board() = default;
+	~Board() = default;
 
 	void move(int position, int destination)
 	{

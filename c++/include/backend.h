@@ -19,13 +19,13 @@ Contains function declarations for .cpp files
 
 //IOHandler.cpp
 std::string readBoardState();
-std::string outputNewBoardState(const std::vector<board> & validMoves);
+std::string outputNewBoardState(const std::vector<Board> & validMoves);
 
 //moveGenerator.cpp
 bool indexIsValid(int position);
 bool canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack = false);
-std::string checkKill(int position, const board & currentBoard, std::string & visited, std::string & updateVisited);
-std::string workhorse(int position, const board & currentBoard, std::vector<board> & validMoves, std::string visited);
-std::vector<board> generateRandomMoves(board currentBoard);
+std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited);
+std::string workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited);
+std::vector<Board> generateRandomMoves(Board currentBoard);
 
 #endif // !FILE_BACKEND_H_INCLUDED

@@ -66,7 +66,7 @@ string readBoardState()
 	return boardState;
 }
 
-std::string outputNewBoardState(const vector<board> & validMoves)
+std::string outputNewBoardState(const vector<Board> & validMoves)
 {
 	std::ofstream shadowOutFile(shadowState);
 	std::ofstream boardStateOutFile(boardState, std::ofstream::trunc);

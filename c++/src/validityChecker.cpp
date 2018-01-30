@@ -11,7 +11,7 @@ validity of the proposed move is checked here
 #include <string>
 using std::string;
 
-bool validateMove(const board & previousBoard, const board & currentBoard) 
+bool validateMove(const Board & previousBoard, const Board & currentBoard) 
 { 
 	//a very sophisticated validation function
 	return true;

@@ -37,11 +37,11 @@ int main()
 	string previousBoard = "Tristan is awesome";
 	while (true)
 	{
-		board b(readBoardState());
+		Board b(readBoardState());
 
 		if (previousBoard != b.getBoardStateString())
 		{
-			vector<board> validMoves = generateRandomMoves(b);
+			vector<Board> validMoves = generateRandomMoves(b);
 			previousBoard = outputNewBoardState(validMoves);
 		}
 

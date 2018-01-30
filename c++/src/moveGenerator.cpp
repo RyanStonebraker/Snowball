@@ -40,7 +40,7 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString,
 
 }
 
-std::string checkKill(int position, const board & currentBoard, std::string & visited, std::string & updateVisited)
+std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited)
 {
 	std::string nextBoard = currentBoard.getBoardStateString();
 
@@ -111,7 +111,7 @@ std::string checkKill(int position, const board & currentBoard, std::string & vi
 
 }
 
-std::string workhorse(int position, const board & currentBoard, std::vector<board> & validMoves, std::string visited)
+std::string workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited)
 {
 	std::string updateVisited = visited; //might remove ***
 	while (true)
@@ -128,9 +128,9 @@ std::string workhorse(int position, const board & currentBoard, std::vector<boar
 	return visited;
 }
 
-std::vector<board> generateRandomMoves(board currentBoard)
+std::vector<Board> generateRandomMoves(Board currentBoard)
 {
-	std::vector<board> validMoves;
+	std::vector<Board> validMoves;
 	std::string visited = currentBoard.getBoardStateString();
 
 	for (int position = 0; position < currentBoard.getBoardStateString().length(); position++)
