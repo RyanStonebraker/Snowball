@@ -28,8 +28,8 @@ using std::mt19937;
 using std::uniform_int_distribution;
 
 
-string shadowState = "..\\..\\..\\comm\\shadowstate.txt";
-string boardState = "..\\..\\..\\comm\\boardstate.txt";
+string shadowState = "../comm/shadowstate.txt";
+string boardState = "../comm/boardstate.txt";
 
 string readBoardState()
 {
@@ -37,8 +37,7 @@ string readBoardState()
 
 	if (!inFile)
 	{
-		cout << "Error opening file" << endl;
-		return "BOARDSTATE.TXT FAILED TO OPEN";
+		cerr << "BOARDSTATE.TXT FAILED TO OPEN" << endl;
 		throw;
 	}
 
@@ -53,7 +52,7 @@ string readBoardState()
 			/*if (inFile.eof())
 				break;*/
 
-			return "ERROR READING BOARDSTATE.TXT";
+			cerr << "ERROR READING BOARDSTATE.TXT" << endl;
 			throw;
 		}
 
