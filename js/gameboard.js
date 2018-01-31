@@ -15,6 +15,8 @@ const path = require('path');
 
 // Global object literal to store various game state info
 var game = {
+  "passiveStepMode": false,
+  "passiveStepCacheCreated": false,
   "tileDim": 8,
   "teamPieceCount": 12,
   "communicationLocation": __dirname,
@@ -24,14 +26,11 @@ var game = {
   "redPieces": [],
   "whitePieces": [],
 
-  // Starting mover
-  "redFirst": true,
-
   // Controller States (can add a state to communicate to competition server)
-  "redFile": false,
-  "redPlayer": true,
-  "whiteFile": false,
-  "whitePlayer": true,
+  "redFile": true,
+  "redPlayer": false,
+  "whiteFile": true,
+  "whitePlayer": false,
 
   "lastMouseClick": {
     "x": -1,
@@ -52,7 +51,8 @@ var game = {
 
   "fileBoardPrevState": "",
   "fileServer": "localhost:3000",
-  "playerBoardState": ""
+  "playerBoardState": "",
+  "controllerConnected": false
 };
 
 // Global object literal for keeping track of scoring and turns
@@ -95,8 +95,19 @@ function GameBoard(div) {
 
   this.updateScoreBoard();
 
-  if (game.redFile || game.whiteFile)
+  if (game.redFile || game.whiteFile) {
     this.sendHandshake();
+
+    game.playerBoardState = "11111111111100000000222222222222";
+    game.fileBoardState = "11111111111100000000222222222222";
+    game.fileBoardPrevState = "11111111111100000000222222222222";
+    this.writeMove();
+    // game.playerBoardState = "";
+  }
+
+  if (game.passiveStepMode)
+    ++scoreboard.totalMoveCount;
+
 
   // Check board for update conditions
   this.refreshBoard();
@@ -122,10 +133,23 @@ GameBoard.prototype.keyEventHandler = function(evt) {
     case "P".charCodeAt():
       game.pause = (game.pause ? false : true);
       break;
-    // 1 makes player a File state controller
-    // case "1"
 
-
+    // right arrow
+    case 39:
+      if (game.passiveStepMode) {
+        var teamFutureMove = scoreboard.totalMoveCount % 2 == 0 ? scoreboard.white : scoreboard.red;
+        ++scoreboard.totalMoveCount;
+        ++teamFutureMove.totalMoveCount;
+      }
+      break;
+    // left arrow
+    case 37:
+      if (game.passiveStepMode && scoreboard.totalMoveCount >= 0) {
+        var teamPrevMove = scoreboard.totalMoveCount % 2 == 1 ? scoreboard.red : scoreboard.white;
+        --scoreboard.totalMoveCount;
+        --teamPrevMove.moveCount;
+      }
+      break;
   }
 }
 
@@ -139,50 +163,97 @@ GameBoard.prototype.sendHandshake = function() {
       }
       if (parseInt(data[0]) == 1) {
         // Player red goes first
-        if (data[1] == 0) {
-          game.redFirst = true;
-          game.redPlayer = true;
-          game.redFile = false;
-        }
-        // Player black goes first
-        else if (data[1] == 1) {
-          game.redFirst = false;
-          game.whitePlayer = true;
-          game.whiteFile = false;
-        }
-      } else if (data[0] == 0) {
+        game.redPlayer = true;
+        game.redFile = false;
+      } else if (parseInt(data[0]) == 0) {
         // Computer red goes first
-        if (data[1] == 0) {
-          game.redFirst = true;
-          game.redFile = true;
-          game.redPlayer = false;
-        }
-        // Computer black goes first
-        else if (data[1] == 1) {
-          game.redFirst = false;
-          game.redPlayer = false;
-          game.redFile = true;
-        }
+        game.redFile = true;
+        game.redPlayer = false;
       }
     });
   } else {
-    fs.writeFile(path.join(game.communicationLocation, "/comm/handshake0.txt"), 'utf-8', (err, data) => {
+    var startPacket = ((game.redPlayer && !game.redFile) ? 1 : 0).toString();
+    // Write out boolean of player or computer going first
+    // In case of AI vs AI, 0/1 markers must be irregularly chosen
+    fs.writeFile(path.join(game.communicationLocation, "/comm/handshake0.txt"),
+    startPacket, (err) => {
       if (err) {
         alert("Handshake0 Write Error:" + err.message);
         game.pause = true;
         return;
       }
-      // TODO: Encode Booleans to handshake
     });
   }
 }
 
+GameBoard.prototype.confirmSend = function () {
+  if (fs.existsSync(path.join(game.communicationLocation, "/comm/handshake1.txt"))) {
+    fs.readFile(path.join(game.communicationLocation, "/comm/handshake1.txt"), 'utf-8', (err, data) => {
+      if (err) {
+        alert("Handshake1 Exists, but Read Error:" + err.message);
+        game.pause = true;
+        return;
+      }
+      if (parseInt(data[0]) == 1) {
+        console.log("Controller Connected!");
+        game.pause = false;
+        // Start game
+        game.controllerConnected = true;
+      } else if (parseInt(data[0]) == 0) {
+        // Error with prev handshake read
+        this.sendHandshake();
+      }
+    });
+  }
+}
+
+// Write to a new incremented text file
+GameBoard.prototype.writeMove = function () {
+  var fname = "turn" + (scoreboard.totalMoveCount).toString() + ".txt";
+  var board = game.playerBoardState.length >= 32 ? game.playerBoardState : game.fileBoardState;
+  fs.writeFile(path.join(game.communicationLocation, "/comm/currentgame/" + fname),
+  board, (err) => {
+    if (err) {
+      alert(fname + " Write Error:" + err.message);
+      game.pause = true;
+      return;
+    }
+  });
+}
+
+GameBoard.prototype.readMove = function (moveCount) {
+  var movename = "turn" + moveCount.toString() + ".txt";
+  fs.readFile(path.join(game.communicationLocation, "/comm/currentgame/" + movename), 'utf-8', (err, data) => {
+    if (err) {
+      alert(movename + " Read Error:" + err.message);
+      game.pause = true;
+      return;
+    }
+    if (data.toString().length >= 32) {
+      game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
+    }
+    else
+      console.log("Error - " + movename + " BoardState Not Valid: " + data);
+  });
+}
+
+GameBoard.prototype.moveWritten = function (moveNum) {
+  var fname = "turn" + moveNum.toString() + ".txt";
+  return fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/" + fname));
+}
+
 // Update function to constantly redraw board
-GameBoard.prototype.refreshBoard = function() {
+GameBoard.prototype.refreshBoard = function () {
   var self = this;
   requestAnimationFrame(function() {
       self.refreshBoard();
   });
+
+  if ((game.redFile || game.whiteFile) && !game.controllerConnected) {
+    this.confirmSend();
+    game.pause = true;
+    console.log("GUI Waiting for handshake response...");
+  }
 
 
   // ******** This Ajax Request would make update work normally in web browser *********
@@ -196,19 +267,24 @@ GameBoard.prototype.refreshBoard = function() {
   //   }
   // });
   if (!game.pause) {
-    fs.readFile(path.join(game.communicationLocation, "/comm/boardstate.txt"), 'utf-8', (err, data) => {
-      if (err) {
-        alert("BoardState Read Error:" + err.message);
-        game.pause = true;
-        return;
-      }
-      if (data.toString().length >= 32)
-        game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
-      else
-        console.log("Error - BoardState Not Valid: " + data);
-    });
+    if (game.passiveStepMode && !game.passiveStepCacheCreated) {
+      --game.totalMoveCount;
+      game.passiveStepCacheCreated = true;
+    }
 
-    if ((scoreboard.red.lastMoveStarted || scoreboard.white.lastMoveStarted) && !scoreboard.startClock) {
+    // fs.readFile(path.join(game.communicationLocation, "/comm/boardstate.txt"), 'utf-8', (err, data) => {
+    //   if (err) {
+    //     alert("BoardState Read Error:" + err.message);
+    //     game.pause = true;
+    //     return;
+    //   }
+    //   if (data.toString().length >= 32)
+    //     game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
+    //   else
+    //     console.log("Error - BoardState Not Valid: " + data);
+    // });
+
+    if ((scoreboard.red.lastMoveStarted || scoreboard.white.lastMoveStarted) && !scoreboard.startClock && !game.passiveStepMode) {
       scoreboard.startTime = performance.now();
       scoreboard.startClock = true;
     }
@@ -291,7 +367,8 @@ GameBoard.prototype.updateScoreBoard = function() {
   // replace text for scoreboard section
   if (scoreboard.red.moveCount + scoreboard.white.moveCount != scoreboard.totalMoveCount || scoreboard.totalTime == 0) {
     // update total move count
-    scoreboard.totalMoveCount = scoreboard.red.moveCount + scoreboard.white.moveCount;
+    if (!game.passiveStepMode)
+      scoreboard.totalMoveCount = scoreboard.red.moveCount + scoreboard.white.moveCount;
     var scoreText = "SCOREBOARD:</br></br>";
     scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
     scoreText += "Piece Count: " + scoreboard.red.pieceCount;
@@ -302,7 +379,7 @@ GameBoard.prototype.updateScoreBoard = function() {
       "</p></br><h2>White (ACTIVE TURN):</h2>" : "</p></br>White:";
     scoreText += "<p>Piece Count: " + scoreboard.white.pieceCount;
     scoreText += "</br>King Count: " + scoreboard.white.kingCount;
-    scoreText += "</br>Enemies Captured: " + scoreboard.red.enemyCaptured;
+    scoreText += "</br>Enemies Captured: " + scoreboard.white.enemyCaptured;
     scoreText += "</br>Last Move Time: " + Math.round(scoreboard.white.timePerLastMove * 100, 0.01) / 100 + "s</p>";
 
     scoreText += "</br>Total Move Count: " + scoreboard.totalMoveCount;
@@ -316,11 +393,8 @@ GameBoard.prototype.updateScoreBoard = function() {
 
 // Start team based gameplay
 GameBoard.prototype.moveController = function() {
-  var firstMover = (game.redFirst) ? scoreboard.red : scoreboard.white;
-  var secondMover = (game.redFirst) ? scoreboard.white : scoreboard.red;
-
-  // move first player if count is equal, else second player
-  if (firstMover.moveCount == secondMover.moveCount) {
+  // move red if count is equal, else move white
+  if (scoreboard.red.moveCount == scoreboard.white.moveCount) {
     if (game.redPlayer == true) {
 
       if (game.redFile)
@@ -361,6 +435,17 @@ GameBoard.prototype.moveController = function() {
 
 GameBoard.prototype.fileInputController = function(color) {
   var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
+
+  if (!this.moveWritten(scoreboard.totalMoveCount))
+    this.writeMove();
+
+  if (this.moveWritten(scoreboard.totalMoveCount + 1)) {
+    this.readMove(scoreboard.totalMoveCount + 1);
+  }
+
+  if (game.passiveStepMode && this.moveWritten(scoreboard.totalMoveCount)) {
+    this.readMove(scoreboard.totalMoveCount + 1);
+  }
 
   teamScoreBoard.lastMoveStarted = performance.now();
 
@@ -438,7 +523,8 @@ GameBoard.prototype.fileInputController = function(color) {
       game.whitePieces[currWhite].alive = false;
     }
   }
-  teamScoreBoard.timePerLastMove = performance.now() - teamScoreBoard.lastMoveStarted;
+  if (!game.passiveStepMode)
+    teamScoreBoard.timePerLastMove = performance.now() - teamScoreBoard.lastMoveStarted;
 }
 
 // Update selected teams pieces based on mouse click events
@@ -470,7 +556,7 @@ GameBoard.prototype.playerController = function(color) {
       // TODO: Replace + 1 and + 2 with a variable that holds the pos change for
       // both colors, for kings, just loop twice, changing color
 
-      // TODO: Allow jump choice when more than one option
+      // TODO: Allow jump choice from shadow state when more than one option
 
       if (color == "red") {
         var jumpPiece = {
