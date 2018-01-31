@@ -71,7 +71,6 @@ vector<Board> flipColor(vector<Board> validMoves)
 int main()
 {
 <<<<<<< HEAD
-	system("Color 5A");
 =======
 	string previousBoard = "Tristan is awesome";
 	while (true)
