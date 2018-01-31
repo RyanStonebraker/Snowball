@@ -38,16 +38,12 @@ ____
 ```js
           Sent from Interface
 
-          First number: Starting Controller
+          First number: Starting Red
                 0 = Computer
                 1 = Player
 
-          Second number: Computer Color
-                0 = red
-                1 = black
-
-          Example: 01 = Computer starts first as black.
-                   10 = Player starts first as red.
+          Example: 0 = Computer starts first as red.
+                   1 = Player starts first as red.
 ```
 
 ### Handshake Protocol : handshake1.txt
