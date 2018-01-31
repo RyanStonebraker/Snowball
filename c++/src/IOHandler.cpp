@@ -29,7 +29,6 @@ using std::mt19937;
 using std::uniform_int_distribution;
 
 
-<<<<<<< HEAD
 string shadowState = "../../comm/shadowstate.txt";
 string boardState = "../../comm/boardstate.txt";
 string handshake0 = "../../comm/handshake0.txt";
@@ -128,10 +127,6 @@ void print(const Board & b)
 
 	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 }
-=======
-string shadowState = "../comm/shadowstate.txt";
-string boardState = "../comm/boardstate.txt";
->>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 
 string readBoardState()
 {
@@ -139,15 +134,13 @@ string readBoardState()
 
 	while(!inFile)
 	{
-<<<<<<< HEAD
+
 		ifstream inFile(boardState);
 		/*cout << "Error opening file" << endl;
 		return "BOARDSTATE.TXT FAILED TO OPEN";
 		throw;*/
-=======
 		cerr << "BOARDSTATE.TXT FAILED TO OPEN" << endl;
 		throw;
->>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 	}
 
 	//vector<string> allBoardStates;
@@ -180,11 +173,7 @@ string readBoardState()
 	return boardState;
 }
 
-<<<<<<< HEAD
 int outputNewBoardState(const vector<Board> & validMoves)
-=======
-std::string outputNewBoardState(const vector<Board> & validMoves)
->>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 {
 	ofstream shadowOutFile(shadowState);
 	ofstream boardStateOutFile(boardState, std::ofstream::trunc);

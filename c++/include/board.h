@@ -37,8 +37,6 @@ public:
 	}
 
 	~Board() = default;
-<<<<<<< HEAD
-=======
 
 	void move(int position, int destination)
 	{
@@ -46,7 +44,6 @@ public:
 			      _boardStateString[(_boardStateString.length() - 1) - destination]);
 		updateBoard();
 	}
->>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 
 	_96Bit getBoardStateBits() const
 	{
