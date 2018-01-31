@@ -27,8 +27,8 @@ var game = {
   "whitePieces": [],
 
   // Controller States (can add a state to communicate to competition server)
-  "redFile": true,
-  "redPlayer": false,
+  "redFile": false,
+  "redPlayer": true,
   "whiteFile": true,
   "whitePlayer": false,
 
@@ -76,7 +76,9 @@ var scoreboard = {
   "totalMoveCount": 0,
   "startTime": 0,
   "totalTime": 0,
-  "startClock": false
+  "startClock": false,
+
+  "maxTurn": 0
 };
 
 // Main "class"/start function
@@ -136,7 +138,7 @@ GameBoard.prototype.keyEventHandler = function(evt) {
 
     // right arrow
     case 39:
-      if (game.passiveStepMode) {
+      if (game.passiveStepMode && scoreboard.totalMoveCount <= scoreboard.maxTurn) {
         var teamFutureMove = scoreboard.totalMoveCount % 2 == 0 ? scoreboard.white : scoreboard.red;
         ++scoreboard.totalMoveCount;
         ++teamFutureMove.totalMoveCount;
@@ -148,6 +150,22 @@ GameBoard.prototype.keyEventHandler = function(evt) {
         var teamPrevMove = scoreboard.totalMoveCount % 2 == 1 ? scoreboard.red : scoreboard.white;
         --scoreboard.totalMoveCount;
         --teamPrevMove.moveCount;
+      }
+      break;
+    // Up arrow
+    case 38:
+      if (!game.passiveStepMode) {
+        game.maxTurn = this.findMaxTurn();
+        game.passiveStepMode = true;
+        --scoreboard.totalMoveCount;
+        console.log("Passive Step Mode On");
+      }
+      break;
+    // Down Arrow
+    case 40:
+      if (game.passiveStepMode) {
+        game.passiveStepMode = false;
+        console.log("Passive Step Mode Off");
       }
       break;
   }
@@ -205,6 +223,20 @@ GameBoard.prototype.confirmSend = function () {
       }
     });
   }
+}
+
+GameBoard.prototype.findMaxTurn = function ()  {
+  var maxTurn = 0;
+  while (true) {
+    if (fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/turn" + maxTurn.toString() + ".txt"))) {
+      ++maxTurn;
+      continue;
+    } else {
+      --maxTurn;
+      break;
+    }
+  }
+  return maxTurn;
 }
 
 // Write to a new incremented text file
@@ -267,10 +299,10 @@ GameBoard.prototype.refreshBoard = function () {
   //   }
   // });
   if (!game.pause) {
-    if (game.passiveStepMode && !game.passiveStepCacheCreated) {
-      --game.totalMoveCount;
-      game.passiveStepCacheCreated = true;
-    }
+    // if (game.passiveStepMode && !game.passiveStepCacheCreated) {
+    //   --scoreboard.totalMoveCount;
+    //   game.passiveStepCacheCreated = true;
+    // }
 
     // fs.readFile(path.join(game.communicationLocation, "/comm/boardstate.txt"), 'utf-8', (err, data) => {
     //   if (err) {
@@ -296,9 +328,9 @@ GameBoard.prototype.refreshBoard = function () {
   this.drawTeam(game.redPieces, game.redTeamColor);
   this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-    this.moveController();
+  this.moveController();
 
-    this.updateScoreBoard();
+  this.updateScoreBoard();
   } else {
     this.drawPause();
   }
@@ -361,6 +393,7 @@ GameBoard.prototype.updateScoreBoard = function() {
   scoreboard.white.pieceCount = whiteCount;
   scoreboard.red.kingCount = 0;
   scoreboard.white.kingCount = 0;
+
   // Get precision timing
   scoreboard.totalTime = scoreboard.startClock ? Math.round((performance.now() - scoreboard.startTime) / 10) / 100 : 0;
 
