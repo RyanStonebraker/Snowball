@@ -6,7 +6,7 @@
 //  Copyright © 2018 Thatcher Lane. All rights reserved.
 //
 
-#include "moveTable.h"
+#include "../include/moveTable.h"
 #include <cstdlib>
 #include <iostream>
 #include <string>

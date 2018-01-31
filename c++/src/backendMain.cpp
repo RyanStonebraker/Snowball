@@ -25,29 +25,101 @@ called from here to keep things organized.
 	//right side: 7, 15, 23, 31
 */
 
-#include "backend.h"
-#include "board.h"
+#include "../include/backend.h"
+#include "../include/board.h"
 #include <vector>
 using std::vector;
 #include <string>
 using std::string;
 
-int main()
+vector<Board> flipColor(vector<Board> validMoves)
 {
-	string previousBoard = "Tristan is awesome";
-	while (true)
-	{
-		board b(readBoardState());
+	//std::move
+	std::transform(validMoves.begin(), validMoves.end(), validMoves.begin(), [](Board & b) {
+		
+		string flippedBoard = "";
+		string boardString = b.getBoardStateString();
+		
+		std::reverse(boardString.begin(), boardString.end());
 
-		if (previousBoard != b.getBoardStateString())
+		b = { boardString };
+
+		for (auto & n : b.getBoardStateString())
 		{
-			vector<board> validMoves = generateRandomMoves(b);
-			previousBoard = outputNewBoardState(validMoves);
+			int piece = n - '0';
+
+			if (piece == BLACK)
+				flippedBoard += '1';
+			else if (piece == RED)
+				flippedBoard += '2';
+			else if (piece == BLACK_KING)
+				flippedBoard += '3';
+			else if (piece == RED_KING)
+				flippedBoard += '4';
+			else
+				flippedBoard += '0';
 		}
 
-		//for manual control:
-		//std::cin.get();
+		Board temp(flippedBoard);
+		return temp;
+
+	});
+
+	return validMoves;
+}
+
+int main()
+{
+	system("Color 5A");
+
+	if (startGame(setupGame())) //computer is black and goes second
+	{
+		while (true)
+		{
+			//updateFileName();
+			Board b(readBoardState());
+
+			//for manual control:
+			if (std::cin.get())
+				std::cout << "Next Turn" << std::endl;
+
+			vector<Board> validMoves = generateRandomMoves(b);
+
+			if (validMoves.size() == 0)
+				break;
+
+			updateFileName();
+			outputNewBoardState(validMoves);
+		}
 	}
+	else //computer is red and goes first
+	{
+		Board b(readBoardState());
+		int indexOfMoveChosen;
+
+		while (true)
+		{
+			updateFileName();
+			//for manual control:
+
+			if (std::cin.get())
+				std::cout << "Next Turn" << std::endl;
+
+			vector<Board> validMoves = generateRandomMoves(b);
+
+			if (validMoves.size() == 0)
+				break;
+
+			vector<Board> flippedValidMoves = flipColor(validMoves);
+			indexOfMoveChosen = outputNewBoardState(flippedValidMoves);
+			b = validMoves[indexOfMoveChosen];
+			//updateFileName();
+		}
+	}
+
+	std::cout << "gameover" << std::endl;
+
+	std::cin.get();
 	return 0; //this is for aesthetic appeal
 }
 

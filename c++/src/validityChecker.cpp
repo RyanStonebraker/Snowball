@@ -6,12 +6,12 @@ After changes have been made to a board, the
 validity of the proposed move is checked here
 */
 
-#include "backend.h"
-#include "board.h"
+#include "../include/backend.h"
+#include "../include/board.h"
 #include <string>
 using std::string;
 
-bool validateMove(const board & previousBoard, const board & currentBoard) 
+bool validateMove(const Board & previousBoard, const Board & currentBoard) 
 { 
 	//a very sophisticated validation function
 	return true;

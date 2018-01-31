@@ -20,10 +20,10 @@ struct _96Bit{
 	unsigned long long int _64b = 0;
 };
 
-class board
+class Board
 {
 
-friend std::ostream & operator<< (std::ostream & output, const board & b)
+friend std::ostream & operator<< (std::ostream & output, const Board & b)
 {
 	output << "High Level String: " << b._boardStateString << " Bit String - a: " << b._boardStateBits._64a << " Bit String - b: " << b._boardStateBits._64b;
 	return output;
@@ -31,19 +31,12 @@ friend std::ostream & operator<< (std::ostream & output, const board & b)
 
 public:
 
-	board(const std::string & boardState) : _boardStateString(boardState)
+	Board(const std::string & boardState) : _boardStateString(boardState)
 	{
 		updateBoard();
 	}
 
-	~board() = default;
-
-	void move(int position, int destination)
-	{
-		std::swap(_boardStateString[(_boardStateString.length() - 1) - position], 
-			      _boardStateString[(_boardStateString.length() - 1) - destination]);
-		updateBoard();
-	}
+	~Board() = default;
 
 	_96Bit getBoardStateBits() const
 	{
@@ -58,6 +51,11 @@ public:
 	std::string getBoardStateString() const
 	{
 		return _boardStateString;
+	}
+
+	void setBoardStateString(const std::string & newState)
+	{
+		_boardStateString = newState;
 	}
 
 	int & operator[](int index)
@@ -111,7 +109,7 @@ private:
 	{
 		unsigned long long int bitFactor = 1;
 
-		for (int i = 0; i < _boardStateString.length(); i++)
+		for (unsigned int i = 0; i < _boardStateString.length(); i++)
 		{
 			_board.push_back(_boardStateString[i] - '0');
 			
