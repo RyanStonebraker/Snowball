@@ -5,7 +5,7 @@ CS 405 - Dr. Genetti
 Contains function definitions for board class
 */
 
-#include "..\include\board.h"
+#include "board.h"
 
 std::ostream & operator<< (std::ostream & output, const Board & b)
 {
