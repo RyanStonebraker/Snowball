@@ -70,12 +70,20 @@ vector<Board> flipColor(vector<Board> validMoves)
 
 int main()
 {
+<<<<<<< HEAD
 	system("Color 5A");
+=======
+	string previousBoard = "Tristan is awesome";
+	while (true)
+	{
+		Board b(readBoardState());
+>>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 
 	if (startGame(setupGame())) //computer is black and goes second
 	{
 		while (true)
 		{
+<<<<<<< HEAD
 			//updateFileName();
 			Board b(readBoardState());
 
@@ -90,6 +98,10 @@ int main()
 
 			updateFileName();
 			outputNewBoardState(validMoves);
+=======
+			vector<Board> validMoves = generateRandomMoves(b);
+			previousBoard = outputNewBoardState(validMoves);
+>>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 		}
 	}
 	else //computer is red and goes first

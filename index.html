@@ -12,7 +12,7 @@
   </head>
   <body>
     <header>
-      <img src="img/header.png"></img>
+      <img src="img/header.png" id = "logo_img"></img>
     </header>
     <section class = "board-wrapper">
       <canvas id="gameboard" width="500" height="500">
@@ -28,6 +28,7 @@
 
     <script type="text/javascript">
       var loadGameboard = new GameBoard(document.getElementById('gameboard'));
+      document.getElementById("logo_img").draggable = false;
     </script>
   </body>
 </html>

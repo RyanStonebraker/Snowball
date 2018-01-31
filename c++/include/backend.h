@@ -19,10 +19,14 @@ Contains function declarations for .cpp files
 
 //IOHandler.cpp
 std::string readBoardState();
+<<<<<<< HEAD
 int outputNewBoardState(const std::vector<Board> & validMoves);
 std::string updateFileName();
 int setupGame();
 bool startGame(int startingDetails);
+=======
+std::string outputNewBoardState(const std::vector<Board> & validMoves);
+>>>>>>> 7646212e63d48f9143fec26f4aecbf944164731a
 
 //moveGenerator.cpp
 bool indexIsValid(int position);

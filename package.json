@@ -3,11 +3,44 @@
   "version": "0.0.1",
   "description": "An A.I. checkers player.",
   "main": "index.js",
-  "devDependencies": {
-    "electron": "^1.7.11"
-  },
   "scripts": {
-    "start": "electron index.js"
+    "postinstall" : "install-app-deps",
+    "start": "npm install & electron index.js",
+    "pack": "build --dir",
+    "dist": "build"
+  },
+  "builds": {
+    "appId": "snowball",
+    "category": "your.app.category.type",
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+  },
+  "linux": {
+  "target": [
+    "AppImage",
+    "deb"
+    ]
+  },
+  "win": {
+    "target": "Squirrel",
+    "icon": "build/icon.ico"
+  }
+},
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
   },
   "keywords": [],
   "author": "Ryan Stonebraker",
