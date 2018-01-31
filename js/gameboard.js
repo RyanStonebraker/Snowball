@@ -11,16 +11,28 @@ var height = 500;
 // ** End Global
 
 var fs = require('fs');
+const path = require('path');
 
 // Global object literal to store various game state info
 var game = {
   "tileDim": 8,
   "teamPieceCount": 12,
+  "communicationLocation": __dirname,
   "darkTileColor": "black",
   "lightTileColor": "white",
   "kingColor": "gold",
   "redPieces": [],
   "whitePieces": [],
+
+  // Starting mover
+  "redFirst": true,
+
+  // Controller States (can add a state to communicate to competition server)
+  "redFile": false,
+  "redPlayer": true,
+  "whiteFile": false,
+  "whitePlayer": true,
+
   "lastMouseClick": {
     "x": -1,
     "y": -1
@@ -83,6 +95,9 @@ function GameBoard(div) {
 
   this.updateScoreBoard();
 
+  if (game.redFile || game.whiteFile)
+    this.sendHandshake();
+
   // Check board for update conditions
   this.refreshBoard();
 
@@ -102,10 +117,63 @@ GameBoard.prototype.mouseEventHandler = function(evt) {
 
 GameBoard.prototype.keyEventHandler = function(evt) {
   switch (evt.keyCode) {
+    // space or P pauses game
     case " ".charCodeAt():
     case "P".charCodeAt():
       game.pause = (game.pause ? false : true);
       break;
+    // 1 makes player a File state controller
+    // case "1"
+
+
+  }
+}
+
+GameBoard.prototype.sendHandshake = function() {
+  if (fs.existsSync(path.join(game.communicationLocation, "/comm/handshake0.txt"))) {
+    fs.readFile(path.join(game.communicationLocation, "/comm/handshake0.txt"), 'utf-8', (err, data) => {
+      if (err) {
+        alert("Handshake0 Exists, but Read Error:" + err.message);
+        game.pause = true;
+        return;
+      }
+      if (parseInt(data[0]) == 1) {
+        // Player red goes first
+        if (data[1] == 0) {
+          game.redFirst = true;
+          game.redPlayer = true;
+          game.redFile = false;
+        }
+        // Player black goes first
+        else if (data[1] == 1) {
+          game.redFirst = false;
+          game.whitePlayer = true;
+          game.whiteFile = false;
+        }
+      } else if (data[0] == 0) {
+        // Computer red goes first
+        if (data[1] == 0) {
+          game.redFirst = true;
+          game.redFile = true;
+          game.redPlayer = false;
+        }
+        // Computer black goes first
+        else if (data[1] == 1) {
+          game.redFirst = false;
+          game.redPlayer = false;
+          game.redFile = true;
+        }
+      }
+    });
+  } else {
+    fs.writeFile(path.join(game.communicationLocation, "/comm/handshake0.txt"), 'utf-8', (err, data) => {
+      if (err) {
+        alert("Handshake0 Write Error:" + err.message);
+        game.pause = true;
+        return;
+      }
+      // TODO: Encode Booleans to handshake
+    });
   }
 }
 
@@ -113,7 +181,7 @@ GameBoard.prototype.keyEventHandler = function(evt) {
 GameBoard.prototype.refreshBoard = function() {
   var self = this;
   requestAnimationFrame(function() {
-    self.refreshBoard();
+      self.refreshBoard();
   });
 
 
@@ -127,32 +195,31 @@ GameBoard.prototype.refreshBoard = function() {
   //     game.fileBoardState = data;
   //   }
   // });
+  if (!game.pause) {
+    fs.readFile(path.join(game.communicationLocation, "/comm/boardstate.txt"), 'utf-8', (err, data) => {
+      if (err) {
+        alert("BoardState Read Error:" + err.message);
+        game.pause = true;
+        return;
+      }
+      if (data.toString().length >= 32)
+        game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
+      else
+        console.log("Error - BoardState Not Valid: " + data);
+    });
 
-  fs.readFile("comm/boardstate.txt", 'utf-8', (err, data) => {
-    if (err) {
-      alert("BoardState Read Error:" + err.message);
-      game.pause = true;
-      return;
+    if ((scoreboard.red.lastMoveStarted || scoreboard.white.lastMoveStarted) && !scoreboard.startClock) {
+      scoreboard.startTime = performance.now();
+      scoreboard.startClock = true;
     }
-    if (data.toString().length >= 32)
-      game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
-    else
-      console.log("Error - BoardState Not Valid: " + data);
-  });
 
-  if ((scoreboard.red.lastMoveStarted || scoreboard.white.lastMoveStarted) && !scoreboard.startClock) {
-    scoreboard.startTime = performance.now();
-    scoreboard.startClock = true;
-  }
-
-  // Draw checkerboard
-  this.drawBackground();
+    // Draw checkerboard
+    this.drawBackground();
 
   // Draw both team arrays
   this.drawTeam(game.redPieces, game.redTeamColor);
   this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-  if (!game.pause) {
     this.moveController();
 
     this.updateScoreBoard();
@@ -249,12 +316,46 @@ GameBoard.prototype.updateScoreBoard = function() {
 
 // Start team based gameplay
 GameBoard.prototype.moveController = function() {
-  // red's turn if red and white have same number of total moves
-  if (scoreboard.red.moveCount == scoreboard.white.moveCount) {
-    this.playerController("red");
+  var firstMover = (game.redFirst) ? scoreboard.red : scoreboard.white;
+  var secondMover = (game.redFirst) ? scoreboard.white : scoreboard.red;
+
+  // move first player if count is equal, else second player
+  if (firstMover.moveCount == secondMover.moveCount) {
+    if (game.redPlayer == true) {
+
+      if (game.redFile)
+        game.redFile = false;
+
+      this.playerController("red");
+
+    } else if (game.redFile == true) {
+
+      if (game.redPlayer)
+        game.redPlayer = false;
+
+      this.fileInputController("red");
+    } else {
+      console.log("NO RED PIECE CONTROLLER SET!");
+    }
+
   } else {
-    // this.playerController("white");
-    this.fileInputController("white");
+
+    if (game.whitePlayer == true) {
+
+      if (game.whiteFile)
+        game.whiteFile = false;
+
+      this.playerController("white");
+    } else if (game.whiteFile == true) {
+
+      if (game.whitePlayer)
+        game.whitePlayer = false;
+
+      this.fileInputController("white");
+
+    } else {
+      console.log("NO WHITE PIECE CONTROLLER SET!");
+    }
   }
 }
 
@@ -369,36 +470,59 @@ GameBoard.prototype.playerController = function(color) {
       // TODO: Replace + 1 and + 2 with a variable that holds the pos change for
       // both colors, for kings, just loop twice, changing color
 
-      if (color == "red") {
-        var jumpPiece = {"row" : teamArr[game.selectedSquare.index].row + 1,
-                         "col" : teamArr[game.selectedSquare.index].col + 1};
+      // TODO: Allow jump choice when more than one option
 
-        var safety = {"row" : teamArr[game.selectedSquare.index].row + 2,
-                         "col" : teamArr[game.selectedSquare.index].col + 2};
+      if (color == "red") {
+        var jumpPiece = {
+          "row": teamArr[game.selectedSquare.index].row + 1,
+          "col": teamArr[game.selectedSquare.index].col + 1
+        };
+
+        var safety = {
+          "row": teamArr[game.selectedSquare.index].row + 2,
+          "col": teamArr[game.selectedSquare.index].col + 2
+        };
 
         var getAwaySpot = -1;
 
-        var enemyNear = this.spaceOccupied({"row": jumpPiece.row, "col": jumpPiece.col}, teamOpp);
+        var enemyNear = this.spaceOccupied({
+          "row": jumpPiece.row,
+          "col": jumpPiece.col
+        }, teamOpp);
 
-        safety.row = jumpPiece.row + 1;
-        safety.col = jumpPiece.col + 1;
+        // safety.row = jumpPiece.row + 1;
+        // safety.col = jumpPiece.col + 1;
 
         if (enemyNear == -1) {
           jumpPiece.col -= 2;
           safety.col -= 4;
-          enemyNear = this.spaceOccupied({"row": jumpPiece.row, "col": jumpPiece.col}, teamOpp);
-          if (enemyNear != -1) {
-            getAwaySpot = this.spaceOccupied({"row": safety.ro1, "col": safety.col}, teamOpp);
+          enemyNear = this.spaceOccupied({
+            "row": jumpPiece.row,
+            "col": jumpPiece.col
+          }, teamOpp);
+          if (enemyNear >= 0) {
+            getAwaySpot = this.spaceOccupied({
+              "row": safety.row,
+              "col": safety.col
+            }, teamOpp);
             getAwaySpot = (getAwaySpot == -1 ?
-                                    this.spaceOccupied({"row": safety.row, "col": safety.col}, teamArr) :
-                                    getAwaySpot);
+              this.spaceOccupied({
+                "row": safety.row,
+                "col": safety.col
+              }, teamArr) :
+              getAwaySpot);
           }
-        }
-        else {
-          getAwaySpot = this.spaceOccupied({"row": safety.row, "col": safety.col}, teamOpp);
+        } else {
+          getAwaySpot = this.spaceOccupied({
+            "row": safety.row,
+            "col": safety.col
+          }, teamOpp);
           getAwaySpot = (getAwaySpot == -1 ?
-                                  this.spaceOccupied({"row": safety.row, "col": safety.col}, teamArr) :
-                                  getAwaySpot);
+            this.spaceOccupied({
+              "row": safety.row,
+              "col": safety.col
+            }, teamArr) :
+            getAwaySpot);
         }
 
         if (enemyNear != -1 && getAwaySpot == -1) {
@@ -456,6 +580,9 @@ GameBoard.prototype.playerController = function(color) {
 // Simple function that checks whether a row/col is in an array of row/cols (used to check if occupied)
 // returns -1 if no match found
 GameBoard.prototype.spaceOccupied = function(loc, arr) {
+  if (loc.row >= game.tileDim || loc.col >= game.tileDim || loc.row < 0 || loc.col < 0) {
+    return -2;
+  }
   for (var i = 0; i < arr.length; ++i) {
     var spot = arr[i];
     if (spot.row == loc.row && spot.col == loc.col && spot.alive) {
