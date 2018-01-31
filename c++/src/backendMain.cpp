@@ -21,7 +21,7 @@ called from here to keep things organized.
 	|  |28|  |29|  |30|  |31|
 	‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-	//left side: 0 (SPECIAL), 8, 16, 24
+	//left side: 0, 8, 16, 24
 	//right side: 7, 15, 23, 31
 */
 

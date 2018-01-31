@@ -2,7 +2,7 @@
 board.h
 Snowball AI
 CS 405 - Dr. Genetti
-Contains function declarations board class
+Contains function prototypes for board class
 */
 
 
@@ -22,111 +22,51 @@ struct _96Bit{
 
 class Board
 {
-
-friend std::ostream & operator<< (std::ostream & output, const Board & b)
-{
-	output << "High Level String: " << b._boardStateString << " Bit String - a: " << b._boardStateBits._64a << " Bit String - b: " << b._boardStateBits._64b;
-	return output;
-}
+	//stream insertion overload
+	friend std::ostream & operator<< (std::ostream & output, const Board & b);
 
 public:
 
-	Board(const std::string & boardState) : _boardStateString(boardState)
-	{
-		updateBoard();
-	}
+	//ctor
+	Board(const std::string & boardState) : _boardStateString(boardState) { updateBoard(); }
 
+	//dctor
 	~Board() = default;
 
-	void move(int position, int destination)
-	{
-		std::swap(_boardStateString[(_boardStateString.length() - 1) - position], 
-			      _boardStateString[(_boardStateString.length() - 1) - destination]);
-		updateBoard();
-	}
+	//copy ctor
+	Board(const Board & other) = default;
 
-	_96Bit getBoardStateBits() const
-	{
-		return _boardStateBits;
-	}
+	//copy assignment
+	Board & operator=(const Board & other) = default;
 
-	std::vector<int> getBoardArray() const
-	{
-		return _board;
-	}
+	//move ctor
+	Board(Board && other) = default;
 
-	std::string getBoardStateString() const
-	{
-		return _boardStateString;
-	}
+	//move assignment
+	Board & operator=(Board && other) = default;
+	
 
-	void setBoardStateString(const std::string & newState)
-	{
-		_boardStateString = newState;
-	}
+	//retrieval functions
+	_96Bit getBoardStateBits() const; 
+	std::vector<int> getBoardArray() const; 
+	std::string getBoardStateString() const;
 
-	int & operator[](int index)
-	{
-		return _board[index];
-	}
+	//mutator functions
+	void setBoardStateString(const std::string & newState);
 
-	const int & operator[](int index) const
-	{
-		return _board[index];
-	}
+	//[] overloads
+	int & operator[](int index);
+	const int & operator[](int index) const;
 
 private:
 
-	void convertToBits(const int & boardVal, const unsigned long long int & bitFactor, bool swapVar = false)
-	{
-		unsigned long long int boardStateBitsSeg = _boardStateBits._64a;
-		unsigned long long int check = 1;
+	//convertToBits
+	//takes given board and produced a 96bit representation of it
+	void convertToBits(const int & boardVal, const unsigned long long int & bitFactor, bool swapVar = false);
 
-		if(swapVar)
-		boardStateBitsSeg = _boardStateBits._64b;
-
-		switch (boardVal)
-		{
-		case 1: // red
-			boardStateBitsSeg += (bitFactor >> 2);
-			break;
-
-		case 2: // black
-			boardStateBitsSeg += (bitFactor >> 1);
-			break;
-
-		case 3: // red king
-			boardStateBitsSeg += (bitFactor >> 1);
-			boardStateBitsSeg += (bitFactor >> 2);
-			break;
-
-		case 4: // black king
-			boardStateBitsSeg += bitFactor;
-			break;
-		}
-
-		if (swapVar)
-			_boardStateBits._64b = boardStateBitsSeg;
-		else
-			_boardStateBits._64a = boardStateBitsSeg;
-
-	}
-
-	void updateBoard()
-	{
-		unsigned long long int bitFactor = 1;
-
-		for (unsigned int i = 0; i < _boardStateString.length(); i++)
-		{
-			_board.push_back(_boardStateString[i] - '0');
-			
-			if (i <= 18 && _board[i] != 0)
-				convertToBits(_board[i], (bitFactor << (2 + 3 * i)));
-			else
-				convertToBits(_board[i], (bitFactor << (2 + 3 * (i - 19))), true);
-		}
-	}
-
+	//updateBoard
+	//recalculates 96bit board representation based on _boardStateString
+	void updateBoard();
 
 private:
 
@@ -134,8 +74,7 @@ private:
 	//_declspec (align(16)) __m128i _boardStateBits;
 	_96Bit _boardStateBits;
 	std::vector<int> _board;
-	
-	
+
 };
 
 #endif // !FILE_BOARD_H_INCLUDED
