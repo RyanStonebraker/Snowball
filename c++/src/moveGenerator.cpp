@@ -33,7 +33,7 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString,
 	{
 		return nextLocationState == 0;
 	}
-	
+
 	return false;
 }
 
@@ -118,14 +118,9 @@ std::string workhorse(int position, const Board & currentBoard, std::vector<Boar
 		if (nextBoard == currentBoard.getBoardStateString())
 			break;
 
-		if (nextBoard[0] == BLACK)
-			nextBoard[0] = BLACK_KING;
-		else if (nextBoard[1] == BLACK)
-			nextBoard[1] = BLACK_KING;
-		else if (nextBoard[2] == BLACK)
-			nextBoard[2] = BLACK_KING;
-		else if (nextBoard[3] == BLACK)
-			nextBoard[3] = BLACK_KING;
+		for(int kingCheck = 0; kingCheck < 4; kingCheck++)
+			if(nextBoard[kingCheck] == BLACK + '0')
+				nextBoard[kingCheck] = BLACK_KING + '0';
 
 		validMoves.push_back({ nextBoard });
 	}
