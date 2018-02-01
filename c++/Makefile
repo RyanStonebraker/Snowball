@@ -9,6 +9,6 @@ ai_run: $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
 
 ai_test: $(TEST_SOURCES)
-	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES)
+	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES) $(filter-out src/backendMain.cpp, $(SOURCES))
 
 
