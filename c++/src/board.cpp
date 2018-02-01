@@ -31,6 +31,7 @@ std::string Board::getBoardStateString() const
 void Board::setBoardStateString(const std::string & newState)
 {
 	_boardStateString = newState;
+	updateBoard();
 }
 
 int & Board::operator[](int index)
