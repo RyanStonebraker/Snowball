@@ -119,12 +119,12 @@ std::string workhorse(int position, const Board & currentBoard, std::vector<Boar
 			break;
 
 		if (nextBoard[0] == BLACK)
-			nextBoard[0] == BLACK_KING;
-		else if (nextBoard[1] = BLACK)
-			nextBoard[1] == BLACK_KING;
-		else if (nextBoard[2] = BLACK)
-			nextBoard[2] == BLACK_KING;
-		else if (nextBoard[3] = BLACK)
+			nextBoard[0] = BLACK_KING;
+		else if (nextBoard[1] == BLACK)
+			nextBoard[1] = BLACK_KING;
+		else if (nextBoard[2] == BLACK)
+			nextBoard[2] = BLACK_KING;
+		else if (nextBoard[3] == BLACK)
 			nextBoard[3] = BLACK_KING;
 
 		validMoves.push_back({ nextBoard });
