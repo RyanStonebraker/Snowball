@@ -27,7 +27,9 @@ class Board
 
 public:
 
-	//ctor
+	//default ctor
+	Board() : _boardStateString("11111111111100000000222222222222") { updateBoard(); }
+	//1 param ctor
 	Board(const std::string & boardState) : _boardStateString(boardState) { updateBoard(); }
 
 	//dctor
