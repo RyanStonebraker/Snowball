@@ -51,17 +51,17 @@ std::string checkKill(int position, const Board & currentBoard, std::string & vi
 	int backLeftShift = ((position / 4) % 2) == 0 ? position + 3 : position + 4;
 	int backRightShift = ((position / 4) % 2) == 0 ? position + 4 : position + 5;
 
-	bool leftKillCondition = position%8 != 0 && ((indexIsValid(leftShift) ? (currentBoard[leftShift] == RED || currentBoard[leftShift] == RED_KING) : false) ?
+	bool leftKillCondition = position % 8 != 0 && ((indexIsValid(leftShift) ? (currentBoard[leftShift] == RED || currentBoard[leftShift] == RED_KING) : false) ?
 		(canMove(position, position - 9, currentBoard[position], nextBoard, isSide) ? (visited[position - 9] != 'x') : false) : false);
 
-	bool rightKillCondition = position+1 % 8 != 0 && ((indexIsValid(rightShift) ? (currentBoard[rightShift] == RED || currentBoard[rightShift] == RED_KING) : false) ?
+	bool rightKillCondition = (position + 1) % 8 != 0 && ((indexIsValid(rightShift) ? (currentBoard[rightShift] == RED || currentBoard[rightShift] == RED_KING) : false) ?
 		(canMove(position, position - 7, currentBoard[position], nextBoard, isSide) ? (visited[position - 7] != 'x') : false) : false);
 
 
 	bool backLeftKillCondition = position % 8 != 0 && isKing && ((indexIsValid(backLeftShift) ? (currentBoard[backLeftShift] == RED || currentBoard[backLeftShift] == RED_KING) : false) ?
 		(canMove(position, position + 7, currentBoard[position], nextBoard, isSide) ? (visited[position + 7] != 'x') : false) : false);
 
-	bool backRightKillCondition = position + 1 % 8 != 0 && isKing && ((indexIsValid(backRightShift) ? (currentBoard[backRightShift] == RED || currentBoard[backRightShift] == RED_KING) : false) ?
+	bool backRightKillCondition = (position + 1) % 8 != 0 && isKing && ((indexIsValid(backRightShift) ? (currentBoard[backRightShift] == RED || currentBoard[backRightShift] == RED_KING) : false) ?
 		(canMove(position, position + 9, currentBoard[position], nextBoard, isSide) ? (visited[position + 9] != 'x') : false) : false);
 
 	if (!((leftKillCondition && rightKillCondition) || (leftKillCondition && backLeftKillCondition) ||
