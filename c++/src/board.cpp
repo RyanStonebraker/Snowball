@@ -46,7 +46,7 @@ const int & Board::operator[](int index) const
 void Board::convertToBits(const int & boardVal, const unsigned long long int & bitFactor, bool swapVar)
 {
 	unsigned long long int boardStateBitsSeg = _boardStateBits._64a;
-	unsigned long long int check = 1;
+	// unsigned long long int check = 1;
 
 	if (swapVar)
 		boardStateBitsSeg = _boardStateBits._64b;

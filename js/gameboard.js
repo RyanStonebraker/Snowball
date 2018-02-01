@@ -27,10 +27,10 @@ var game = {
   "whitePieces": [],
 
   // Controller States (can add a state to communicate to competition server)
-  "redFile": false,
-  "redPlayer": true,
-  "whiteFile": true,
-  "whitePlayer": false,
+  "redFile": true,
+  "redPlayer": false,
+  "whiteFile": false,
+  "whitePlayer": true,
 
   "lastMouseClick": {
     "x": -1,
@@ -76,9 +76,9 @@ var scoreboard = {
   "totalMoveCount": 0,
   "startTime": 0,
   "totalTime": 0,
-  "startClock": false,
+  "startClock": false
 
-  "maxTurn": 0
+  // "maxTurn": 0
 };
 
 // Main "class"/start function
@@ -138,7 +138,7 @@ GameBoard.prototype.keyEventHandler = function(evt) {
 
     // right arrow
     case 39:
-      if (game.passiveStepMode && scoreboard.totalMoveCount <= scoreboard.maxTurn) {
+      if (game.passiveStepMode) {
         var teamFutureMove = scoreboard.totalMoveCount % 2 == 0 ? scoreboard.white : scoreboard.red;
         ++scoreboard.totalMoveCount;
         ++teamFutureMove.totalMoveCount;
@@ -155,7 +155,7 @@ GameBoard.prototype.keyEventHandler = function(evt) {
     // Up arrow
     case 38:
       if (!game.passiveStepMode) {
-        game.maxTurn = this.findMaxTurn();
+        // game.maxTurn = 100;
         game.passiveStepMode = true;
         --scoreboard.totalMoveCount;
         console.log("Passive Step Mode On");
@@ -225,19 +225,19 @@ GameBoard.prototype.confirmSend = function () {
   }
 }
 
-GameBoard.prototype.findMaxTurn = function ()  {
-  var maxTurn = 0;
-  while (true) {
-    if (fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/turn" + maxTurn.toString() + ".txt"))) {
-      ++maxTurn;
-      continue;
-    } else {
-      --maxTurn;
-      break;
-    }
-  }
-  return maxTurn;
-}
+// GameBoard.prototype.findMaxTurn = function ()  {
+//   var maxTurn = 0;
+//   while (true) {
+//     if (fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/turn" + maxTurn.toString() + ".txt"))) {
+//       ++maxTurn;
+//       continue;
+//     } else {
+//       --maxTurn;
+//       break;
+//     }
+//   }
+//   return maxTurn;
+// }
 
 // Write to a new incremented text file
 GameBoard.prototype.writeMove = function () {
@@ -255,18 +255,20 @@ GameBoard.prototype.writeMove = function () {
 
 GameBoard.prototype.readMove = function (moveCount) {
   var movename = "turn" + moveCount.toString() + ".txt";
-  fs.readFile(path.join(game.communicationLocation, "/comm/currentgame/" + movename), 'utf-8', (err, data) => {
-    if (err) {
-      alert(movename + " Read Error:" + err.message);
-      game.pause = true;
-      return;
-    }
-    if (data.toString().length >= 32) {
-      game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
-    }
-    else
-      console.log("Error - " + movename + " BoardState Not Valid: " + data);
-  });
+  if (fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/" + movename))) {
+    fs.readFile(path.join(game.communicationLocation, "/comm/currentgame/" + movename), 'utf-8', (err, data) => {
+      if (err) {
+        alert(movename + " Read Error:" + err.message);
+        game.pause = true;
+        return;
+      }
+      if (data.toString().length >= 32) {
+        game.fileBoardState = data.toString().replace("\n", "").substring(0, 32);
+      }
+      else
+        console.log("Error - " + movename + " BoardState Not Valid: " + data);
+    });
+  }
 }
 
 GameBoard.prototype.moveWritten = function (moveNum) {
@@ -542,15 +544,15 @@ GameBoard.prototype.fileInputController = function(color) {
       }
     }
     for (currRed; currRed < game.teamPieceCount; ++currRed) {
-      game.redPieces[currRed].row = row;
-      game.redPieces[currRed].col = col;
+      game.redPieces[currRed].row = 69;
+      game.redPieces[currRed].col = 69;
       game.redPieces[currRed].isKing = false;
       game.redPieces[currRed].highlight = false;
       game.redPieces[currRed].alive = false;
     }
     for (currRed; currWhite < game.teamPieceCount; ++currWhite) {
-      game.whitePieces[currWhite].row = row;
-      game.whitePieces[currWhite].col = col;
+      game.whitePieces[currWhite].row = 69;
+      game.whitePieces[currWhite].col = 69;
       game.whitePieces[currWhite].isKing = false;
       game.whitePieces[currWhite].highlight = false;
       game.whitePieces[currWhite].alive = false;
@@ -650,6 +652,12 @@ GameBoard.prototype.playerController = function(color) {
           teamArr[game.selectedSquare.index].highlight = false;
 
           teamOpp[enemyNear].alive = false;
+
+          // ;)
+          teamOpp[enemyNear].row = -69;
+          teamOpp[enemyNear].col = -69;
+          console.log("69d a board");
+
           jumpAvailable = true;
         }
       }

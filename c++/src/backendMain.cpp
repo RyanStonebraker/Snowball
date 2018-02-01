@@ -36,10 +36,10 @@ vector<Board> flipColor(vector<Board> validMoves)
 {
 	//std::move
 	std::transform(validMoves.begin(), validMoves.end(), validMoves.begin(), [](Board & b) {
-		
+
 		string flippedBoard = "";
 		string boardString = b.getBoardStateString();
-		
+
 		std::reverse(boardString.begin(), boardString.end());
 
 		b = { boardString };
@@ -72,18 +72,18 @@ int main()
 {
 	while (true)
 	{
-		Board b(readBoardState());
+		// Board b(readBoardState());
 
 		if (startGame(setupGame())) //computer is black and goes second
 		{
 			while (true)
 			{
-				//updateFileName();
+				updateFileName();
 				Board b(readBoardState());
 
 				//for manual control:
-				if (std::cin.get())
-					std::cout << "Next Turn" << std::endl;
+				// if (std::cin.get())
+				// 	std::cout << "Next Turn" << std::endl;
 
 				vector<Board> validMoves = generateRandomMoves(b);
 
@@ -97,15 +97,15 @@ int main()
 		else //computer is red and goes first
 		{
 			Board b(readBoardState());
-			int indexOfMoveChosen;
+			// int indexOfMoveChosen;
 
 			while (true)
 			{
 				updateFileName();
 				//for manual control:
 
-				if (std::cin.get())
-					std::cout << "Next Turn" << std::endl;
+				// if (std::cin.get())
+				// 	std::cout << "Next Turn" << std::endl;
 
 				vector<Board> validMoves = generateRandomMoves(b);
 
@@ -113,9 +113,12 @@ int main()
 					break;
 
 				vector<Board> flippedValidMoves = flipColor(validMoves);
-				indexOfMoveChosen = outputNewBoardState(flippedValidMoves);
-				b = validMoves[indexOfMoveChosen];
-				//updateFileName();
+				outputNewBoardState(flippedValidMoves);
+				// b = validMoves[indexOfMoveChosen];
+				updateFileName();
+
+				vector <Board> flipInputBoard = {readBoardState()};
+				b = flipColor(flipInputBoard)[0];
 			}
 		}
 
@@ -125,4 +128,3 @@ int main()
 		return 0; //this is for aesthetic appeal
 	}
 }
-

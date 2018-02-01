@@ -29,20 +29,27 @@ using std::mt19937;
 using std::uniform_int_distribution;
 
 
-string shadowState = "../../comm/shadowstate.txt";
-string boardState = "../../comm/boardstate.txt";
-string handshake0 = "../../comm/handshake0.txt";
-string handshake1 = "../../comm/handshake1.txt";
+string shadowState = "../comm/shadowstate.txt";
+string boardState = "../comm/currentgame/turn0.txt";
+string handshake0 = "../comm/handshake0.txt";
+string handshake1 = "../comm/handshake1.txt";
+
+std::ifstream test(string pathName) {
+	ifstream idk(pathName);
+	return idk;
+}
 
 int setupGame()
 {
 	while (true)
 	{
 		ifstream interfaceInput(handshake0);
-		ofstream computerOutput(handshake1, std::ofstream::trunc);
 
-		while (!interfaceInput)
-			ifstream interfaceInput(handshake0);
+		while (!interfaceInput) {
+			interfaceInput = test(handshake0);
+		}
+
+		ofstream computerOutput(handshake1, std::ofstream::trunc);
 
 		string handshake0;
 		getline(interfaceInput, handshake0);
@@ -85,13 +92,16 @@ bool startGame(int startingDetails)
 
 	//(startingDetails == 0) //go first as red
 	//(startingDetails == 1) //go second as black
-	
+
 	if(startingDetails != 0 && startingDetails != 1)
 	{
 		computerOutput << '0';
 
 		if (!computerOutput) //WIP
+		{
+			std::cout << "Failed to read Handshake0" << std::endl;
 			setupGame();
+		}
 	}
 
 	computerOutput << '1';
@@ -99,11 +109,11 @@ bool startGame(int startingDetails)
 	return startingDetails == 1;
 
 }
-
+static int fileIncrementer = 1;
 string updateFileName()
 {
-	const string beginningPath = "..\\..\\comm\\";
-	static int fileIncrementer = 0;
+	const string beginningPath = "../comm/currentgame/";
+	// static int fileIncrementer = 1;
 	boardState = beginningPath + "turn" + std::to_string(fileIncrementer) + ".txt";
 	fileIncrementer++;
 	return boardState;
@@ -111,6 +121,7 @@ string updateFileName()
 
 void print(const Board & b)
 {
+	std::cout << "mUv NuM: " << fileIncrementer << std::endl;
 	std::cout << "_________________________" << std::endl;
 
 	for (int k = 0; k < 8; k++)
@@ -132,29 +143,35 @@ string readBoardState()
 {
 	ifstream inFile(boardState);
 
-	while(!inFile)
+	string inputLine;
+	while(!inFile || inputLine.size() < 32)
 	{
+		inFile = test(boardState);
 
-		ifstream inFile(boardState);
+		if (inFile) {
+			getline(inFile, inputLine);
+		}
+		// ifstream inFile(boardState);
 		/*cout << "Error opening file" << endl;
 		return "BOARDSTATE.TXT FAILED TO OPEN";
 		throw;*/
-		cerr << "BOARDSTATE.TXT FAILED TO OPEN" << endl;
-		throw;
+		// cerr << "BOARDSTATE.TXT FAILED TO OPEN" << endl;
+		// throw;
 	}
 
 	//vector<string> allBoardStates;
 	/*while (true)
 	{*/
-		string inputLine;
-		getline(inFile, inputLine);
+		// string inputLine;
+		// getline(inFile, inputLine);
 
 		if (!inFile)
 		{
+			// getline(inFile, inputLine);
 			/*if (inFile.eof())
 				break;*/
 
-			cerr << "ERROR READING BOARDSTATE.TXT" << endl;
+			cerr << "ERROR READING TURN-SOMETHING.TXT" << endl;
 			throw;
 		}
 
@@ -166,9 +183,9 @@ string readBoardState()
 	//}
 
 		/***DEBUG***/
-		std::cout << "RECIEVED BOARD: " << boardState << std::endl;
+		std::cout << "RECEIVED BOARD: " << boardState << std::endl;
 		std::cout << "INTERPRETATION: \n";
-		print({ boardState }); 
+		print({ boardState });
 
 	return boardState;
 }
@@ -197,6 +214,6 @@ int outputNewBoardState(const vector<Board> & validMoves)
 	print(validMoves[choice]);
 
 	boardStateOutFile << validMoves[choice].getBoardStateString();
-	
+
 	return choice;
 }
