@@ -430,7 +430,7 @@ GameBoard.prototype.updateScoreBoard = function() {
 GameBoard.prototype.moveController = function() {
   // move red if count is equal, else move white
   if (scoreboard.red.moveCount == scoreboard.white.moveCount) {
-    if (game.redPlayer == true) {
+    if (game.redPlayer) {
 
       if (game.redFile)
         game.redFile = false;
@@ -449,13 +449,13 @@ GameBoard.prototype.moveController = function() {
 
   } else {
 
-    if (game.whitePlayer == true) {
+    if (game.whitePlayer) {
 
       if (game.whiteFile)
         game.whiteFile = false;
 
       this.playerController("white");
-    } else if (game.whiteFile == true) {
+    } else if (game.whiteFile) {
 
       if (game.whitePlayer)
         game.whitePlayer = false;
@@ -468,20 +468,25 @@ GameBoard.prototype.moveController = function() {
   }
 }
 
+// Passive controller for input from computer created files
 GameBoard.prototype.fileInputController = function(color) {
   var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
 
+  // If no file for the current move count exists, create one
   if (!this.moveWritten(scoreboard.totalMoveCount))
     this.writeMove();
 
+  // If a file for the next move exists, read it in
   if (this.moveWritten(scoreboard.totalMoveCount + 1)) {
     this.readMove(scoreboard.totalMoveCount + 1);
   }
 
+  // **************************************************************REMOVE*************************
   if (game.passiveStepMode && this.moveWritten(scoreboard.totalMoveCount)) {
     this.readMove(scoreboard.totalMoveCount + 1);
   }
 
+  // TODO: Change location of lastMove started so that AI's time is measured
   teamScoreBoard.lastMoveStarted = performance.now();
 
   var currRed = 0;
@@ -593,16 +598,28 @@ GameBoard.prototype.playerController = function(color) {
 
       // TODO: Allow jump choice from shadow state when more than one option
 
-      if (color == "red") {
-        var jumpPiece = {
-          "row": teamArr[game.selectedSquare.index].row + 1,
-          "col": teamArr[game.selectedSquare.index].col + 1
-        };
 
-        var safety = {
-          "row": teamArr[game.selectedSquare.index].row + 2,
-          "col": teamArr[game.selectedSquare.index].col + 2
-        };
+      var checkColor = "red";
+      var kingRep = teamArr[game.selectedSquare.index].isKing ? 2 : 1;
+
+      var nextSpot = (color == "red") ? 1 : -1;
+      var nextSafetySpot = (color == "red") ? 2 : -2;
+
+      var jumpPiece = {
+        "row": teamArr[game.selectedSquare.index].row + nextSpot,
+        "col": teamArr[game.selectedSquare.index].col + nextSpot
+      };
+
+      var safety = {
+        "row": teamArr[game.selectedSquare.index].row + nextSafetySpot,
+        "col": teamArr[game.selectedSquare.index].col + nextSafetySpot
+      };
+
+      for (var i = 0; i < kingRep; ++i) {
+      // var nextSpot = (checkColor == "red") ? 1 : -1;
+      // var nextSafetySpot = (checkColor == "red") ? 2 : -2;
+      // checkColor = "white";
+      // if (checkColor == "red" || checkColor == "white") {
 
         var getAwaySpot = -1;
 
@@ -615,8 +632,8 @@ GameBoard.prototype.playerController = function(color) {
         // safety.col = jumpPiece.col + 1;
 
         if (enemyNear == -1) {
-          jumpPiece.col -= 2;
-          safety.col -= 4;
+          jumpPiece.col -= (2 * nextSpot);
+          safety.col -= (2 * nextSafetySpot);
           enemyNear = this.spaceOccupied({
             "row": jumpPiece.row,
             "col": jumpPiece.col
@@ -660,6 +677,9 @@ GameBoard.prototype.playerController = function(color) {
 
           jumpAvailable = true;
         }
+
+        nextSpot = (color == "red") ? -1 : 1;
+        nextSafetySpot = (color == "red") ? -2 : 2;
       }
       if (!jumpAvailable) {
         teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
