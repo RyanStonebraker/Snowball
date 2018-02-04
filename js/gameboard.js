@@ -73,10 +73,10 @@ var game = {
 };
 
 // Player vs Player
-game.redPlayer = true;
-game.whitePlayer = true;
-game.redFile = false;
-game.whiteFile = false;
+// game.redPlayer = true;
+// game.whitePlayer = true;
+// game.redFile = false;
+// game.whiteFile = false;
 
 // Global object literal for keeping track of scoring and turns
 var scoreboard = {
@@ -106,8 +106,8 @@ var scoreboard = {
 	"startClock": false
 };
 
-// var DEFAULT_BOARD = "11111111111100000000222222222222";
-var DEFAULT_BOARD = "11111111101101000220000222222022";
+// Default loaded board. If this string is changed before runtime, the game will start in this state.
+var DEFAULT_BOARD = "11111111111100000000222222222222";
 
 // Main "class"/start function
 function GameBoard(div)
@@ -765,6 +765,7 @@ GameBoard.prototype.updateChanged = function (color)
 
 		var currentTeam = (color === "red" ? game.redPieces : game.whitePieces);
 		var enemyTeam = (color === "red" ? game.whitePieces : game.redPieces);
+    var teamScore = (color === "red" ? scoreboard.red : scoreboard.white);
 		console.log(pieceChangePool);
 		for (var poolPiece = 0; poolPiece < pieceChangePool.length; ++poolPiece)
 		{
@@ -785,8 +786,8 @@ GameBoard.prototype.updateChanged = function (color)
 			}
 			else
 			{
-				console.log(pieceChangePool[poolPiece]);
-
+        ++teamScore.enemyCaptured;
+        
 				// Case: delete jumped enemies
 				indexToMove = this.spaceOccupied(pieceChangePool[poolPiece].pieceLocation, enemyTeam);
 				console.log("Index to Delete: " + indexToMove);
@@ -817,35 +818,12 @@ GameBoard.prototype.updateChanged = function (color)
 	}
 }
 
-// Checks whether a jump needs to be forced
-// TODO: Implement with shadowstate to make more efficient
+// Checks whether a jump needs to be forced and if one does, returns all possible jumps, the
+// enemy pieces that would be killed, and highlights jump spaces if user tries to move elsewhere.
 GameBoard.prototype.jumpRecurse = function (color)
 {
-	// Step 1: Go through every color piece on board and check if there is an enemy near it
-	// Step 2: If there is an enemy near, then check if there is a get away spot beyond it
-	// Step 3: If there is a get away spot beyond it, check if there is an enemy near that is not prev checkerboard
-	// Step 4: If there is another enemy near, check if there is a get away spot ... recurse
-	// Step 5: Log move in an array of parent-child moves
-	// Step 6: Highlight spots available in array
-	// Step 7: Return possible jump moves
-
-	// STRUCTURE:
-	// startRow, startCol, endRow, endCol, killSpots
-	// {"startRow": 0, "startCol": 0, "endRow": 5, "endCol": 5, "killSpots":[INDICES_OF_ENEMY_PIECES]}
-
-	// TODO: Implement Jump recursion checking
-
+  // Structure: {"startRow": START, "startCol": START, "endRow": END, "endCol": END, "killSpots": [ENEMIES]}
 	var jumpMoves = []
-	// WORKING TEST CASE with EXAMPLE DEFAULT BOARD
-	// jumpMoves.push(
-	// {
-	// 	"startRow":3,
-  //   "startCol":3,
-	// 	"endRow": 5,
-	// 	"endCol": 1,
-	// 	"killSpots": [0]
-	// });
-	// this.highlightSquare(5, 1, "green", 0.7);
 
 	var colorPieces = (color === "red") ? game.redPieces : game.whitePieces;
   var colorScore = (color === "red") ? scoreboard.red.moveCount : scoreboard.white.moveCount;
@@ -911,7 +889,6 @@ GameBoard.prototype.jumpRecurse = function (color)
               continue;
             }
 
-				// jumpMoves.push({"startRow":3, "startCol":3, "endRow": 5, "endCol": 1, "killSpots":[0]});
         var killSpot = this.spaceOccupied(coordCheck, oppColorPieces);
 				if (killSpot >= 0 && this.spaceOccupied(emptyCoordCheck, oppColorPieces) === -1 &&
             this.spaceOccupied(emptyCoordCheck, colorPieces) === -1)
@@ -975,6 +952,10 @@ GameBoard.prototype.highlightSquare = function (row, col, color = game.highlight
 	ctx.globalAlpha = 1;
 }
 
+GameBoard.prototype.distance = function (coord1, coord2) {
+  return Math.max(Math.abs(coord2.row - coord1.row), Math.abs(coord2.col - coord2.col));
+}
+
 // Update selected teams pieces based on mouse click events
 GameBoard.prototype.playerController = function (color)
 {
@@ -997,16 +978,6 @@ GameBoard.prototype.playerController = function (color)
 		// If player selected an empty tile and they previously selected their color piece, move piece here
 		if (selected === -1 && oppselect === -1 && game.selectedSquare.index != -1)
 		{
-
-			// IMPLEMENT IN JUMP CHECK ************
-			if (Math.abs(teamArr[game.selectedSquare.index].row - game.selectedSquare.row) > 1 ||
-				Math.abs(teamArr[game.selectedSquare.index].col - game.selectedSquare.col) > 1)
-			{
-				++teamScore.enemyCaptured;
-			}
-			// ************************************
-
-			// TODO: Add jump function here
 			var possibleJumps = this.jumpRecurse(color);
 
 			var chosenJumpPath = false;
@@ -1020,6 +991,7 @@ GameBoard.prototype.playerController = function (color)
               possibleJumps[posMove].startRow === game.prevSelectedSquare.row &&
               possibleJumps[posMove].startCol === game.prevSelectedSquare.col)
 					{
+            ++teamScore.enemyCaptured;
 						for (var removeEnemy = 0; removeEnemy < possibleJumps[posMove].killSpots.length; ++removeEnemy)
 						{
 							teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].alive = false;
