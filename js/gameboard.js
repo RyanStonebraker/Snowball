@@ -50,7 +50,10 @@ var game = {
 		"col": -1,
 		"index": -1
 	},
-  "currentHighlightSquares":[],
+  "currentHighlightSquares": [],
+  "futureHighlightSquares": [],
+  "jumpHighlightColor": "lightgreen",
+  "futureJumpHighlightColor": "darkgreen",
 	"highlightColor": "yellow",
 	"highlightOpacity": 0.5,
 	"redTeamColor": "red",
@@ -64,7 +67,9 @@ var game = {
 	"playerBoardState": "",
 	"controllerConnected": false,
 
-	"fastForward": -1
+	"fastForward": -1,
+
+  "holdTeamTurn": false
 };
 
 // Player vs Player
@@ -102,7 +107,7 @@ var scoreboard = {
 };
 
 // var DEFAULT_BOARD = "11111111111100000000222222222222";
-var DEFAULT_BOARD = "11111111101101000220000222222220";
+var DEFAULT_BOARD = "11111111101101000220000222222022";
 
 // Main "class"/start function
 function GameBoard(div)
@@ -365,8 +370,14 @@ GameBoard.prototype.refreshBoard = function ()
 			this.passiveStepModeDrawBoard();
 		}
 
+    // Draw on jump highlight squares
     for (var square = 0; square < game.currentHighlightSquares.length; ++square) {
-        this.highlightSquare(game.currentHighlightSquares[square].row, game.currentHighlightSquares[square].col, "green", 0.7);
+        this.highlightSquare(game.currentHighlightSquares[square].row, game.currentHighlightSquares[square].col, game.jumpHighlightColor, 0.7);
+    }
+
+    // Draw on future jump highlight squares
+    for (var square = 0; square < game.futureHighlightSquares.length; ++square) {
+        this.highlightSquare(game.futureHighlightSquares[square].row, game.futureHighlightSquares[square].col, game.futureJumpHighlightColor, 0.7);
     }
 
 		this.updateScoreBoard();
@@ -826,17 +837,18 @@ GameBoard.prototype.jumpRecurse = function (color)
 
 	var jumpMoves = []
 	// WORKING TEST CASE with EXAMPLE DEFAULT BOARD
-	jumpMoves.push(
-	{
-		"startRow":3,
-    "startCol":3,
-		"endRow": 5,
-		"endCol": 1,
-		"killSpots": [0]
-	});
+	// jumpMoves.push(
+	// {
+	// 	"startRow":3,
+  //   "startCol":3,
+	// 	"endRow": 5,
+	// 	"endCol": 1,
+	// 	"killSpots": [0]
+	// });
 	// this.highlightSquare(5, 1, "green", 0.7);
 
 	var colorPieces = (color === "red") ? game.redPieces : game.whitePieces;
+  var colorScore = (color === "red") ? scoreboard.red.moveCount : scoreboard.white.moveCount;
 	var oppColorPieces = (color === "red") ? game.whitePieces : game.redPieces;
 	var relativeCheckSpots = (color === "red") ? [
 	{
@@ -874,6 +886,10 @@ GameBoard.prototype.jumpRecurse = function (color)
 	}];
 
   game.currentHighlightSquares = [];
+  game.futureHighlightSquares = [];
+
+  var keepHoldingTurn = false;
+
 	for (var i = 0; i < colorPieces.length; ++i)
 	{
 		if (colorPieces[i].alive)
@@ -886,15 +902,68 @@ GameBoard.prototype.jumpRecurse = function (color)
 					"row": localCheck[rel].addRow + colorPieces[i].row,
 					"col": localCheck[rel].addCol + colorPieces[i].col
 				};
+        var emptyCoordCheck = {
+					"row": localCheck[rel].addRow * 2 + colorPieces[i].row,
+					"col": localCheck[rel].addCol * 2 + colorPieces[i].col
+				};
+        if (emptyCoordCheck.row < 0 || emptyCoordCheck.col < 0 ||
+            emptyCoordCheck.row >= game.tileDim || emptyCoordCheck.col >= game.tileDim) {
+              continue;
+            }
+
 				// jumpMoves.push({"startRow":3, "startCol":3, "endRow": 5, "endCol": 1, "killSpots":[0]});
-				if (this.spaceOccupied(coordCheck, oppColorPieces) >= 0)
+        var killSpot = this.spaceOccupied(coordCheck, oppColorPieces);
+				if (killSpot >= 0 && this.spaceOccupied(emptyCoordCheck, oppColorPieces) === -1 &&
+            this.spaceOccupied(emptyCoordCheck, colorPieces) === -1)
 				{
-          game.currentHighlightSquares.push({"row":coordCheck.row, "col": coordCheck.col});
-					// this.highlightSquare(coordCheck.row, coordCheck.col, "green", 0.7);
+          game.currentHighlightSquares.push(emptyCoordCheck);
+          jumpMoves.push(
+          {
+            "startRow":colorPieces[i].row,
+            "startCol":colorPieces[i].col,
+            "endRow": emptyCoordCheck.row,
+            "endCol": emptyCoordCheck.col,
+            "killSpots": [killSpot]
+          });
+
+          var futureLocalCheck = localCheck;
+
+          var kingRow = (color === "red") ? 7 : 0;
+
+          if (emptyCoordCheck.row === kingRow) {
+            futureLocalCheck = kingCheckSpots;
+          }
+          for (var futureRel = 0; futureRel < futureLocalCheck.length; ++futureRel) {
+            var futureCoordCheck = {
+    					"row": futureLocalCheck[futureRel].addRow + emptyCoordCheck.row,
+    					"col": futureLocalCheck[futureRel].addCol + emptyCoordCheck.col
+    				};
+            var futureEmptyCoordCheck = {
+    					"row": futureLocalCheck[futureRel].addRow * 2 + emptyCoordCheck.row,
+    					"col": futureLocalCheck[futureRel].addCol * 2 + emptyCoordCheck.col
+    				};
+            if (futureEmptyCoordCheck.row < 0 || futureEmptyCoordCheck.col < 0 ||
+                futureEmptyCoordCheck.row >= game.tileDim || futureEmptyCoordCheck.col >= game.tileDim) {
+                  continue;
+                }
+    				// jumpMoves.push({"startRow":3, "startCol":3, "endRow": 5, "endCol": 1, "killSpots":[0]});
+            var futureKillSpot = this.spaceOccupied(futureCoordCheck, oppColorPieces);
+    				if (futureKillSpot >= 0 && futureKillSpot != killSpot && this.spaceOccupied(futureEmptyCoordCheck, oppColorPieces) === -1)
+    				{
+
+              game.futureHighlightSquares.push(futureEmptyCoordCheck);
+              game.holdTeamTurn = true;
+              keepHoldingTurn = true;
+            }
+          }
 				}
 			}
 		}
 	}
+
+  if (!keepHoldingTurn)
+    game.holdTeamTurn = false;
+
 	return jumpMoves;
 }
 
@@ -976,17 +1045,19 @@ GameBoard.prototype.playerController = function (color)
 				if ((game.selectedSquare.row === 7 && color === "red") || (game.selectedSquare.row === 0 && color === "white"))
 					teamArr[game.selectedSquare.index].isKing = true;
 
-				// Player made move, update string
-				this.boardToString();
+        // reset states so unnecessary work isn't done and piece stops being highlighted after placed
+        game.lastMouseClick.x = -1;
+        game.selectedSquare.index = -1;
 
-				// reset states so unnecessary work isn't done and piece stops being highlighted after placed
-				game.lastMouseClick.x = -1;
-				game.selectedSquare.index = -1;
+        if (!game.holdTeamTurn) {
+  				// Player made move, update string
+  				this.boardToString();
 
-				// Update scoreboard
-				++teamScore.moveCount;
-				teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
-				teamScore.lastMoveStarted = 0;
+  				// Update scoreboard
+  				++teamScore.moveCount;
+  				teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
+  				teamScore.lastMoveStarted = 0;
+        }
 			}
 
 		}
@@ -995,7 +1066,7 @@ GameBoard.prototype.playerController = function (color)
 		if (selected != -1)
 		{
 			teamArr[selected].highlight = true;
-      
+
       // Shift current to previous
       game.prevSelectedSquare.index = game.selectedSquare.index;
       game.prevSelectedSquare.row = game.selectedSquare.row;
@@ -1028,7 +1099,7 @@ GameBoard.prototype.spaceOccupied = function (loc, arr)
 	for (var i = 0; i < arr.length; ++i)
 	{
 		var spot = arr[i];
-		if (spot.row === loc.row && spot.col === loc.col && spot.alive)
+		if (spot.row === loc.row && spot.col === loc.col && !!spot.alive)
 		{
 			return i;
 		}
