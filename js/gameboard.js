@@ -44,6 +44,13 @@ var game = {
 		"col": -1,
 		"index": -1
 	},
+	"prevSelectedSquare":
+	{
+		"row": -1,
+		"col": -1,
+		"index": -1
+	},
+  "currentHighlightSquares":[],
 	"highlightColor": "yellow",
 	"highlightOpacity": 0.5,
 	"redTeamColor": "red",
@@ -53,11 +60,18 @@ var game = {
 
 	"fileBoardPrevState": "",
 	"fileServer": "localhost:3000",
+	"folderPath": "/comm/currentgame/",
 	"playerBoardState": "",
 	"controllerConnected": false,
 
-  "fastForward": -1
+	"fastForward": -1
 };
+
+// Player vs Player
+game.redPlayer = true;
+game.whitePlayer = true;
+game.redFile = false;
+game.whiteFile = false;
 
 // Global object literal for keeping track of scoring and turns
 var scoreboard = {
@@ -80,14 +94,15 @@ var scoreboard = {
 		"timePerLastMove": 0
 	},
 	"totalMoveCount": 0,
-  "passiveMoveCountBackUp":0,
+	"passiveMoveCountBackUp": 0,
 	"startTime": 0,
 	"totalTime": 0,
-  "passiveTime": 0,
+	"passiveTime": 0,
 	"startClock": false
 };
 
-var DEFAULT_BOARD = "11111111111100000000222222222222";
+// var DEFAULT_BOARD = "11111111111100000000222222222222";
+var DEFAULT_BOARD = "11111111101101000220000222222220";
 
 // Main "class"/start function
 function GameBoard(div)
@@ -116,7 +131,6 @@ function GameBoard(div)
 		game.fileBoardPrevState = DEFAULT_BOARD;
 		this.writeMove();
 	}
-
 
 	// Check board for update conditions
 	this.refreshBoard();
@@ -151,16 +165,16 @@ GameBoard.prototype.keyEventHandler = function (evt)
 	case 39:
 		if (game.passiveStepMode && scoreboard.totalMoveCount < scoreboard.passiveMoveCountBackUp)
 		{
-      ++scoreboard.totalMoveCount;
-      this.readMove(scoreboard.totalMoveCount);
+			++scoreboard.totalMoveCount;
+			this.readMove(scoreboard.totalMoveCount);
 		}
 		break;
 		// left arrow
 	case 37:
 		if (game.passiveStepMode && scoreboard.totalMoveCount > 0)
 		{
-      --scoreboard.totalMoveCount;
-      this.readMove(scoreboard.totalMoveCount);
+			--scoreboard.totalMoveCount;
+			this.readMove(scoreboard.totalMoveCount);
 		}
 		break;
 		// Up arrow
@@ -168,9 +182,9 @@ GameBoard.prototype.keyEventHandler = function (evt)
 		if (!game.passiveStepMode)
 		{
 			game.passiveStepMode = true;
-      scoreboard.passiveMoveCountBackUp = scoreboard.totalMoveCount;
-      game.passiveStepCache = game.fileBoardState;
-      scoreboard.passiveTime = scoreboard.totalTime;
+			scoreboard.passiveMoveCountBackUp = scoreboard.totalMoveCount;
+			game.passiveStepCache = game.fileBoardState;
+			scoreboard.passiveTime = scoreboard.totalTime;
 			alert("Passive Step Mode On");
 		}
 		break;
@@ -179,15 +193,15 @@ GameBoard.prototype.keyEventHandler = function (evt)
 		if (game.passiveStepMode)
 		{
 			game.passiveStepMode = false;
-      scoreboard.totalMoveCount = scoreboard.passiveMoveCountBackUp;
-      game.fileBoardState = game.passiveStepCache;
-      scoreboard.totalTime = scoreboard.passivetime;
-      this.updateScoreBoard();
+			scoreboard.totalMoveCount = scoreboard.passiveMoveCountBackUp;
+			game.fileBoardState = game.passiveStepCache;
+			scoreboard.totalTime = scoreboard.passivetime;
+			this.updateScoreBoard();
 			alert("Passive Step Mode Off");
 		}
 		break;
-  case "R".charCodeAt():
-    this.uninformedBoardPopulate();
+	case "R".charCodeAt():
+		this.uninformedBoardPopulate();
 	}
 }
 
@@ -203,13 +217,13 @@ GameBoard.prototype.sendHandshake = function ()
 				game.pause = true;
 				return;
 			}
-			if (parseInt(data[0]) == 1)
+			if (parseInt(data[0]) === 1)
 			{
 				// Player red goes first
 				game.redPlayer = true;
 				game.redFile = false;
 			}
-			else if (parseInt(data[0]) == 0)
+			else if (parseInt(data[0]) === 0)
 			{
 				// Computer red goes first
 				game.redFile = true;
@@ -247,14 +261,14 @@ GameBoard.prototype.confirmSend = function ()
 				game.pause = true;
 				return;
 			}
-			if (parseInt(data[0]) == 1)
+			if (parseInt(data[0]) === 1)
 			{
 				console.log("Controller Connected!");
 				game.pause = false;
 				// Start game
 				game.controllerConnected = true;
 			}
-			else if (parseInt(data[0]) == 0)
+			else if (parseInt(data[0]) === 0)
 			{
 				// Error with prev handshake read
 				this.sendHandshake();
@@ -268,7 +282,7 @@ GameBoard.prototype.writeMove = function ()
 {
 	var fname = "turn" + (scoreboard.totalMoveCount).toString() + ".txt";
 	var board = game.playerBoardState.length >= 32 ? game.playerBoardState : game.fileBoardState;
-	fs.writeFile(path.join(game.communicationLocation, "/comm/currentgame/" + fname),
+	fs.writeFile(path.join(game.communicationLocation, game.folderPath + fname),
 		board, (err) =>
 		{
 			if (err)
@@ -283,9 +297,9 @@ GameBoard.prototype.writeMove = function ()
 GameBoard.prototype.readMove = function (moveCount)
 {
 	var movename = "turn" + moveCount.toString() + ".txt";
-	if (fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/" + movename)))
+	if (fs.existsSync(path.join(game.communicationLocation, game.folderPath + movename)))
 	{
-		fs.readFile(path.join(game.communicationLocation, "/comm/currentgame/" + movename), 'utf-8', (err, data) =>
+		fs.readFile(path.join(game.communicationLocation, game.folderPath + movename), 'utf-8', (err, data) =>
 		{
 			if (err)
 			{
@@ -306,7 +320,7 @@ GameBoard.prototype.readMove = function (moveCount)
 GameBoard.prototype.moveWritten = function (moveNum)
 {
 	var fname = "turn" + moveNum.toString() + ".txt";
-	return fs.existsSync(path.join(game.communicationLocation, "/comm/currentgame/" + fname));
+	return fs.existsSync(path.join(game.communicationLocation, game.folderPath + fname));
 }
 
 // Update function to constantly redraw board
@@ -338,26 +352,35 @@ GameBoard.prototype.refreshBoard = function ()
 
 
 
-    if (!game.passiveStepMode) {
-  		// Draw both team arrays
-  		this.drawTeam(game.redPieces, game.redTeamColor);
-  		this.drawTeam(game.whitePieces, game.whiteTeamColor);
+		if (!game.passiveStepMode)
+		{
+			// Draw both team arrays
+			this.drawTeam(game.redPieces, game.redTeamColor);
+			this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-  		this.moveController();
-    } else {
-      this.passiveStepModeDrawBoard();
+			this.moveController();
+		}
+		else
+		{
+			this.passiveStepModeDrawBoard();
+		}
+
+    for (var square = 0; square < game.currentHighlightSquares.length; ++square) {
+        this.highlightSquare(game.currentHighlightSquares[square].row, game.currentHighlightSquares[square].col, "green", 0.7);
     }
 
 		this.updateScoreBoard();
 
-    // hacky way to force repopulation of the board if out of sync
-    if (game.fastForward <= 50 && game.fastForward >= 0) {
-      this.uninformedBoardPopulate();
-      ++game.fastForward;
-      if (game.fastForward >= 50) {
-        game.fastForward = -1;
-      }
-    }
+		// hacky way to force repopulation of the board if out of sync
+		if (game.fastForward <= 50 && game.fastForward >= 0)
+		{
+			this.uninformedBoardPopulate();
+			++game.fastForward;
+			if (game.fastForward >= 50)
+			{
+				game.fastForward = -1;
+			}
+		}
 	}
 	else
 	{
@@ -434,13 +457,13 @@ GameBoard.prototype.updateScoreBoard = function ()
 	scoreboard.totalTime = scoreboard.startClock ? Math.round((performance.now() - scoreboard.startTime) / 10) / 100 : 0;
 
 	// replace text for scoreboard section
-	if (scoreboard.red.moveCount + scoreboard.white.moveCount != scoreboard.totalMoveCount || scoreboard.totalTime == 0)
+	if (scoreboard.red.moveCount + scoreboard.white.moveCount != scoreboard.totalMoveCount || scoreboard.totalTime === 0)
 	{
 		// update total move count
 		if (!game.passiveStepMode)
 			scoreboard.totalMoveCount = scoreboard.red.moveCount + scoreboard.white.moveCount;
 		var scoreText = "SCOREBOARD:</br></br>";
-		scoreText += (scoreboard.red.moveCount == scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
+		scoreText += (scoreboard.red.moveCount === scoreboard.white.moveCount) ? "<h2>Red (ACTIVE TURN):</h2><p>" : "Red:<p>";
 		scoreText += "Piece Count: " + scoreboard.red.pieceCount;
 		scoreText += "</br>King Count: " + scoreboard.red.kingCount;
 		scoreText += "</br>Enemies Captured: " + scoreboard.red.enemyCaptured;
@@ -465,31 +488,37 @@ GameBoard.prototype.updateScoreBoard = function ()
 // Start team based gameplay
 GameBoard.prototype.moveController = function ()
 {
-  // If not changing total move count and on the first move.
-  if (!game.passiveStepMode && !scoreboard.totalMoveCount && this.moveWritten(1)) {
-    // Fast forward to current file
-    while (this.moveWritten(scoreboard.totalMoveCount)) {
-      ++scoreboard.totalMoveCount;
-      if (scoreboard.totalMoveCount % 2 == 1) {
-        ++scoreboard.red.moveCount;
-      } else {
-        ++scoreboard.white.moveCount;
-      }
-    }
+	// If not changing total move count and on the first move.
+	if (!game.passiveStepMode && !scoreboard.totalMoveCount && this.moveWritten(1))
+	{
+		// Fast forward to current file
+		while (this.moveWritten(scoreboard.totalMoveCount))
+		{
+			++scoreboard.totalMoveCount;
+			if (scoreboard.totalMoveCount % 2 === 1)
+			{
+				++scoreboard.red.moveCount;
+			}
+			else
+			{
+				++scoreboard.white.moveCount;
+			}
+		}
 
-    this.readMove(parseInt(scoreboard.totalMoveCount));
+		this.readMove(parseInt(scoreboard.totalMoveCount));
 
-    game.fileBoardPrevState = game.fileBoardState;
-    game.playerBoardState = game.fileBoardState;
+		game.fileBoardPrevState = game.fileBoardState;
+		game.playerBoardState = game.fileBoardState;
+		DEFAULT_BOARD = game.fileBoardState;
 
-    alert("Unsynchronized board state! Attempting to Fast Forward...\n If board doesn't synchronize, Press 'R' to force synchronization.");
+		alert("Unsynchronized board state! Attempting to Fast Forward...\n If board doesn't synchronize, Press 'R' to force synchronization.");
 
-    this.fastForward = 0;
-    return;
-  }
+		this.fastForward = 0;
+		return;
+	}
 
 	// move red if count is equal, else move white
-	if (scoreboard.red.moveCount == scoreboard.white.moveCount)
+	if (scoreboard.red.moveCount === scoreboard.white.moveCount)
 	{
 		if (game.redPlayer)
 		{
@@ -500,7 +529,7 @@ GameBoard.prototype.moveController = function ()
 			this.playerController("red");
 
 		}
-		else if (game.redFile == true)
+		else if (game.redFile === true)
 		{
 
 			if (game.redPlayer)
@@ -541,83 +570,86 @@ GameBoard.prototype.moveController = function ()
 	}
 }
 
-GameBoard.prototype.uninformedBoardPopulate = function () {
-  var currRed = 0;
-  var currWhite = 0;
-  for (var spot = 0; spot < game.fileBoardState.length; ++spot)
-  {
-  	var row = Math.floor(2 * spot / game.tileDim);
-  	var col = (2 * spot) % 8 + row % 2;
-  	if (currRed >= 12 && (game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3))
-  	{
-  		console.log("Too many Red pieces in boardstate! Ignoring future moves...");
-  		continue;
-  	}
-  	else if (currWhite >= 12 && (game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4))
-  	{
-  		console.log("Too many White pieces in boardstate! Ignoring future moves...");
-  		continue;
-  	}
-  	switch (game.fileBoardState[spot])
-  	{
-  	case "1":
-  		game.redPieces[currRed].row = row;
-  		game.redPieces[currRed].col = col;
-  		game.redPieces[currRed].isKing = false;
-  		game.redPieces[currRed].highlight = false;
-  		game.redPieces[currRed].alive = true;
-  		++currRed;
-  		break;
-  	case "2":
-  		game.whitePieces[currWhite].row = row;
-  		game.whitePieces[currWhite].col = col;
-  		game.whitePieces[currWhite].isKing = false;
-  		game.whitePieces[currWhite].highlight = false;
-  		game.whitePieces[currWhite].alive = true;
-  		++currWhite;
-  		break;
-  	case "3":
-  		game.redPieces[currRed].row = row;
-  		game.redPieces[currRed].col = col;
-  		game.redPieces[currRed].isKing = true;
-  		game.redPieces[currRed].highlight = false;
-  		game.redPieces[currRed].alive = true;
-  		++currRed;
-  		break;
-  	case "4":
-  		game.whitePieces[currWhite].row = row;
-  		game.whitePieces[currWhite].col = col;
-  		game.whitePieces[currWhite].isKing = true;
-  		game.whitePieces[currWhite].highlight = false;
-  		game.whitePieces[currWhite].alive = true;
-  		++currWhite;
-  		break;
-  	default:
-  		break;
-  	}
-  }
-  for (currRed; currRed < game.teamPieceCount; ++currRed)
-  {
-  	game.redPieces[currRed].row = 69;
-  	game.redPieces[currRed].col = 69;
-  	game.redPieces[currRed].isKing = false;
-  	game.redPieces[currRed].highlight = false;
-  	game.redPieces[currRed].alive = false;
-  }
-  for (currRed; currWhite < game.teamPieceCount; ++currWhite)
-  {
-  	game.whitePieces[currWhite].row = 69;
-  	game.whitePieces[currWhite].col = 69;
-  	game.whitePieces[currWhite].isKing = false;
-  	game.whitePieces[currWhite].highlight = false;
-  	game.whitePieces[currWhite].alive = false;
-  }
+GameBoard.prototype.uninformedBoardPopulate = function (board)
+{
+	if (!board)
+		board = game.fileBoardState;
+	var currRed = 0;
+	var currWhite = 0;
+	for (var spot = 0; spot < board.length; ++spot)
+	{
+		var row = Math.floor(2 * spot / game.tileDim);
+		var col = (2 * spot) % 8 + row % 2;
+		if (currRed >= 12 && (board[spot] === 1 || board[spot] === 3))
+		{
+			console.log("Too many Red pieces in boardstate! Ignoring future moves...");
+			continue;
+		}
+		else if (currWhite >= 12 && (board[spot] === 2 || board[spot] === 4))
+		{
+			console.log("Too many White pieces in boardstate! Ignoring future moves...");
+			continue;
+		}
+		switch (board[spot])
+		{
+		case "1":
+			game.redPieces[currRed].row = row;
+			game.redPieces[currRed].col = col;
+			game.redPieces[currRed].isKing = false;
+			game.redPieces[currRed].highlight = false;
+			game.redPieces[currRed].alive = true;
+			++currRed;
+			break;
+		case "2":
+			game.whitePieces[currWhite].row = row;
+			game.whitePieces[currWhite].col = col;
+			game.whitePieces[currWhite].isKing = false;
+			game.whitePieces[currWhite].highlight = false;
+			game.whitePieces[currWhite].alive = true;
+			++currWhite;
+			break;
+		case "3":
+			game.redPieces[currRed].row = row;
+			game.redPieces[currRed].col = col;
+			game.redPieces[currRed].isKing = true;
+			game.redPieces[currRed].highlight = false;
+			game.redPieces[currRed].alive = true;
+			++currRed;
+			break;
+		case "4":
+			game.whitePieces[currWhite].row = row;
+			game.whitePieces[currWhite].col = col;
+			game.whitePieces[currWhite].isKing = true;
+			game.whitePieces[currWhite].highlight = false;
+			game.whitePieces[currWhite].alive = true;
+			++currWhite;
+			break;
+		default:
+			break;
+		}
+	}
+	for (currRed; currRed < game.teamPieceCount; ++currRed)
+	{
+		game.redPieces[currRed].row = -1;
+		game.redPieces[currRed].col = -1;
+		game.redPieces[currRed].isKing = false;
+		game.redPieces[currRed].highlight = false;
+		game.redPieces[currRed].alive = false;
+	}
+	for (currRed; currWhite < game.teamPieceCount; ++currWhite)
+	{
+		game.whitePieces[currWhite].row = -1;
+		game.whitePieces[currWhite].col = -1;
+		game.whitePieces[currWhite].isKing = false;
+		game.whitePieces[currWhite].highlight = false;
+		game.whitePieces[currWhite].alive = false;
+	}
 }
 
 // Passive controller for input from computer created files
 GameBoard.prototype.fileInputController = function (color)
 {
-	var teamScoreBoard = (color == "red" ? scoreboard.red : scoreboard.white);
+	var teamScoreBoard = (color === "red" ? scoreboard.red : scoreboard.white);
 
 	// If no file for the current move count exists, create one
 	if (!this.moveWritten(scoreboard.totalMoveCount))
@@ -638,8 +670,8 @@ GameBoard.prototype.fileInputController = function (color)
 
 		++teamScoreBoard.moveCount;
 
-    // smartly updates internal board by finding changes in boardstates
-    this.updateChanged(color);
+		// smartly updates internal board by finding changes in boardstates
+		this.updateChanged(color);
 
 		game.playerBoardState = game.fileBoardState;
 		game.fileBoardPrevState = game.fileBoardState;
@@ -649,28 +681,30 @@ GameBoard.prototype.fileInputController = function (color)
 }
 
 // short circuits game logic and just draws whatever is in files
-GameBoard.prototype.passiveStepModeDrawBoard = function () {
-  for (var spot = 0; spot < game.fileBoardState.length; ++spot) {
-    var row = Math.floor(2 * spot / game.tileDim);
-    var col = (2 * spot) % 8 + row % 2;
+GameBoard.prototype.passiveStepModeDrawBoard = function ()
+{
+	for (var spot = 0; spot < game.fileBoardState.length; ++spot)
+	{
+		var row = Math.floor(2 * spot / game.tileDim);
+		var col = (2 * spot) % 8 + row % 2;
 
-    if (game.fileBoardState[spot] != "0") {
-      // returns true for 1 and 3 (red)
-      var pieceColor = (parseInt(game.fileBoardState[spot]) % 2 == 1) ? game.redTeamColor : game.whiteTeamColor;
-      // 3, 4 are kings
-      var pieceKing = (parseInt(game.fileBoardState[spot]) >= 3) ? true : false;
-      // draw piece on board
-      this.drawPiece(col, row, pieceColor, pieceKing, false);
-    }
+		if (game.fileBoardState[spot] != "0")
+		{
+			// returns true for 1 and 3 (red)
+			var pieceColor = (parseInt(game.fileBoardState[spot]) % 2 === 1) ? game.redTeamColor : game.whiteTeamColor;
+			// 3, 4 are kings
+			var pieceKing = (parseInt(game.fileBoardState[spot]) >= 3) ? true : false;
+			// draw piece on board
+			this.drawPiece(col, row, pieceColor, pieceKing, false);
+		}
 
-  }
+	}
 }
-
 
 // A smart moving function that finds differences in boardstates and only moves a single piece
 GameBoard.prototype.updateChanged = function (color)
 {
-  console.log("PlayerBoardState: " + game.playerBoardState + "\nFileBoardState:   " + game.fileBoardState + "\nColor: " + color);
+	console.log("PlayerBoardState: " + game.playerBoardState + "\nFileBoardState:   " + game.fileBoardState + "\nColor: " + color);
 	if (game.fileBoardState != game.playerBoardState)
 	{
 		// Holds all piece changes
@@ -687,15 +721,16 @@ GameBoard.prototype.updateChanged = function (color)
 				var col = (2 * piece) % 8 + row % 2;
 
 				// Check if previous piece was the moving color's piece
-				var sameColor = (color == "red") ?
-					(game.playerBoardState[piece] == '1' || game.playerBoardState[piece] == '3') :
-					(game.playerBoardState[piece] == '2' || game.playerBoardState[piece] == '4');
+				var sameColor = (color === "red") ?
+					(game.playerBoardState[piece] === '1' || game.playerBoardState[piece] === '3') :
+					(game.playerBoardState[piece] === '2' || game.playerBoardState[piece] === '4');
 
-        if (game.playerBoardState[piece] == '0') {
-          var sameColor = (color == "red") ?
-            (game.fileBoardState[piece] == '1' || game.fileBoardState[piece] == '3') :
-            (game.fileBoardState[piece] == '2' || game.fileBoardState[piece] == '4');
-        }
+				if (game.playerBoardState[piece] === '0')
+				{
+					var sameColor = (color === "red") ?
+						(game.fileBoardState[piece] === '1' || game.fileBoardState[piece] === '3') :
+						(game.fileBoardState[piece] === '2' || game.fileBoardState[piece] === '4');
+				}
 
 				// Add current spot of fileBoardState to the pieceChangePool
 				pieceChangePool.push(
@@ -717,19 +752,20 @@ GameBoard.prototype.updateChanged = function (color)
 		// stores the current location of the piece being updated
 		var currentColorPieceLocation = {};
 
-		var currentTeam = (color == "red" ? game.redPieces : game.whitePieces);
-		var enemyTeam = (color == "red" ? game.whitePieces : game.redPieces);
-    console.log(pieceChangePool);
+		var currentTeam = (color === "red" ? game.redPieces : game.whitePieces);
+		var enemyTeam = (color === "red" ? game.whitePieces : game.redPieces);
+		console.log(pieceChangePool);
 		for (var poolPiece = 0; poolPiece < pieceChangePool.length; ++poolPiece)
 		{
-			if (pieceChangePool[poolPiece].sameColor && pieceChangePool[poolPiece].pieceType == '0')
+			if (pieceChangePool[poolPiece].sameColor && pieceChangePool[poolPiece].pieceType === '0')
 			{
-        // An error occured if there was more than one same colored move
-        // Still updates to new location though to attempt and visually show bug
-        if (!!previousColorPieceLocation.pieceLocation) {
-          alert("Invalid Move! Too many " + color.toUpperCase() + " pieces moved!\n Before Move: " +
-          game.playerBoardState + "\n After Move: " + game.fileBoardState);
-        }
+				// An error occured if there was more than one same colored move
+				// Still updates to new location though to attempt and visually show bug
+				if (!!previousColorPieceLocation.pieceLocation)
+				{
+					alert("Invalid Move! Too many " + color.toUpperCase() + " pieces moved!\n Before Move: " +
+						game.playerBoardState + "\n After Move: " + game.fileBoardState);
+				}
 				previousColorPieceLocation = pieceChangePool[poolPiece];
 			}
 			else if (pieceChangePool[poolPiece].sameColor && pieceChangePool[poolPiece].pieceType != '0')
@@ -738,33 +774,33 @@ GameBoard.prototype.updateChanged = function (color)
 			}
 			else
 			{
-        console.log(pieceChangePool[poolPiece]);
-        // BUG: GETTING INDEX TO DELETE -1, FIX BEFORE ADDING JUMP CHECKER
+				console.log(pieceChangePool[poolPiece]);
 
 				// Case: delete jumped enemies
 				indexToMove = this.spaceOccupied(pieceChangePool[poolPiece].pieceLocation, enemyTeam);
-        console.log("Index to Delete: " + indexToMove);
+				console.log("Index to Delete: " + indexToMove);
 				enemyTeam[indexToMove].alive = false;
 				enemyTeam[indexToMove].row = -5;
 				enemyTeam[indexToMove].col = -5;
 			}
 		}
 
-    // Case: Color piece moved to new location
+		// Case: Color piece moved to new location
 		var moveFromHere = this.spaceOccupied(previousColorPieceLocation.pieceLocation, currentTeam);
 		if (moveFromHere >= 0)
 		{
-      if (!currentTeam[moveFromHere].alive)
-        alert("WARNING: MOVING GHOST PIECE!!!\nPREVIOUS BOARD STATE: " + game.playerBoardState +
-        "\nCURRENT BOARD STATE: " + game.fileBoardState);
+			if (!currentTeam[moveFromHere].alive)
+				alert("WARNING: MOVING GHOST PIECE!!!\nPREVIOUS BOARD STATE: " + game.playerBoardState +
+					"\nCURRENT BOARD STATE: " + game.fileBoardState);
 
 			currentTeam[moveFromHere].row = currentColorPieceLocation.pieceLocation.row;
 			currentTeam[moveFromHere].col = currentColorPieceLocation.pieceLocation.col;
 
-      kingForColor = (color == "red") ? 3 : 4;
-      if (currentColorPieceLocation.pieceType == kingForColor) {
-        currentTeam[moveFromHere].isKing = true;
-      }
+			kingForColor = (color === "red") ? 3 : 4;
+			if (currentColorPieceLocation.pieceType === kingForColor)
+			{
+				currentTeam[moveFromHere].isKing = true;
+			}
 		}
 
 	}
@@ -772,32 +808,111 @@ GameBoard.prototype.updateChanged = function (color)
 
 // Checks whether a jump needs to be forced
 // TODO: Implement with shadowstate to make more efficient
-GameBoard.prototype.jumpRecurse = function (color) {
-  // Step 1: Go through every color piece on board and check if there is an enemy near it
-  // Step 2: If there is an enemy near, then check if there is a get away spot beyond it
-  // Step 3: If there is a get away spot beyond it, check if there is an enemy near that is not prev checkerboard
-  // Step 4: If there is another enemy near, check if there is a get away spot ... recurse
-  // Step 5: Log move in an array of parent-child moves
-  // Step 6: Highlight spots available in array
-  // Step 7: Return possible jump moves
+GameBoard.prototype.jumpRecurse = function (color)
+{
+	// Step 1: Go through every color piece on board and check if there is an enemy near it
+	// Step 2: If there is an enemy near, then check if there is a get away spot beyond it
+	// Step 3: If there is a get away spot beyond it, check if there is an enemy near that is not prev checkerboard
+	// Step 4: If there is another enemy near, check if there is a get away spot ... recurse
+	// Step 5: Log move in an array of parent-child moves
+	// Step 6: Highlight spots available in array
+	// Step 7: Return possible jump moves
 
-  // STRUCTURE:
-    // startRow, startCol, endRow, endCol, killSpots
-    // {"startRow": 0, "startCol": 0, "endRow": 5, "endCol": 5, "killSpots":[INDICES_OF_ENEMY_PIECES]}
+	// STRUCTURE:
+	// startRow, startCol, endRow, endCol, killSpots
+	// {"startRow": 0, "startCol": 0, "endRow": 5, "endCol": 5, "killSpots":[INDICES_OF_ENEMY_PIECES]}
 
-  // TODO: Implement Jump recursion checking
+	// TODO: Implement Jump recursion checking
 
-  var jumpMoves = []
-  return jumpMoves;
+	var jumpMoves = []
+	// WORKING TEST CASE with EXAMPLE DEFAULT BOARD
+	jumpMoves.push(
+	{
+		"startRow":3,
+    "startCol":3,
+		"endRow": 5,
+		"endCol": 1,
+		"killSpots": [0]
+	});
+	// this.highlightSquare(5, 1, "green", 0.7);
+
+	var colorPieces = (color === "red") ? game.redPieces : game.whitePieces;
+	var oppColorPieces = (color === "red") ? game.whitePieces : game.redPieces;
+	var relativeCheckSpots = (color === "red") ? [
+	{
+		"addRow": 1,
+		"addCol": 1
+	},
+	{
+		"addRow": 1,
+		"addCol": -1
+	}] : [
+	{
+		"addRow": -1,
+		"addCol": -1
+	},
+	{
+		"addRow": -1,
+		"addCol": 1
+	}];
+	var kingCheckSpots = [
+	{
+		"addRow": 1,
+		"addCol": 1
+	},
+	{
+		"addRow": 1,
+		"addCol": -1
+	},
+	{
+		"addRow": -1,
+		"addCol": -1
+	},
+	{
+		"addRow": -1,
+		"addCol": 1
+	}];
+
+  game.currentHighlightSquares = [];
+	for (var i = 0; i < colorPieces.length; ++i)
+	{
+		if (colorPieces[i].alive)
+		{
+			var localCheck = colorPieces[i].isKing ? kingCheckSpots : relativeCheckSpots;
+
+			for (var rel = 0; rel < localCheck.length; ++rel)
+			{
+				var coordCheck = {
+					"row": localCheck[rel].addRow + colorPieces[i].row,
+					"col": localCheck[rel].addCol + colorPieces[i].col
+				};
+				// jumpMoves.push({"startRow":3, "startCol":3, "endRow": 5, "endCol": 1, "killSpots":[0]});
+				if (this.spaceOccupied(coordCheck, oppColorPieces) >= 0)
+				{
+          game.currentHighlightSquares.push({"row":coordCheck.row, "col": coordCheck.col});
+					// this.highlightSquare(coordCheck.row, coordCheck.col, "green", 0.7);
+				}
+			}
+		}
+	}
+	return jumpMoves;
+}
+
+GameBoard.prototype.highlightSquare = function (row, col, color = game.highlightColor, opacity = game.highlightOpacity)
+{
+	ctx.globalAlpha = opacity;
+	ctx.fillStyle = color;
+	ctx.fillRect(width / game.tileDim * col, width / game.tileDim * row, width / game.tileDim, width / game.tileDim);
+	ctx.globalAlpha = 1;
 }
 
 // Update selected teams pieces based on mouse click events
 GameBoard.prototype.playerController = function (color)
 {
 	// Store both team arrays by reference
-	var teamArr = (color == "red" ? game.redPieces : game.whitePieces);
-	var teamOpp = (color == "red" ? game.whitePieces : game.redPieces);
-	var teamScore = (color == "red" ? scoreboard.red : scoreboard.white);
+	var teamArr = (color === "red" ? game.redPieces : game.whitePieces);
+	var teamOpp = (color === "red" ? game.whitePieces : game.redPieces);
+	var teamScore = (color === "red" ? scoreboard.red : scoreboard.white);
 
 	// Use x position of last mouse click as a way to check if playerController has already been called
 	if (game.lastMouseClick.x != -1)
@@ -811,58 +926,68 @@ GameBoard.prototype.playerController = function (color)
 		var oppselect = this.spaceOccupied(game.selectedSquare, teamOpp);
 
 		// If player selected an empty tile and they previously selected their color piece, move piece here
-		if (selected == -1 && oppselect == -1 && game.selectedSquare.index != -1)
+		if (selected === -1 && oppselect === -1 && game.selectedSquare.index != -1)
 		{
 
-      // IMPLEMENT IN JUMP CHECK ************
+			// IMPLEMENT IN JUMP CHECK ************
 			if (Math.abs(teamArr[game.selectedSquare.index].row - game.selectedSquare.row) > 1 ||
 				Math.abs(teamArr[game.selectedSquare.index].col - game.selectedSquare.col) > 1)
 			{
 				++teamScore.enemyCaptured;
 			}
-      // ************************************
+			// ************************************
 
 			// TODO: Add jump function here
-      var possibleJumps = this.jumpRecurse(color);
+			var possibleJumps = this.jumpRecurse(color);
 
-      var chosenJumpPath = false;
+			var chosenJumpPath = false;
 
-      if (possibleJumps.length > 0) {
-        for (var posMove = 0; posMove < possibleJumps.length; ++posMove) {
-          if (game.selectedSquare.row == possibleJumps[posMove].startRow && game.selectedSquare.col == possibleJumps[posMove].startCol) {
-            for (var removeEnemy = 0; removeEnemy < possibleJumps[posMove].killSpots; ++removeEnemy) {
-              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].alive = false;
-              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].row = -1;
-              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].col = -1;
-            }
-            game.selectedSquare.row = possibleJumps[posMove].endRow;
-            game.selectedSquare.col = possibleJumps[posMove].endCol;
-          }
-        }
-      }
+			if (possibleJumps.length > 0)
+			{
+				for (var posMove = 0; posMove < possibleJumps.length; ++posMove)
+				{
+					if (game.selectedSquare.row === possibleJumps[posMove].endRow &&
+              game.selectedSquare.col === possibleJumps[posMove].endCol &&
+              possibleJumps[posMove].startRow === game.prevSelectedSquare.row &&
+              possibleJumps[posMove].startCol === game.prevSelectedSquare.col)
+					{
+						for (var removeEnemy = 0; removeEnemy < possibleJumps[posMove].killSpots.length; ++removeEnemy)
+						{
+							teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].alive = false;
+							teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].row = -1;
+							teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].col = -1;
+						}
+						game.selectedSquare.row = possibleJumps[posMove].endRow;
+						game.selectedSquare.col = possibleJumps[posMove].endCol;
+						chosenJumpPath = true;
+						break;
+					}
+				}
+			}
 
+			if (!possibleJumps.length || chosenJumpPath)
+			{
+				teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
+				teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
+				teamArr[game.selectedSquare.index].highlight = false;
+        game.currentHighlightSquares = [];
 
-      if (!possibleJumps.length || chosenJumpPath) {
-  			teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
-  			teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
-  			teamArr[game.selectedSquare.index].highlight = false;
+				// King if reached end of board
+				if ((game.selectedSquare.row === 7 && color === "red") || (game.selectedSquare.row === 0 && color === "white"))
+					teamArr[game.selectedSquare.index].isKing = true;
 
-  			// King if reached end of board
-  			if ((game.selectedSquare.row == 7 && color == "red") || (game.selectedSquare.row == 0 && color == "white"))
-  				teamArr[game.selectedSquare.index].isKing = true;
+				// Player made move, update string
+				this.boardToString();
 
-  			// Player made move, update string
-  			this.boardToString();
+				// reset states so unnecessary work isn't done and piece stops being highlighted after placed
+				game.lastMouseClick.x = -1;
+				game.selectedSquare.index = -1;
 
-  			// reset states so unnecessary work isn't done and piece stops being highlighted after placed
-  			game.lastMouseClick.x = -1;
-  			game.selectedSquare.index = -1;
-
-  			// Update scoreboard
-  			++teamScore.moveCount;
-  			teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
-  			teamScore.lastMoveStarted = 0;
-      }
+				// Update scoreboard
+				++teamScore.moveCount;
+				teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
+				teamScore.lastMoveStarted = 0;
+			}
 
 		}
 
@@ -870,9 +995,14 @@ GameBoard.prototype.playerController = function (color)
 		if (selected != -1)
 		{
 			teamArr[selected].highlight = true;
+      
+      // Shift current to previous
+      game.prevSelectedSquare.index = game.selectedSquare.index;
+      game.prevSelectedSquare.row = game.selectedSquare.row;
+      game.prevSelectedSquare.col = game.selectedSquare.col;
 
-      // deselect previously selected square if player changes mind on piece selection
-      if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected)
+			// deselect previously selected square if player changes mind on piece selection
+			if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected)
 			{
 				teamArr[game.selectedSquare.index].highlight = false;
 			}
@@ -883,6 +1013,7 @@ GameBoard.prototype.playerController = function (color)
 
 			game.selectedSquare.index = selected;
 		}
+    game.lastMouseClick.x = -1;
 	}
 }
 
@@ -897,7 +1028,7 @@ GameBoard.prototype.spaceOccupied = function (loc, arr)
 	for (var i = 0; i < arr.length; ++i)
 	{
 		var spot = arr[i];
-		if (spot.row == loc.row && spot.col == loc.col && spot.alive)
+		if (spot.row === loc.row && spot.col === loc.col && spot.alive)
 		{
 			return i;
 		}
@@ -915,7 +1046,7 @@ GameBoard.prototype.drawBackground = function ()
 	{
 		for (var rows = 0; rows < game.tileDim; ++rows)
 		{
-			if ((cols + rows) % 2 == 0)
+			if ((cols + rows) % 2 === 0)
 				ctx.fillRect((width / game.tileDim * rows) % width, height / game.tileDim * cols, width / game.tileDim, height / game.tileDim);
 		}
 	}
@@ -950,10 +1081,7 @@ GameBoard.prototype.drawPiece = function (col, row, color, king, highlight)
 
 	if (highlight)
 	{
-		ctx.globalAlpha = game.highlightOpacity;
-		ctx.fillStyle = game.highlightColor;
-		ctx.fillRect(width / game.tileDim * col, width / game.tileDim * row, width / game.tileDim, width / game.tileDim);
-		ctx.globalAlpha = 1;
+		this.highlightSquare(row, col);
 	}
 }
 
@@ -977,7 +1105,7 @@ GameBoard.prototype.generateTeams = function ()
 			"alive": true
 		});
 
-		if (row % 2 == 0)
+		if (row % 2 === 0)
 			++col;
 		else
 		{
@@ -992,6 +1120,7 @@ GameBoard.prototype.generateTeams = function ()
 			"alive": true
 		});
 	}
+	this.uninformedBoardPopulate(DEFAULT_BOARD);
 }
 
 // Draws every checker piece for specified team
