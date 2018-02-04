@@ -54,7 +54,9 @@ var game = {
 	"fileBoardPrevState": "",
 	"fileServer": "localhost:3000",
 	"playerBoardState": "",
-	"controllerConnected": false
+	"controllerConnected": false,
+
+  "fastForward": -1
 };
 
 // Global object literal for keeping track of scoring and turns
@@ -81,8 +83,11 @@ var scoreboard = {
   "passiveMoveCountBackUp":0,
 	"startTime": 0,
 	"totalTime": 0,
+  "passiveTime": 0,
 	"startClock": false
 };
+
+var DEFAULT_BOARD = "11111111111100000000222222222222";
 
 // Main "class"/start function
 function GameBoard(div)
@@ -102,13 +107,13 @@ function GameBoard(div)
 
 	this.updateScoreBoard();
 
-	if (game.redFile || game.whiteFile)
+	if ((game.redFile || game.whiteFile) && !this.moveWritten(0))
 	{
 		this.sendHandshake();
 
-		game.playerBoardState = "11111111111100000000222222222222";
-		game.fileBoardState = "11111111111100000000222222222222";
-		game.fileBoardPrevState = "11111111111100000000222222222222";
+		game.playerBoardState = DEFAULT_BOARD;
+		game.fileBoardState = DEFAULT_BOARD;
+		game.fileBoardPrevState = DEFAULT_BOARD;
 		this.writeMove();
 	}
 
@@ -165,6 +170,7 @@ GameBoard.prototype.keyEventHandler = function (evt)
 			game.passiveStepMode = true;
       scoreboard.passiveMoveCountBackUp = scoreboard.totalMoveCount;
       game.passiveStepCache = game.fileBoardState;
+      scoreboard.passiveTime = scoreboard.totalTime;
 			alert("Passive Step Mode On");
 		}
 		break;
@@ -175,9 +181,13 @@ GameBoard.prototype.keyEventHandler = function (evt)
 			game.passiveStepMode = false;
       scoreboard.totalMoveCount = scoreboard.passiveMoveCountBackUp;
       game.fileBoardState = game.passiveStepCache;
+      scoreboard.totalTime = scoreboard.passivetime;
+      this.updateScoreBoard();
 			alert("Passive Step Mode Off");
 		}
 		break;
+  case "R".charCodeAt():
+    this.uninformedBoardPopulate();
 	}
 }
 
@@ -326,6 +336,8 @@ GameBoard.prototype.refreshBoard = function ()
 		// Draw checkerboard
 		this.drawBackground();
 
+
+
     if (!game.passiveStepMode) {
   		// Draw both team arrays
   		this.drawTeam(game.redPieces, game.redTeamColor);
@@ -337,6 +349,15 @@ GameBoard.prototype.refreshBoard = function ()
     }
 
 		this.updateScoreBoard();
+
+    // hacky way to force repopulation of the board if out of sync
+    if (game.fastForward <= 50 && game.fastForward >= 0) {
+      this.uninformedBoardPopulate();
+      ++game.fastForward;
+      if (game.fastForward >= 50) {
+        game.fastForward = -1;
+      }
+    }
 	}
 	else
 	{
@@ -444,6 +465,29 @@ GameBoard.prototype.updateScoreBoard = function ()
 // Start team based gameplay
 GameBoard.prototype.moveController = function ()
 {
+  // If not changing total move count and on the first move.
+  if (!game.passiveStepMode && !scoreboard.totalMoveCount && this.moveWritten(1)) {
+    // Fast forward to current file
+    while (this.moveWritten(scoreboard.totalMoveCount)) {
+      ++scoreboard.totalMoveCount;
+      if (scoreboard.totalMoveCount % 2 == 1) {
+        ++scoreboard.red.moveCount;
+      } else {
+        ++scoreboard.white.moveCount;
+      }
+    }
+
+    this.readMove(parseInt(scoreboard.totalMoveCount));
+
+    game.fileBoardPrevState = game.fileBoardState;
+    game.playerBoardState = game.fileBoardState;
+
+    alert("Unsynchronized board state! Attempting to Fast Forward...\n If board doesn't synchronize, Press 'R' to force synchronization.");
+
+    this.fastForward = 0;
+    return;
+  }
+
 	// move red if count is equal, else move white
 	if (scoreboard.red.moveCount == scoreboard.white.moveCount)
 	{
@@ -497,6 +541,79 @@ GameBoard.prototype.moveController = function ()
 	}
 }
 
+GameBoard.prototype.uninformedBoardPopulate = function () {
+  var currRed = 0;
+  var currWhite = 0;
+  for (var spot = 0; spot < game.fileBoardState.length; ++spot)
+  {
+  	var row = Math.floor(2 * spot / game.tileDim);
+  	var col = (2 * spot) % 8 + row % 2;
+  	if (currRed >= 12 && (game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3))
+  	{
+  		console.log("Too many Red pieces in boardstate! Ignoring future moves...");
+  		continue;
+  	}
+  	else if (currWhite >= 12 && (game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4))
+  	{
+  		console.log("Too many White pieces in boardstate! Ignoring future moves...");
+  		continue;
+  	}
+  	switch (game.fileBoardState[spot])
+  	{
+  	case "1":
+  		game.redPieces[currRed].row = row;
+  		game.redPieces[currRed].col = col;
+  		game.redPieces[currRed].isKing = false;
+  		game.redPieces[currRed].highlight = false;
+  		game.redPieces[currRed].alive = true;
+  		++currRed;
+  		break;
+  	case "2":
+  		game.whitePieces[currWhite].row = row;
+  		game.whitePieces[currWhite].col = col;
+  		game.whitePieces[currWhite].isKing = false;
+  		game.whitePieces[currWhite].highlight = false;
+  		game.whitePieces[currWhite].alive = true;
+  		++currWhite;
+  		break;
+  	case "3":
+  		game.redPieces[currRed].row = row;
+  		game.redPieces[currRed].col = col;
+  		game.redPieces[currRed].isKing = true;
+  		game.redPieces[currRed].highlight = false;
+  		game.redPieces[currRed].alive = true;
+  		++currRed;
+  		break;
+  	case "4":
+  		game.whitePieces[currWhite].row = row;
+  		game.whitePieces[currWhite].col = col;
+  		game.whitePieces[currWhite].isKing = true;
+  		game.whitePieces[currWhite].highlight = false;
+  		game.whitePieces[currWhite].alive = true;
+  		++currWhite;
+  		break;
+  	default:
+  		break;
+  	}
+  }
+  for (currRed; currRed < game.teamPieceCount; ++currRed)
+  {
+  	game.redPieces[currRed].row = 69;
+  	game.redPieces[currRed].col = 69;
+  	game.redPieces[currRed].isKing = false;
+  	game.redPieces[currRed].highlight = false;
+  	game.redPieces[currRed].alive = false;
+  }
+  for (currRed; currWhite < game.teamPieceCount; ++currWhite)
+  {
+  	game.whitePieces[currWhite].row = 69;
+  	game.whitePieces[currWhite].col = 69;
+  	game.whitePieces[currWhite].isKing = false;
+  	game.whitePieces[currWhite].highlight = false;
+  	game.whitePieces[currWhite].alive = false;
+  }
+}
+
 // Passive controller for input from computer created files
 GameBoard.prototype.fileInputController = function (color)
 {
@@ -512,17 +629,7 @@ GameBoard.prototype.fileInputController = function (color)
 		this.readMove(scoreboard.totalMoveCount + 1);
 	}
 
-	// **************************************************************REMOVE*************************
-	// if (game.passiveStepMode && this.moveWritten(scoreboard.totalMoveCount))
-	// {
-	// 	this.readMove(scoreboard.totalMoveCount + 1);
-	// }
-
-	// TODO: Change location of lastMove started so that AI's time is measured
 	teamScoreBoard.lastMoveStarted = performance.now();
-
-	var currRed = 0;
-	var currWhite = 0;
 
 	if (game.fileBoardPrevState.toString().substring(0, 32) != game.fileBoardState.toString().substring(0, 32) &&
 		game.fileBoardState.toString().length >= 32 && game.fileBoardState.toString().substring(0, 32) !=
@@ -531,82 +638,11 @@ GameBoard.prototype.fileInputController = function (color)
 
 		++teamScoreBoard.moveCount;
 
-
-		// TODO: **** START MOVE READ REWRITE -- ABSTRACT TO FUNCTION
+    // smartly updates internal board by finding changes in boardstates
     this.updateChanged(color);
-		// FIND DIFF BEFORE ERASING PREV BOARD STATE
+
 		game.playerBoardState = game.fileBoardState;
 		game.fileBoardPrevState = game.fileBoardState;
-
-		// for (var spot = 0; spot < 32; ++spot)
-		// {
-		// 	var row = Math.floor(2 * spot / game.tileDim);
-		// 	var col = (2 * spot) % 8 + row % 2;
-		// 	if (currRed >= 12 && (game.fileBoardState[spot] == 1 || game.fileBoardState[spot] == 3))
-		// 	{
-		// 		console.log("Too many Red pieces in boardstate! Ignoring future moves...");
-		// 		continue;
-		// 	}
-		// 	else if (currWhite >= 12 && (game.fileBoardState[spot] == 2 || game.fileBoardState[spot] == 4))
-		// 	{
-		// 		console.log("Too many White pieces in boardstate! Ignoring future moves...");
-		// 		continue;
-		// 	}
-		// 	switch (game.fileBoardState[spot])
-		// 	{
-		// 	case "1":
-		// 		game.redPieces[currRed].row = row;
-		// 		game.redPieces[currRed].col = col;
-		// 		game.redPieces[currRed].isKing = false;
-		// 		game.redPieces[currRed].highlight = false;
-		// 		game.redPieces[currRed].alive = true;
-		// 		++currRed;
-		// 		break;
-		// 	case "2":
-		// 		game.whitePieces[currWhite].row = row;
-		// 		game.whitePieces[currWhite].col = col;
-		// 		game.whitePieces[currWhite].isKing = false;
-		// 		game.whitePieces[currWhite].highlight = false;
-		// 		game.whitePieces[currWhite].alive = true;
-		// 		++currWhite;
-		// 		break;
-		// 	case "3":
-		// 		game.redPieces[currRed].row = row;
-		// 		game.redPieces[currRed].col = col;
-		// 		game.redPieces[currRed].isKing = true;
-		// 		game.redPieces[currRed].highlight = false;
-		// 		game.redPieces[currRed].alive = true;
-		// 		++currRed;
-		// 		break;
-		// 	case "4":
-		// 		game.whitePieces[currWhite].row = row;
-		// 		game.whitePieces[currWhite].col = col;
-		// 		game.whitePieces[currWhite].isKing = true;
-		// 		game.whitePieces[currWhite].highlight = false;
-		// 		game.whitePieces[currWhite].alive = true;
-		// 		++currWhite;
-		// 		break;
-		// 	default:
-		// 		break;
-		// 	}
-		// }
-		// for (currRed; currRed < game.teamPieceCount; ++currRed)
-		// {
-		// 	game.redPieces[currRed].row = 69;
-		// 	game.redPieces[currRed].col = 69;
-		// 	game.redPieces[currRed].isKing = false;
-		// 	game.redPieces[currRed].highlight = false;
-		// 	game.redPieces[currRed].alive = false;
-		// }
-		// for (currRed; currWhite < game.teamPieceCount; ++currWhite)
-		// {
-		// 	game.whitePieces[currWhite].row = 69;
-		// 	game.whitePieces[currWhite].col = 69;
-		// 	game.whitePieces[currWhite].isKing = false;
-		// 	game.whitePieces[currWhite].highlight = false;
-		// 	game.whitePieces[currWhite].alive = false;
-		// }
-		// *** END REWRITE ZONE
 	}
 	if (!game.passiveStepMode)
 		teamScoreBoard.timePerLastMove = performance.now() - teamScoreBoard.lastMoveStarted;
@@ -631,7 +667,7 @@ GameBoard.prototype.passiveStepModeDrawBoard = function () {
 }
 
 
-// TODO: Thoroughly test for correctness and implement NOW
+// A smart moving function that finds differences in boardstates and only moves a single piece
 GameBoard.prototype.updateChanged = function (color)
 {
   console.log("PlayerBoardState: " + game.playerBoardState + "\nFileBoardState:   " + game.fileBoardState + "\nColor: " + color);
