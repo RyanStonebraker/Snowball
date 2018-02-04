@@ -22,7 +22,7 @@ private:
     static const int tableSize = 32;
 
     struct move{
-        std::string position;
+        string position;
         int moveOne;
         int moveTwo;
         move* next;
@@ -32,13 +32,17 @@ private:
 
 public:
     MoveTable(); 
-    int hash(std::string key);
+    static int hash(std::string key);
     void addMove(std::string position, int moveOne, int moveTwo);
     int numberOfItemsInIndex(int index);
     void printTable();
     void printItemsInIndex(int index);
-    void findMove(string position);
-    void removeItem(string position); 
+    std::pair<int, int> findMove(string position);
+    void removeItem(string position);
+
+    void updateTables();
+    void generateShadowState(string currentBoardState, MoveTable redTable, MoveTable blackTable);
+    string findShadowState(string position);
 
 
 };

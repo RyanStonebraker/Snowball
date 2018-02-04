@@ -6,9 +6,11 @@
 //  Copyright © 2018 Thatcher Lane. All rights reserved.
 //
 
-#include "../include/moveTable.h"
+#include "moveTable.h"
+#include "board.h"
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <string>
 using std::string; 
 
@@ -106,11 +108,12 @@ void MoveTable::printItemsInIndex(int index){
     }
 }
 
-void MoveTable::findMove(string position){
+std::pair<int, int> MoveTable::findMove(string position){
+    std::pair<int, int> movePair;
     int index = hash(position);
     bool foundName = false;
-    int moveOne = -1;
-    int moveTwo = -1;
+    int moveOne;
+    int moveTwo;
 
     move* Ptr = hashTable[index];
     while (Ptr != NULL) {
@@ -121,14 +124,17 @@ void MoveTable::findMove(string position){
         }
         Ptr = Ptr->next;
     }
+
     if (foundName == true) {
-        std::cout << "Possible moves for Position " << position << std::endl;
-        std::cout << "Move One: " << moveOne << std::endl;
-        std::cout << "Move Two: " << moveTwo << std::endl;
+        movePair.first = moveOne;
+        movePair.second = moveTwo;
     }
+
     else{
         std::cout << "Position " << position << " was not found in the move table\n";
     }
+
+    return movePair;
 }
 
 void MoveTable::removeItem(string position){
@@ -193,6 +199,136 @@ void MoveTable::removeItem(string position){
     }
 }
 
+
+
+
+
+
+void MoveTable::generateShadowState(string currentBoardState, MoveTable blackTable, MoveTable redTable){
+    std::ofstream shadowState;
+    shadowState.open("shadowstate.txt", std::fstream::app);
+
+    for (int i=0; i<currentBoardState.length(); i++) {
+        char piece = currentBoardState[i];
+        std::pair<int, int> movesPair;
+
+        switch (piece) {
+            //blank space
+            case '0':
+                shadowState << piece << " " << -1 << std::endl;
+                break;
+
+            //black piece
+            case '1':
+                movesPair = blackTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << piece << " " << -1 << std::endl;
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << piece << " " << movesPair.second << std::endl;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << piece << " " << movesPair.first << std::endl;
+                }
+                else {
+                    shadowState << piece << " " << movesPair.first << movesPair.second << std::endl;
+                }
+                break;
+
+            //red piece
+            case '2':
+                movesPair = redTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << piece << " " << -1 << std::endl;
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << piece << " " << movesPair.second << std::endl;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << piece << " " << movesPair.first << std::endl;
+                }
+                else {
+                    shadowState << piece << " " << movesPair.first << movesPair.second << std::endl;
+                }
+                break;
+
+            // Black King
+            case '3':
+                movesPair = blackTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << piece << " ";
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << piece << " " << movesPair.second;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << piece << " " << movesPair.first;
+                }
+                else {
+                    shadowState << piece << " " << movesPair.first << movesPair.second;
+                }
+
+                movesPair = redTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << std::endl;
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << movesPair.second << std::endl;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << movesPair.first << std::endl;
+                }
+                else {
+                    shadowState << movesPair.first << movesPair.second << std::endl;
+                }
+                break;
+
+            //Red King
+            case '4':
+                movesPair = blackTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << piece << " ";
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << piece << " " << movesPair.second;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << piece << " " << movesPair.first;
+                }
+                else {
+                    shadowState << piece << " " << movesPair.first << movesPair.second;
+                }
+                
+                movesPair = redTable.findMove(std::to_string(i+1));
+                if (movesPair.first == -1 && movesPair.second == -1 ) {
+                    shadowState << std::endl;
+                }
+                else if (movesPair.first == -1) {
+                    shadowState << movesPair.second << std::endl;
+                }
+                else if(movesPair.second == -1) {
+                    shadowState << movesPair.first << std::endl;
+                }
+                else {
+                    shadowState << movesPair.first << movesPair.second << std::endl;
+                }
+                break;
+                
+                
+            default:
+                break;
+        }
+    }
+}
+
+string MoveTable::findShadowState(string position){
+    return position;
+}
+
+void MoveTable::updateTables(){
+
+
+}
 
 
 
