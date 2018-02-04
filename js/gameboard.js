@@ -16,7 +16,7 @@ const path = require('path');
 // Global object literal to store various game state info
 var game = {
 	"passiveStepMode": false,
-	"passiveStepCacheCreated": false,
+	"passiveStepCache": "",
 	"tileDim": 8,
 	"teamPieceCount": 12,
 	"communicationLocation": __dirname,
@@ -78,6 +78,7 @@ var scoreboard = {
 		"timePerLastMove": 0
 	},
 	"totalMoveCount": 0,
+  "passiveMoveCountBackUp":0,
 	"startTime": 0,
 	"totalTime": 0,
 	"startClock": false
@@ -143,30 +144,28 @@ GameBoard.prototype.keyEventHandler = function (evt)
 
 		// right arrow
 	case 39:
-		if (game.passiveStepMode)
+		if (game.passiveStepMode && scoreboard.totalMoveCount < scoreboard.passiveMoveCountBackUp)
 		{
-			var teamFutureMove = scoreboard.totalMoveCount % 2 == 0 ? scoreboard.white : scoreboard.red;
-			++scoreboard.totalMoveCount;
-			++teamFutureMove.totalMoveCount;
+      ++scoreboard.totalMoveCount;
+      this.readMove(scoreboard.totalMoveCount);
 		}
 		break;
 		// left arrow
 	case 37:
-		if (game.passiveStepMode && scoreboard.totalMoveCount >= 0)
+		if (game.passiveStepMode && scoreboard.totalMoveCount > 0)
 		{
-			var teamPrevMove = scoreboard.totalMoveCount % 2 == 1 ? scoreboard.red : scoreboard.white;
-			--scoreboard.totalMoveCount;
-			--teamPrevMove.moveCount;
+      --scoreboard.totalMoveCount;
+      this.readMove(scoreboard.totalMoveCount);
 		}
 		break;
 		// Up arrow
 	case 38:
 		if (!game.passiveStepMode)
 		{
-			// game.maxTurn = 100;
 			game.passiveStepMode = true;
-			--scoreboard.totalMoveCount;
-			console.log("Passive Step Mode On");
+      scoreboard.passiveMoveCountBackUp = scoreboard.totalMoveCount;
+      game.passiveStepCache = game.fileBoardState;
+			alert("Passive Step Mode On");
 		}
 		break;
 		// Down Arrow
@@ -174,7 +173,9 @@ GameBoard.prototype.keyEventHandler = function (evt)
 		if (game.passiveStepMode)
 		{
 			game.passiveStepMode = false;
-			console.log("Passive Step Mode Off");
+      scoreboard.totalMoveCount = scoreboard.passiveMoveCountBackUp;
+      game.fileBoardState = game.passiveStepCache;
+			alert("Passive Step Mode Off");
 		}
 		break;
 	}
@@ -325,11 +326,15 @@ GameBoard.prototype.refreshBoard = function ()
 		// Draw checkerboard
 		this.drawBackground();
 
-		// Draw both team arrays
-		this.drawTeam(game.redPieces, game.redTeamColor);
-		this.drawTeam(game.whitePieces, game.whiteTeamColor);
+    if (!game.passiveStepMode) {
+  		// Draw both team arrays
+  		this.drawTeam(game.redPieces, game.redTeamColor);
+  		this.drawTeam(game.whitePieces, game.whiteTeamColor);
 
-		this.moveController();
+  		this.moveController();
+    } else {
+      this.passiveStepModeDrawBoard();
+    }
 
 		this.updateScoreBoard();
 	}
@@ -508,10 +513,10 @@ GameBoard.prototype.fileInputController = function (color)
 	}
 
 	// **************************************************************REMOVE*************************
-	if (game.passiveStepMode && this.moveWritten(scoreboard.totalMoveCount))
-	{
-		this.readMove(scoreboard.totalMoveCount + 1);
-	}
+	// if (game.passiveStepMode && this.moveWritten(scoreboard.totalMoveCount))
+	// {
+	// 	this.readMove(scoreboard.totalMoveCount + 1);
+	// }
 
 	// TODO: Change location of lastMove started so that AI's time is measured
 	teamScoreBoard.lastMoveStarted = performance.now();
@@ -607,17 +612,31 @@ GameBoard.prototype.fileInputController = function (color)
 		teamScoreBoard.timePerLastMove = performance.now() - teamScoreBoard.lastMoveStarted;
 }
 
+// short circuits game logic and just draws whatever is in files
+GameBoard.prototype.passiveStepModeDrawBoard = function () {
+  for (var spot = 0; spot < game.fileBoardState.length; ++spot) {
+    var row = Math.floor(2 * spot / game.tileDim);
+    var col = (2 * spot) % 8 + row % 2;
+
+    if (game.fileBoardState[spot] != "0") {
+      // returns true for 1 and 3 (red)
+      var pieceColor = (parseInt(game.fileBoardState[spot]) % 2 == 1) ? game.redTeamColor : game.whiteTeamColor;
+      // 3, 4 are kings
+      var pieceKing = (parseInt(game.fileBoardState[spot]) >= 3) ? true : false;
+      // draw piece on board
+      this.drawPiece(col, row, pieceColor, pieceKing, false);
+    }
+
+  }
+}
+
 
 // TODO: Thoroughly test for correctness and implement NOW
 GameBoard.prototype.updateChanged = function (color)
 {
-	// game.fileBoardState
-	// game.playerBoardState
-
   console.log("PlayerBoardState: " + game.playerBoardState + "\nFileBoardState:   " + game.fileBoardState + "\nColor: " + color);
 	if (game.fileBoardState != game.playerBoardState)
 	{
-
 		// Holds all piece changes
 		// Structure: {"pieceLocation":{"row":[0-7], "col":[0-7]}, "pieceType": [0|1|2|3|4], "sameColor":[true-false]}
 		var pieceChangePool = []
@@ -670,18 +689,22 @@ GameBoard.prototype.updateChanged = function (color)
 			if (pieceChangePool[poolPiece].sameColor && pieceChangePool[poolPiece].pieceType == '0')
 			{
         // An error occured if there was more than one same colored move
-        if (previousColorPieceLocation.length >= 1) {
+        // Still updates to new location though to attempt and visually show bug
+        if (!!previousColorPieceLocation.pieceLocation) {
           alert("Invalid Move! Too many " + color.toUpperCase() + " pieces moved!\n Before Move: " +
           game.playerBoardState + "\n After Move: " + game.fileBoardState);
         }
-				previousColorPieceLocation = pieceChangePool[poolPiece].pieceLocation;
+				previousColorPieceLocation = pieceChangePool[poolPiece];
 			}
 			else if (pieceChangePool[poolPiece].sameColor && pieceChangePool[poolPiece].pieceType != '0')
 			{
-				currentColorPieceLocation = pieceChangePool[poolPiece].pieceLocation;
+				currentColorPieceLocation = pieceChangePool[poolPiece];
 			}
 			else
 			{
+        console.log(pieceChangePool[poolPiece]);
+        // BUG: GETTING INDEX TO DELETE -1, FIX BEFORE ADDING JUMP CHECKER
+
 				// Case: delete jumped enemies
 				indexToMove = this.spaceOccupied(pieceChangePool[poolPiece].pieceLocation, enemyTeam);
         console.log("Index to Delete: " + indexToMove);
@@ -692,18 +715,44 @@ GameBoard.prototype.updateChanged = function (color)
 		}
 
     // Case: Color piece moved to new location
-		var moveFromHere = this.spaceOccupied(previousColorPieceLocation, currentTeam);
+		var moveFromHere = this.spaceOccupied(previousColorPieceLocation.pieceLocation, currentTeam);
 		if (moveFromHere >= 0)
 		{
       if (!currentTeam[moveFromHere].alive)
         alert("WARNING: MOVING GHOST PIECE!!!\nPREVIOUS BOARD STATE: " + game.playerBoardState +
         "\nCURRENT BOARD STATE: " + game.fileBoardState);
 
-			currentTeam[moveFromHere].row = currentColorPieceLocation.row;
-			currentTeam[moveFromHere].col = currentColorPieceLocation.col;
+			currentTeam[moveFromHere].row = currentColorPieceLocation.pieceLocation.row;
+			currentTeam[moveFromHere].col = currentColorPieceLocation.pieceLocation.col;
+
+      kingForColor = (color == "red") ? 3 : 4;
+      if (currentColorPieceLocation.pieceType == kingForColor) {
+        currentTeam[moveFromHere].isKing = true;
+      }
 		}
 
 	}
+}
+
+// Checks whether a jump needs to be forced
+// TODO: Implement with shadowstate to make more efficient
+GameBoard.prototype.jumpRecurse = function (color) {
+  // Step 1: Go through every color piece on board and check if there is an enemy near it
+  // Step 2: If there is an enemy near, then check if there is a get away spot beyond it
+  // Step 3: If there is a get away spot beyond it, check if there is an enemy near that is not prev checkerboard
+  // Step 4: If there is another enemy near, check if there is a get away spot ... recurse
+  // Step 5: Log move in an array of parent-child moves
+  // Step 6: Highlight spots available in array
+  // Step 7: Return possible jump moves
+
+  // STRUCTURE:
+    // startRow, startCol, endRow, endCol, killSpots
+    // {"startRow": 0, "startCol": 0, "endRow": 5, "endCol": 5, "killSpots":[INDICES_OF_ENEMY_PIECES]}
+
+  // TODO: Implement Jump recursion checking
+
+  var jumpMoves = []
+  return jumpMoves;
 }
 
 // Update selected teams pieces based on mouse click events
@@ -728,33 +777,56 @@ GameBoard.prototype.playerController = function (color)
 		// If player selected an empty tile and they previously selected their color piece, move piece here
 		if (selected == -1 && oppselect == -1 && game.selectedSquare.index != -1)
 		{
+
+      // IMPLEMENT IN JUMP CHECK ************
 			if (Math.abs(teamArr[game.selectedSquare.index].row - game.selectedSquare.row) > 1 ||
 				Math.abs(teamArr[game.selectedSquare.index].col - game.selectedSquare.col) > 1)
 			{
 				++teamScore.enemyCaptured;
 			}
+      // ************************************
 
 			// TODO: Add jump function here
+      var possibleJumps = this.jumpRecurse(color);
 
-			teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
-			teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
-			teamArr[game.selectedSquare.index].highlight = false;
+      var chosenJumpPath = false;
 
-			// King if reached end of board
-			if ((game.selectedSquare.row == 7 && color == "red") || (game.selectedSquare.row == 0 && color == "white"))
-				teamArr[game.selectedSquare.index].isKing = true;
+      if (possibleJumps.length > 0) {
+        for (var posMove = 0; posMove < possibleJumps.length; ++posMove) {
+          if (game.selectedSquare.row == possibleJumps[posMove].startRow && game.selectedSquare.col == possibleJumps[posMove].startCol) {
+            for (var removeEnemy = 0; removeEnemy < possibleJumps[posMove].killSpots; ++removeEnemy) {
+              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].alive = false;
+              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].row = -1;
+              teamOpp[possibleJumps[posMove].killSpots[removeEnemy]].col = -1;
+            }
+            game.selectedSquare.row = possibleJumps[posMove].endRow;
+            game.selectedSquare.col = possibleJumps[posMove].endCol;
+          }
+        }
+      }
 
-			// Player made move, update string
-			this.boardToString();
 
-			// reset states so unnecessary work isn't done and piece stops being highlighted after placed
-			game.lastMouseClick.x = -1;
-			game.selectedSquare.index = -1;
+      if (!possibleJumps.length || chosenJumpPath) {
+  			teamArr[game.selectedSquare.index].row = game.selectedSquare.row;
+  			teamArr[game.selectedSquare.index].col = game.selectedSquare.col;
+  			teamArr[game.selectedSquare.index].highlight = false;
 
-			// Update scoreboard
-			++teamScore.moveCount;
-			teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
-			teamScore.lastMoveStarted = 0;
+  			// King if reached end of board
+  			if ((game.selectedSquare.row == 7 && color == "red") || (game.selectedSquare.row == 0 && color == "white"))
+  				teamArr[game.selectedSquare.index].isKing = true;
+
+  			// Player made move, update string
+  			this.boardToString();
+
+  			// reset states so unnecessary work isn't done and piece stops being highlighted after placed
+  			game.lastMouseClick.x = -1;
+  			game.selectedSquare.index = -1;
+
+  			// Update scoreboard
+  			++teamScore.moveCount;
+  			teamScore.timePerLastMove = performance.now() / 1000 - teamScore.lastMoveStarted;
+  			teamScore.lastMoveStarted = 0;
+      }
 
 		}
 
@@ -762,11 +834,13 @@ GameBoard.prototype.playerController = function (color)
 		if (selected != -1)
 		{
 			teamArr[selected].highlight = true;
-			// deselect previously selected square if there was one
-			if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected)
+
+      // deselect previously selected square if player changes mind on piece selection
+      if (game.selectedSquare.index != -1 && game.selectedSquare.index != selected)
 			{
 				teamArr[game.selectedSquare.index].highlight = false;
 			}
+
 			// Log start of move if not in middle of move
 			if (!teamScore.lastMoveStarted)
 				teamScore.lastMoveStarted = performance.now() / 1000;
