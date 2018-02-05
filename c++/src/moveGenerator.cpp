@@ -29,7 +29,7 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString,
 	else if (isSide && std::abs(position - nextPosition) != 4)
 		return false;
 
-	if (piece == BLACK || piece == BLACK_KING) //TO DO: side checks in here
+	if (piece == BLACK || piece == BLACK_KING) 
 	{
 		return nextLocationState == 0;
 	}
