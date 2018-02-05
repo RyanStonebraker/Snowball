@@ -108,6 +108,7 @@ var scoreboard = {
 
 // Default loaded board. If this string is changed before runtime, the game will start in this state.
 var DEFAULT_BOARD = "11111111111100000000222222222222";
+// var DEFAULT_BOARD = "11111111101101000220000222222022";
 
 // Main "class"/start function
 function GameBoard(div)
@@ -787,7 +788,7 @@ GameBoard.prototype.updateChanged = function (color)
 			else
 			{
         ++teamScore.enemyCaptured;
-        
+
 				// Case: delete jumped enemies
 				indexToMove = this.spaceOccupied(pieceChangePool[poolPiece].pieceLocation, enemyTeam);
 				console.log("Index to Delete: " + indexToMove);
@@ -809,7 +810,7 @@ GameBoard.prototype.updateChanged = function (color)
 			currentTeam[moveFromHere].col = currentColorPieceLocation.pieceLocation.col;
 
 			kingForColor = (color === "red") ? 3 : 4;
-			if (currentColorPieceLocation.pieceType === kingForColor)
+			if (parseInt(currentColorPieceLocation.pieceType) === kingForColor)
 			{
 				currentTeam[moveFromHere].isKing = true;
 			}
