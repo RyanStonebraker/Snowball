@@ -11,17 +11,22 @@ Developer Dependencies:
 Example frontend build setup:
 
 ```
-$ brew install node
+$ brew install node (apt-get install nodejs on linux)
 $ npm install electron -g
+$ npm install electron-prompt
 
 $ electron index.js
 ```
 Example backend build setup:
 
 ```
-$ cd c++
-$ make
-$ bin/ai_run
+$ make -C c++ // to build the C++ backend
+
+$ make -C c++ run // for running AI vs Player games
+
+$ make -C c++ front_run // Player vs Player games
+
+$ make -C c++ run (and in another console make -C c++ run_ai after AI vs AI selected) // for AI vs AI games
 ```
 Running tests:
 
