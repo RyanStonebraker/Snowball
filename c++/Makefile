@@ -10,8 +10,11 @@ TEMP_OBJECTS := $(wildcard ../comm/currentgame/turn*.txt) $(wildcard ../comm/han
 ai_run: $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
 
-build: $(SOURCES)
+build_run: $(SOURCES)
 	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) && $(RUN)
+
+run_ai:
+	$(TARGET)
 
 run :
 	electron $(GUI_TARGET) &

@@ -111,10 +111,48 @@ var DEFAULT_BOARD = "11111111111100000000222222222222";
 // var DEFAULT_BOARD = "11111111101101000220000222222022";
 
 // Main "class"/start function
-function GameBoard(div)
+function GameBoard(div, start_board, start_mode)
 {
 	if (!div)
 		return null;
+
+  if (start_board) {
+    DEFAULT_BOARD = start_board;
+  }
+
+  // If a value selected for start mode (0 is an option, so compare against null)
+  if (start_mode != null) {
+    switch (parseInt(start_mode)) {
+      // AI vs Player
+      case 0:
+        game.redPlayer = false;
+        game.whitePlayer = true;
+        game.redFile = true;
+        game.whiteFile = false;
+        break;
+      // Player vs AI
+      case 1:
+        game.redPlayer = true;
+        game.whitePlayer = false;
+        game.redFile = false;
+        game.whiteFile = true;
+        break;
+      // Player vs Player
+      case 2:
+        game.redPlayer = true;
+        game.whitePlayer = true;
+        game.redFile = false;
+        game.whiteFile = false;
+        break;
+      // AI vs AI
+      case 3:
+        game.redPlayer = false;
+        game.whitePlayer = false;
+        game.redFile = true;
+        game.whiteFile = true;
+        break;
+    }
+  }
 
 	canvas = div;
 
@@ -356,7 +394,23 @@ GameBoard.prototype.refreshBoard = function ()
 		// Draw checkerboard
 		this.drawBackground();
 
+    if (scoreboard.totalMoveCount == 1 && game.redFile && game.whiteFile && fs.existsSync(path.join(game.communicationLocation, "/comm/handshake1.txt"))) {
+      // NOTE: Spawning a process WOULD work if the C++ code ran slower (took up 15 secs) Problem is they are trying to write at same times
+      // var spawn = require('child_process').spawn;
+      fs.unlinkSync(path.join(game.communicationLocation, "/comm/handshake1.txt"));
+      fs.writeFileSync(path.join(game.communicationLocation, "/comm/handshake0.txt"),
+        "1", (err) =>
+        {
+          if (err)
+          {
+            alert("Handshake0 Write Error:" + err.message);
+            game.pause = true;
+            return;
+          }
+        });
 
+        // var enemyAI = spawn('make', ['run_ai']);
+    }
 
 		if (!game.passiveStepMode)
 		{
@@ -501,7 +555,7 @@ GameBoard.prototype.updateScoreBoard = function ()
 GameBoard.prototype.moveController = function ()
 {
 	// If not changing total move count and on the first move.
-	if (!game.passiveStepMode && !scoreboard.totalMoveCount && this.moveWritten(1))
+	if (!game.passiveStepMode && !scoreboard.totalMoveCount && this.moveWritten(2))
 	{
 		// Fast forward to current file
 		while (this.moveWritten(scoreboard.totalMoveCount))

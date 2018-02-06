@@ -4,7 +4,7 @@
   "description": "An A.I. checkers player.",
   "main": "index.js",
   "scripts": {
-    "postinstall" : "install-app-deps",
+    "postinstall": "install-app-deps",
     "start": "npm install & electron index.js",
     "pack": "build --dir",
     "dist": "build"
@@ -25,19 +25,21 @@
           "path": "/Applications"
         }
       ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": "Squirrel",
+      "icon": "build/icon.ico"
+    }
   },
-  "linux": {
-  "target": [
-    "AppImage",
-    "deb"
-    ]
+  "dependencies": {
+    "electron-prompt": "^0.5.0"
   },
-  "win": {
-    "target": "Squirrel",
-    "icon": "build/icon.ico"
-  }
-},
-  "dependencies": {},
   "devDependencies": {
     "electron": "latest",
     "electron-builder": "latest"

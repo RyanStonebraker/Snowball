@@ -27,7 +27,26 @@
     </section>
 
     <script type="text/javascript">
-      var loadGameboard = new GameBoard(document.getElementById('gameboard'));
+      const prompt = require('electron-prompt');
+      
+      prompt({
+        title: 'Game Settings',
+        label: 'Mode:',
+        value: 'http://example.org',
+        inputAttrs: { // attrs to be set if using 'input'
+            type: 'url'
+        },
+        type: 'select', // 'select' or 'input, defaults to 'input'
+        selectOptions: { // select options if using 'select' type
+            '1': 'Player (Red) vs AI (Black)',
+            '0': 'AI (Red) vs Player (Black)',
+            '2': 'Player (Red) vs Player (Black)',
+            '3': 'AI (Red) vs AI (Black)'
+        }
+      }).then((mode) => {
+        var loadGameboard = new GameBoard(document.getElementById('gameboard'), "11111111111100000000222222222222", mode);
+})
+.catch(console.error);
       document.getElementById("logo_img").draggable = false;
     </script>
   </body>
