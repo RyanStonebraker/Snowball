@@ -69,7 +69,9 @@ var game = {
 
 	"fastForward": -1,
 
-  "holdTeamTurn": false
+  "holdTeamTurn": false,
+
+  "winner": ""
 };
 
 // Player vs Player
@@ -391,6 +393,11 @@ GameBoard.prototype.refreshBoard = function ()
 			scoreboard.startClock = true;
 		}
 
+    if (!scoreboard.red.pieceCount || !scoreboard.white.pieceCount) {
+      game.pause = true;
+      game.winner = (scoreboard.red.pieceCount == 0) ? "white" : "red";
+    }
+
 		// Draw checkerboard
 		this.drawBackground();
 
@@ -450,8 +457,25 @@ GameBoard.prototype.refreshBoard = function ()
 	}
 	else
 	{
-		this.drawPause();
+    if (game.winner)
+      this.drawVictory();
+    else
+		  this.drawPause();
+
 	}
+}
+
+GameBoard.prototype.drawVictory = function () {
+  ctx.shadowColor = "black";
+  ctx.shadowOffsetX = 5;
+  ctx.shadowOffsetY = 5;
+  ctx.shadowBlur = 7;
+  ctx.font = "95px Comic Sans";
+  if (game.winner == "white")
+    ctx.font = "80px Comic Sans";
+  ctx.textAlign = "center";
+  ctx.fillStyle = game.winner;
+  ctx.fillText(game.winner.toUpperCase() + " WON!", width/2, height/2);
 }
 
 GameBoard.prototype.boardToString = function ()
