@@ -227,7 +227,13 @@ GameBoard.prototype.keyEventHandler = function (evt)
 	case 38:
 		if (!game.passiveStepMode)
 		{
+      // ctx.shadowColor = "black";
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 0;
+
 			game.passiveStepMode = true;
+      game.pause = false;
 			scoreboard.passiveMoveCountBackUp = scoreboard.totalMoveCount;
 			game.passiveStepCache = game.fileBoardState;
 			scoreboard.passiveTime = scoreboard.totalTime;
@@ -393,7 +399,7 @@ GameBoard.prototype.refreshBoard = function ()
 			scoreboard.startClock = true;
 		}
 
-    if (!scoreboard.red.pieceCount || !scoreboard.white.pieceCount) {
+    if ((!scoreboard.red.pieceCount || !scoreboard.white.pieceCount) && !game.passiveStepMode) {
       game.pause = true;
       game.winner = (scoreboard.red.pieceCount == 0) ? "white" : "red";
     }

@@ -183,9 +183,9 @@ string readBoardState()
 	//}
 
 		/***DEBUG***/
-		std::cout << "RECEIVED BOARD: " << boardState << std::endl;
-		std::cout << "INTERPRETATION: \n";
-		print({ boardState });
+		// std::cout << "RECEIVED BOARD: " << boardState << std::endl;
+		// std::cout << "INTERPRETATION: \n";
+		// print({ boardState });
 
 	return boardState;
 }
@@ -195,13 +195,13 @@ int outputNewBoardState(const vector<Board> & validMoves)
 	ofstream shadowOutFile(shadowState);
 	ofstream boardStateOutFile(boardState, std::ofstream::trunc);
 
-	std::cout << "Black Center Move Generations: \n" << std::endl;
-	for (auto & n : validMoves)
-	{
-		std::cout << n << std::endl;
-		print(n);
-		shadowOutFile << n.getBoardStateString() << std::endl;
-	}
+	// std::cout << "Black Center Move Generations: \n" << std::endl;
+	// for (auto & n : validMoves)
+	// {
+	// 	std::cout << n << std::endl;
+	// 	print(n);
+	// 	shadowOutFile << n.getBoardStateString() << std::endl;
+	// }
 
 	random_device rd;
 	mt19937 gen(rd());
@@ -209,9 +209,9 @@ int outputNewBoardState(const vector<Board> & validMoves)
 
 	int choice = dis(gen);
 
-	std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
-	std::cout << "INTERPRETATION: \n";
-	print(validMoves[choice]);
+	// std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
+	// std::cout << "INTERPRETATION: \n";
+	// print(validMoves[choice]);
 
 	boardStateOutFile << validMoves[choice].getBoardStateString();
 
