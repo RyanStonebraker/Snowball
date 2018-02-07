@@ -42,10 +42,11 @@ vector<Board> flipColor(vector<Board> validMoves)
 
 		string flippedBoard = "";
 		string boardString = b.getBoardStateString();
+		int quality = b.getQuality();
 
 		std::reverse(boardString.begin(), boardString.end());
 
-		b = { boardString };
+		b = { boardString, quality};
 
 		for (auto & n : b.getBoardStateString())
 		{
@@ -63,7 +64,7 @@ vector<Board> flipColor(vector<Board> validMoves)
 				flippedBoard += '0';
 		}
 
-		Board temp(flippedBoard);
+		Board temp(flippedBoard, quality);
 		return temp;
 
 	});
@@ -85,13 +86,13 @@ int main()
 			while (true)
 			{
 				auto startFullTurnCycleTime = system_clock::now();
-				
-				updateFileName(); 
+
+				updateFileName();
 				Board b(readBoardState());
 
 				//for manual control:
-				// if (std::cin.get()) 
-				//		std::cout << "Next Turn" << std::endl; 
+				// if (std::cin.get())
+				//		std::cout << "Next Turn" << std::endl;
 
 				/**TIMING**/
 
@@ -110,13 +111,13 @@ int main()
 
 				updateFileName();
 				outputNewBoardState(validMoves);
-				
+
 				auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
 				duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
 				std::cout << "Turn complete in " << elapsedTurnTime.count() << " seconds" << std::endl; /***DEBUG***/
-				
+
 			}
-			
+
 			auto endGameTime = system_clock::now(); /***DEBUG***/
 			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
 			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
@@ -142,7 +143,8 @@ int main()
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 				vector<Board> validMoves = generateRandomMoves(b);
-				std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
+				vector<Board> flippedValidMoves = flipColor(validMoves);
+				std::sort(flippedValidMoves.begin(), flippedValidMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
@@ -153,7 +155,7 @@ int main()
 				if (validMoves.size() == 0)
 					break;
 
-				vector<Board> flippedValidMoves = flipColor(validMoves);
+				// vector<Board> flippedValidMoves = flipColor(validMoves);
 				outputNewBoardState(flippedValidMoves);
 				// b = validMoves[indexOfMoveChosen];
 				updateFileName();

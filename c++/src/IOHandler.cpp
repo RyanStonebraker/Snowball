@@ -27,9 +27,9 @@ using std::vector;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
-//#include <unistd.h> /***DEBUG***/
+#include <unistd.h> /***DEBUG***/
 
-#define AVG_SLEEP_BLOCK 300
+#define AVG_SLEEP_BLOCK 0
 
 
 string shadowState = "../comm/shadowstate.txt";
@@ -154,7 +154,7 @@ string readBoardState()
 	string inputLine;
 	while(!inFile || inputLine.size() < 32)
 	{
-		//usleep(AVG_SLEEP_BLOCK); /***DEBUG***/
+		usleep(AVG_SLEEP_BLOCK); /***DEBUG***/
 		inFile = test(boardState);
 
 		if (inFile) {
@@ -208,7 +208,7 @@ int outputNewBoardState(const vector<Board> & validMoves)
 	vector<Board> movesToConsider;
 
 	/***DEBUG***/
-	 std::cout << "Black Center Move Generations: \n" << std::endl;
+	 // std::cout << "Black Center Move Generations: \n" << std::endl;
 	 for (auto & n : validMoves)
 	 {
 		 if (n.getQuality() == highestQualityMove)
