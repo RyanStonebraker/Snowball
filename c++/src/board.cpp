@@ -28,6 +28,11 @@ std::string Board::getBoardStateString() const
 	return _boardStateString;
 }
 
+int Board::getQuality() const
+{
+	return _quality;
+}
+
 void Board::setBoardStateString(const std::string & newState)
 {
 	_boardStateString = newState;

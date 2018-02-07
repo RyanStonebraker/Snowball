@@ -23,12 +23,13 @@ int outputNewBoardState(const std::vector<Board> & validMoves);
 std::string updateFileName();
 int setupGame();
 bool startGame(int startingDetails);
+int getFileIncrementer();
 
 
 //moveGenerator.cpp
 bool indexIsValid(int position);
 bool canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack = false);
-std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited);
+std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality);
 std::string workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited);
 std::vector<Board> generateRandomMoves(Board currentBoard);
 

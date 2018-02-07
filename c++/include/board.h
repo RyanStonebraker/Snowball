@@ -28,9 +28,9 @@ class Board
 public:
 
 	//default ctor
-	Board() : _boardStateString("11111111111100000000222222222222") { updateBoard(); }
-	//1 param ctor
-	Board(const std::string & boardState) : _boardStateString(boardState) { updateBoard(); }
+	Board() : _boardStateString("11111111111100000000222222222222"), _quality(0) { updateBoard(); }
+	//1 or 2 param ctor
+	Board(const std::string & boardState, int quality = 0) : _boardStateString(boardState), _quality(quality) { updateBoard(); }
 
 	//dctor
 	~Board() = default;
@@ -52,6 +52,7 @@ public:
 	_96Bit getBoardStateBits() const; 
 	std::vector<int> getBoardArray() const; 
 	std::string getBoardStateString() const;
+	int getQuality() const;
 
 	//mutator functions
 	void setBoardStateString(const std::string & newState);
@@ -73,10 +74,10 @@ private:
 private:
 
 	std::string _boardStateString;
+	int _quality;
 	//_declspec (align(16)) __m128i _boardStateBits;
 	_96Bit _boardStateBits;
 	std::vector<int> _board;
-
 };
 
 #endif // !FILE_BOARD_H_INCLUDED

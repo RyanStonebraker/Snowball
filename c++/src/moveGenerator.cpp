@@ -37,7 +37,7 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString,
 	return false;
 }
 
-std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited)
+std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality)
 {
 	std::string nextBoard = currentBoard.getBoardStateString();
 
@@ -74,32 +74,36 @@ std::string checkKill(int position, const Board & currentBoard, std::string & vi
 	{
 		std::swap(nextBoard[position], nextBoard[position - 9]);
 		nextBoard[((position / 4) % 2) == 0 ? position - 5 : position - 4] = '0';
+		quality++;
 
-		return checkKill(position - 9, { nextBoard }, visited, updateVisited);
+		return checkKill(position - 9, { nextBoard }, visited, updateVisited, quality);
 	}
 
 	if (backLeftKillCondition) //back left kill condition
 	{
 		std::swap(nextBoard[position], nextBoard[position + 7]);
 		nextBoard[((position / 4) % 2) == 0 ? position + 3 : position + 4] = '0';
+		quality++;
 
-		return checkKill(position + 7, { nextBoard }, visited, updateVisited);
+		return checkKill(position + 7, { nextBoard }, visited, updateVisited, quality);
 	}
 
 	if (rightKillCondition) //right kill condition
 	{
 		std::swap(nextBoard[position], nextBoard[position - 7]);
 		nextBoard[((position / 4) % 2) == 0 ? position - 4 : position - 3] = '0';
+		quality++;
 
-		return checkKill(position - 7, { nextBoard }, visited, updateVisited);
+		return checkKill(position - 7, { nextBoard }, visited, updateVisited, quality);
 	}
 
 	if (backRightKillCondition) //back right kill condition
 	{
 		std::swap(nextBoard[position], nextBoard[position + 9]);
 		nextBoard[((position / 4) % 2) == 0 ? position + 4 : position + 5] = '0';
+		quality++;
 
-		return checkKill(position + 9, { nextBoard }, visited, updateVisited);
+		return checkKill(position + 9, { nextBoard }, visited, updateVisited, quality);
 	}
 
 
@@ -112,7 +116,8 @@ std::string workhorse(int position, const Board & currentBoard, std::vector<Boar
 	std::string updateVisited = visited; //might remove ***
 	while (true)
 	{
-		std::string nextBoard = checkKill(position, currentBoard, visited, updateVisited);
+		int quality = 0;
+		std::string nextBoard = checkKill(position, currentBoard, visited, updateVisited, quality);
 		visited = updateVisited; //might remove ***
 
 		if (nextBoard == currentBoard.getBoardStateString())
@@ -122,7 +127,7 @@ std::string workhorse(int position, const Board & currentBoard, std::vector<Boar
 			if(nextBoard[kingCheck] == BLACK + '0')
 				nextBoard[kingCheck] = BLACK_KING + '0';
 
-		validMoves.push_back({ nextBoard });
+		validMoves.push_back({ nextBoard, quality });
 	}
 
 	return visited;

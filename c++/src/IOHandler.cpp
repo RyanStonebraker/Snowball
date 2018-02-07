@@ -27,7 +27,7 @@ using std::vector;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
-#include <unistd.h>
+//#include <unistd.h> /***DEBUG***/
 
 #define AVG_SLEEP_BLOCK 300
 
@@ -122,6 +122,11 @@ string updateFileName()
 	return boardState;
 }
 
+int getFileIncrementer()
+{
+	return fileIncrementer;
+}
+
 void print(const Board & b)
 {
 	std::cout << "mUv NuM: " << fileIncrementer << std::endl;
@@ -149,7 +154,7 @@ string readBoardState()
 	string inputLine;
 	while(!inFile || inputLine.size() < 32)
 	{
-		usleep(AVG_SLEEP_BLOCK);
+		//usleep(AVG_SLEEP_BLOCK); /***DEBUG***/
 		inFile = test(boardState);
 
 		if (inFile) {
@@ -187,9 +192,9 @@ string readBoardState()
 	//}
 
 		/***DEBUG***/
-		// std::cout << "RECEIVED BOARD: " << boardState << std::endl;
-		// std::cout << "INTERPRETATION: \n";
-		// print({ boardState });
+		 /*std::cout << "RECEIVED BOARD: " << boardState << std::endl;
+		 std::cout << "INTERPRETATION: \n";
+		 print({ boardState });*/
 
 	return boardState;
 }
@@ -199,25 +204,33 @@ int outputNewBoardState(const vector<Board> & validMoves)
 	ofstream shadowOutFile(shadowState);
 	ofstream boardStateOutFile(boardState, std::ofstream::trunc);
 
-	// std::cout << "Black Center Move Generations: \n" << std::endl;
-	// for (auto & n : validMoves)
-	// {
-	// 	std::cout << n << std::endl;
-	// 	print(n);
-	// 	shadowOutFile << n.getBoardStateString() << std::endl;
-	// }
+	int highestQualityMove = validMoves[0].getQuality();
+	vector<Board> movesToConsider;
+
+	/***DEBUG***/
+	 std::cout << "Black Center Move Generations: \n" << std::endl;
+	 for (auto & n : validMoves)
+	 {
+		 if (n.getQuality() == highestQualityMove)
+			 movesToConsider.push_back(n);
+
+	 	//std::cout << n << std::endl;
+	 	//print(n);
+	 	shadowOutFile << n.getBoardStateString() << std::endl;
+	 }
 
 	random_device rd;
 	mt19937 gen(rd());
-	uniform_int_distribution<> dis(0, validMoves.size() - 1);
+	uniform_int_distribution<> dis(0, movesToConsider.size() - 1);
 
 	int choice = dis(gen);
 
-	// std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
-	// std::cout << "INTERPRETATION: \n";
-	// print(validMoves[choice]);
+	/***DEBUG***/
+	 /*std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << movesToConsider[choice].getBoardStateString() << std::endl;
+	 std::cout << "INTERPRETATION: \n";
+	 print(movesToConsider[choice]);*/
 
-	boardStateOutFile << validMoves[choice].getBoardStateString();
+	boardStateOutFile << movesToConsider[choice].getBoardStateString();
 
 	return choice;
 }
