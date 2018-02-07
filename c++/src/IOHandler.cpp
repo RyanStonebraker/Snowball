@@ -27,6 +27,9 @@ using std::vector;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
+#include <unistd.h>
+
+#define AVG_SLEEP_BLOCK 300
 
 
 string shadowState = "../comm/shadowstate.txt";
@@ -146,6 +149,7 @@ string readBoardState()
 	string inputLine;
 	while(!inFile || inputLine.size() < 32)
 	{
+		usleep(AVG_SLEEP_BLOCK);
 		inFile = test(boardState);
 
 		if (inFile) {
