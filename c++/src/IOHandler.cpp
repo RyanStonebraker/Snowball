@@ -7,7 +7,8 @@ lookup table for updates, and compressed into a double
 for easy calculations later
 */
 
-#include "../include/board.h" //for custom board array class
+#include "IOHandler.h"
+#include "board.h" //for custom board array class
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -37,12 +38,12 @@ string boardState = "../comm/currentgame/turn0.txt";
 string handshake0 = "../comm/handshake0.txt";
 string handshake1 = "../comm/handshake1.txt";
 
-std::ifstream test(string pathName) {
+std::ifstream IOHandler::test(string pathName) {
 	ifstream idk(pathName);
 	return idk;
 }
 
-int setupGame()
+int IOHandler::setupGame()
 {
 	while (true)
 	{
@@ -86,7 +87,7 @@ int setupGame()
 	}
 }
 
-bool startGame(int startingDetails)
+bool IOHandler::startGame(int startingDetails)
 {
 	ofstream computerOutput(handshake1, std::ofstream::trunc);
 
@@ -112,8 +113,8 @@ bool startGame(int startingDetails)
 	return startingDetails == 1;
 
 }
-static int fileIncrementer = 1;
-string updateFileName()
+
+string IOHandler::updateFileName()
 {
 	const string beginningPath = "../comm/currentgame/";
 	// static int fileIncrementer = 1;
@@ -122,12 +123,12 @@ string updateFileName()
 	return boardState;
 }
 
-int getFileIncrementer()
+int IOHandler::getFileIncrementer()
 {
 	return fileIncrementer;
 }
 
-void print(const Board & b)
+void IOHandler::print(const Board & b)
 {
 	std::cout << "mUv NuM: " << fileIncrementer << std::endl;
 	std::cout << "_________________________" << std::endl;
@@ -147,7 +148,7 @@ void print(const Board & b)
 	std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 }
 
-string readBoardState()
+string IOHandler::readBoardState()
 {
 	ifstream inFile(boardState);
 
@@ -199,7 +200,7 @@ string readBoardState()
 	return boardState;
 }
 
-int outputNewBoardState(const vector<Board> & validMoves)
+int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 {
 	ofstream shadowOutFile(shadowState);
 	ofstream boardStateOutFile(boardState, std::ofstream::trunc);

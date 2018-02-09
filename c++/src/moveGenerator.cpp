@@ -5,15 +5,16 @@ CS 405 - Dr. Genetti
 All moves are generated from here
 */
 
-#include "../include/backend.h"
-#include "../include/board.h"
+#include "moveGenerator.h"
+#include "board.h"
+#include "constants.h"
 
-bool indexIsValid(int position)
+bool MoveGenerator::indexIsValid(int position)
 {
 	return (position <= 31 && position >= 0);
 }
 
-bool canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack)
+bool MoveGenerator::canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack)
 {
 	bool isSide = position == 0 || position == 8 || position == 16 || position == 24 ||
 		position == 7 || position == 15 || position == 23 || position == 31;
@@ -37,7 +38,7 @@ bool canMove(int position, int nextPosition, int piece, std::string boardString,
 	return false;
 }
 
-std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality)
+std::string MoveGenerator::checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality)
 {
 	std::string nextBoard = currentBoard.getBoardStateString();
 
@@ -111,7 +112,7 @@ std::string checkKill(int position, const Board & currentBoard, std::string & vi
 
 }
 
-std::string workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited)
+std::string MoveGenerator::workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited)
 {
 	std::string updateVisited = visited; //might remove ***
 	while (true)
@@ -133,7 +134,7 @@ std::string workhorse(int position, const Board & currentBoard, std::vector<Boar
 	return visited;
 }
 
-std::vector<Board> generateRandomMoves(Board currentBoard)
+std::vector<Board> MoveGenerator::generateRandomMoves(Board currentBoard)
 {
 	std::vector<Board> validMoves;
 	std::string visited = currentBoard.getBoardStateString();

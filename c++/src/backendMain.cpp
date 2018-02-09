@@ -25,8 +25,10 @@ called from here to keep things organized.
 	//right side: 7, 15, 23, 31
 */
 
-#include "../include/backend.h"
-#include "../include/board.h"
+#include "constants.h"
+#include "board.h"
+#include "IOHandler.h"
+#include "moveGenerator.h"
 #include <vector>
 using std::vector;
 #include <string>
@@ -74,11 +76,12 @@ vector<Board> flipColor(vector<Board> validMoves)
 
 int main()
 {
+	IOHandler ioHandler; 
+	MoveGenerator moveGenerator;
 	while (true)
 	{
 		// Board b(readBoardState());
-
-		if (startGame(setupGame())) //computer is black and goes second
+		if (ioHandler.startGame(ioHandler.setupGame())) //computer is black and goes second
 		{
 			auto startGameTime = system_clock::now(); /***DEBUG***/
 			double totalAverageMoveGenTimes = 0.; /***DEBUG***/
@@ -87,8 +90,8 @@ int main()
 			{
 				auto startFullTurnCycleTime = system_clock::now();
 
-				updateFileName();
-				Board b(readBoardState());
+				ioHandler.updateFileName();
+				Board b(ioHandler.readBoardState());
 
 				//for manual control:
 				// if (std::cin.get())
@@ -97,7 +100,7 @@ int main()
 				/**TIMING**/
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
-				vector<Board> validMoves = generateRandomMoves(b);
+				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
 				std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
@@ -109,8 +112,8 @@ int main()
 				if (validMoves.size() == 0)
 					break;
 
-				updateFileName();
-				outputNewBoardState(validMoves);
+				ioHandler.updateFileName();
+				ioHandler.outputNewBoardState(validMoves);
 
 				auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
 				duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
@@ -121,28 +124,28 @@ int main()
 			auto endGameTime = system_clock::now(); /***DEBUG***/
 			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
 			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
-			std::cout << "Average " << getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			std::cout << "Average " << totalAverageMoveGenTimes/getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
+			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
+			std::cout << "Average " << totalAverageMoveGenTimes/ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
 		}
 		else //computer is red and goes first
 		{
 			auto startGameTime = system_clock::now(); /***DEBUG***/
 			double totalAverageMoveGenTimes = 0.; /***DEBUG***/
-			Board b(readBoardState());
+			Board b(ioHandler.readBoardState());
 			// int indexOfMoveChosen;
 
 			while (true)
 			{
 				auto startFullTurnCycleTime = system_clock::now();
 
-				updateFileName();
+				ioHandler.updateFileName();
 				//for manual control:
 
 				// if (std::cin.get())
 				// 	std::cout << "Next Turn" << std::endl;
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
-				vector<Board> validMoves = generateRandomMoves(b);
+				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
 				vector<Board> flippedValidMoves = flipColor(validMoves);
 				std::sort(flippedValidMoves.begin(), flippedValidMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
@@ -156,11 +159,11 @@ int main()
 					break;
 
 				// vector<Board> flippedValidMoves = flipColor(validMoves);
-				outputNewBoardState(flippedValidMoves);
+				ioHandler.outputNewBoardState(flippedValidMoves);
 				// b = validMoves[indexOfMoveChosen];
-				updateFileName();
+				ioHandler.updateFileName();
 
-				vector <Board> flipInputBoard = {readBoardState()};
+				vector <Board> flipInputBoard = {ioHandler.readBoardState()};
 				b = flipColor(flipInputBoard)[0];
 
 				auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
@@ -171,8 +174,8 @@ int main()
 			auto endGameTime = system_clock::now(); /***DEBUG***/
 			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
 			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
-			std::cout << "Average " << getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			std::cout << "Average " << totalAverageMoveGenTimes / getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
+			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
+			std::cout << "Average " << totalAverageMoveGenTimes / ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
 		}
 
 		std::cout << "gameover" << std::endl;
