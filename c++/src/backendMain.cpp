@@ -90,13 +90,11 @@ int main()
 				updateFileName();
 				Board b(readBoardState());
 
-				//for manual control:
-				// if (std::cin.get())
-				//		std::cout << "Next Turn" << std::endl;
-
-				/**TIMING**/
-
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
+
+				// TODO: POPULATE VALID MOVES WITH WEIGHTED MOVES, TAKES BOARD B
+				// NOTE: QUALITY IS A RANKING OF VALID KILLS AVAILABLE ON THE POTENTIAL NEXT MOVE
+
 				vector<Board> validMoves = generateRandomMoves(b);
 				std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
@@ -136,12 +134,11 @@ int main()
 				auto startFullTurnCycleTime = system_clock::now();
 
 				updateFileName();
-				//for manual control:
-
-				// if (std::cin.get())
-				// 	std::cout << "Next Turn" << std::endl;
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
+
+				// TODO: POPULATE VALID MOVES WITH WEIGHTED MOVES, TAKES BOARD B
+
 				vector<Board> validMoves = generateRandomMoves(b);
 				vector<Board> flippedValidMoves = flipColor(validMoves);
 				std::sort(flippedValidMoves.begin(), flippedValidMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
@@ -155,9 +152,8 @@ int main()
 				if (validMoves.size() == 0)
 					break;
 
-				// vector<Board> flippedValidMoves = flipColor(validMoves);
 				outputNewBoardState(flippedValidMoves);
-				// b = validMoves[indexOfMoveChosen];
+
 				updateFileName();
 
 				vector <Board> flipInputBoard = {readBoardState()};
