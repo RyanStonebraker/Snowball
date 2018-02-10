@@ -38,32 +38,63 @@ bool MoveGenerator::canMove(int position, int nextPosition, int piece, std::stri
 	return false;
 }
 
+bool MoveGenerator::calculateLeftKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide)
+{
+	int leftShift = ((position / 4) % 2) == 0 ? position - 5 : position - 4;
+
+	return position % 8 != 0 &&
+		position % 8 != 4 &&
+		((indexIsValid(leftShift) ? (currentBoard[leftShift] == RED || currentBoard[leftShift] == RED_KING) : false) ?
+		(canMove(position, position - 9, currentBoard[position], nextBoard, isSide) ? (visited[position - 9] != 'x') : false) : false);
+}
+
+bool MoveGenerator::calculateRightKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide)
+{
+	int rightShift = ((position / 4) % 2) == 0 ? position - 4 : position - 3;
+
+	return (position + 1) % 8 != 0 &&
+		position % 8 != 3 &&
+		((indexIsValid(rightShift) ? (currentBoard[rightShift] == RED || currentBoard[rightShift] == RED_KING) : false) ?
+		(canMove(position, position - 7, currentBoard[position], nextBoard, isSide) ? (visited[position - 7] != 'x') : false) : false);
+}
+
+bool MoveGenerator::calculateBackLeftKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide)
+{
+	int backLeftShift = ((position / 4) % 2) == 0 ? position + 3 : position + 4;
+
+	return position % 8 != 0 &&
+		position % 8 != 4 &&
+		((indexIsValid(backLeftShift) ? (currentBoard[backLeftShift] == RED || currentBoard[backLeftShift] == RED_KING) : false) ?
+		(canMove(position, position + 7, currentBoard[position], nextBoard, isSide) ? (visited[position + 7] != 'x') : false) : false);
+}
+
+bool MoveGenerator::calculateBackRightKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide)
+{
+	int backRightShift = ((position / 4) % 2) == 0 ? position + 4 : position + 5;
+
+	return (position + 1) % 8 != 0 &&
+		position % 8 != 3 &&
+		((indexIsValid(backRightShift) ? (currentBoard[backRightShift] == RED || currentBoard[backRightShift] == RED_KING) : false) ?
+		(canMove(position, position + 9, currentBoard[position], nextBoard, isSide) ? (visited[position + 9] != 'x') : false) : false);
+}
+
 std::string MoveGenerator::checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality)
 {
 	std::string nextBoard = currentBoard.getBoardStateString();
 
-	bool isLeftSide = position == 0 || position == 8 || position == 16 || position == 24;
-	bool isRightSide = position == 7 || position == 15 || position == 23 || position == 31;
-	bool isSide = isLeftSide || isRightSide;
+	bool isSide = position % 8 == 0 || (position + 1) % 8 == 0;
 	bool isKing = currentBoard[position] == 3 || currentBoard[position] == 4;
 
-	int leftShift = ((position / 4) % 2) == 0 ? position - 5 : position - 4;
-	int rightShift = ((position / 4) % 2) == 0 ? position - 4 : position - 3;
-	int backLeftShift = ((position / 4) % 2) == 0 ? position + 3 : position + 4;
-	int backRightShift = ((position / 4) % 2) == 0 ? position + 4 : position + 5;
+	bool leftKillCondition = calculateLeftKillCondition(position, currentBoard, nextBoard, visited, isSide);
+	bool rightKillCondition = calculateRightKillCondition(position, currentBoard, nextBoard, visited, isSide);
+	bool backLeftKillCondition = false;
+	bool backRightKillCondition = false;
 
-	bool leftKillCondition = position % 8 != 0 && position % 8 != 4 && ((indexIsValid(leftShift) ? (currentBoard[leftShift] == RED || currentBoard[leftShift] == RED_KING) : false) ?
-		(canMove(position, position - 9, currentBoard[position], nextBoard, isSide) ? (visited[position - 9] != 'x') : false) : false);
-
-	bool rightKillCondition = (position + 1) % 8 != 0 && position % 8 != 3 && ((indexIsValid(rightShift) ? (currentBoard[rightShift] == RED || currentBoard[rightShift] == RED_KING) : false) ?
-		(canMove(position, position - 7, currentBoard[position], nextBoard, isSide) ? (visited[position - 7] != 'x') : false) : false);
-
-
-	bool backLeftKillCondition = position % 8 != 0 && position % 8 != 4 && isKing && ((indexIsValid(backLeftShift) ? (currentBoard[backLeftShift] == RED || currentBoard[backLeftShift] == RED_KING) : false) ?
-		(canMove(position, position + 7, currentBoard[position], nextBoard, isSide) ? (visited[position + 7] != 'x') : false) : false);
-
-	bool backRightKillCondition = (position + 1) % 8 != 0 && isKing && position % 8 != 3 && ((indexIsValid(backRightShift) ? (currentBoard[backRightShift] == RED || currentBoard[backRightShift] == RED_KING) : false) ?
-		(canMove(position, position + 9, currentBoard[position], nextBoard, isSide) ? (visited[position + 9] != 'x') : false) : false);
+	if (isKing)
+	{
+		backLeftKillCondition = calculateBackLeftKillCondition(position, currentBoard, nextBoard, visited, isSide);
+		backRightKillCondition = calculateBackRightKillCondition(position, currentBoard, nextBoard, visited, isSide);
+	}
 
 	if (!((leftKillCondition && rightKillCondition) || (leftKillCondition && backLeftKillCondition) ||
 		(leftKillCondition && backRightKillCondition) || (rightKillCondition && backLeftKillCondition) ||
