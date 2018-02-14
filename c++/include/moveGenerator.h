@@ -12,6 +12,7 @@ public:
 	std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality);
 	std::string workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited);
 	std::vector<Board> generateRandomMoves(const Board & currentBoard);
+	std::vector<Board> forceJumps(const std::vector<Board> & validMoves);
 	bool calculateLeftKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide);
 	bool calculateRightKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide);
 	bool calculateBackLeftKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide);

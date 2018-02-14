@@ -54,6 +54,9 @@ public:
 	std::string getBoardStateString() const;
 	int getQuality() const;
 
+	//pice retrieval functions
+	int getKingCount() const;
+
 	//mutator functions
 	void setBoardStateString(const std::string & newState);
 

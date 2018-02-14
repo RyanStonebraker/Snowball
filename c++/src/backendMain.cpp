@@ -90,8 +90,9 @@ int main()
 			{
 				auto startFullTurnCycleTime = system_clock::now();
 
-				ioHandler.updateFileName();
+				ioHandler.updateFileName(); /***DEBUG WIN***/
 				Board b(ioHandler.readBoardState());
+				//std::cin.get(); /***DEBUG WIN***/
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
@@ -99,7 +100,6 @@ int main()
 				// NOTE: QUALITY IS A RANKING OF VALID KILLS AVAILABLE ON THE POTENTIAL NEXT MOVE
 
 				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
-				std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/

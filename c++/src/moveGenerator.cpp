@@ -38,6 +38,30 @@ bool MoveGenerator::canMove(int position, int nextPosition, int piece, std::stri
 	return false;
 }
 
+std::vector<Board> MoveGenerator::forceJumps(const std::vector<Board> & validMoves)
+{
+	if (validMoves.size() > 0)
+	{
+		int highestQualityMove = validMoves[0].getQuality();
+
+		if (highestQualityMove > 0)
+		{
+			std::vector<Board> movesToConsider;
+
+			if (highestQualityMove > 0)
+			{
+				for (auto & n : validMoves)
+				{
+					if (n.getQuality() > 0)
+						movesToConsider.push_back(n);
+				}
+			}
+			return movesToConsider;
+		}
+	}
+	return validMoves;
+}
+
 bool MoveGenerator::calculateLeftKillCondition(int position, const Board & currentBoard, const std::string & nextBoard, const std::string & visited, bool isSide)
 {
 	int leftShift = ((position / 4) % 2) == 0 ? position - 5 : position - 4;
@@ -238,5 +262,6 @@ std::vector<Board> MoveGenerator::generateRandomMoves(const Board & currentBoard
 			}
 		}
 	}
-	return validMoves;
+	std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
+	return forceJumps(validMoves);
 }
