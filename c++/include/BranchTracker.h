@@ -34,8 +34,12 @@ public:
 
   ~BranchTracker() = default;
 
-  double getKingingChange();
-  double getQuality();
+  // double getKingingChange();
+  // double getQuality();
+
+  Board getBestMove();
+
+  Neuron fastForwardHead();
 
   // appends current board to private variables
   // double getCurrentBoardWeight();
@@ -44,6 +48,10 @@ public:
   // _branchWeightings.depth
   double cumulativeBranchWeight();
 
+// private helper functions
+private:
+
+// private members
 private:
   WeightedNode _branchWeightings;
 

@@ -36,6 +36,13 @@ using std::string;
 #include <chrono>
 using std::chrono::system_clock;
 using std::chrono::duration;
+#include "neuron.h"
+#include "BranchTracker.h"
+#include "WeightedNode.h"
+#include <random>
+using std::random_device;
+using std::mt19937;
+using std::uniform_real_distribution;
 
 vector<Board> flipColor(vector<Board> validMoves)
 {
@@ -78,6 +85,24 @@ int main()
 {
 	IOHandler ioHandler;
 	MoveGenerator moveGenerator;
+
+	Neuron _head;
+
+	random_device rdev;
+
+	mt19937 rand_gen(rdev());
+
+	uniform_real_distribution<> rand_weight(0, 1);
+
+	// Random starting weights
+	WeightedNode currentWeights;
+	currentWeights.kingingWeight = rand_weight(rand_gen);
+	currentWeights.qualityWeight = rand_weight(rand_gen);
+	currentWeights.availableMovesWeight = rand_weight(rand_gen);
+	currentWeights.riskFactor = rand_weight(rand_gen);
+	currentWeights.enemyFactor = rand_weight(rand_gen);
+	currentWeights.depth = 3;
+
 	while (true)
 	{
 		// Board b(readBoardState());
@@ -96,10 +121,19 @@ int main()
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
-				// TODO: POPULATE VALID MOVES WITH WEIGHTED MOVES, TAKES BOARD B
-				// NOTE: QUALITY IS A RANKING OF VALID KILLS AVAILABLE ON THE POTENTIAL NEXT MOVE
+				BranchTracker potentialBranch(b, currentWeights);
+				Board nextMove = potentialBranch.getBestMove();
 
-				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
+				// ***** TODO: Neuron class should have an append function to add children to it
+				// and it should have a copy constructor so the below works ******
+
+				// _head.append(potentialBranch.getGoodChildren());
+				// _head = potentialBranch.fastForwardHead();
+
+				// ***** TODO: Refactor outputNewBoardState to just accept a Board to cut out some overhead *****
+				vector <Board> validMoves {nextMove};
+				// vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
+				// std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
