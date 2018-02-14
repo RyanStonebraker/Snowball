@@ -13,7 +13,7 @@ class Neuron {
 public:
 	Neuron() = default;
 	Neuron(Board &board);
-	Neuron(float weight, float averageWeight, std::vector<std::shared_ptr<Neuron>> children, float, Board board);
+	Neuron(float, float, const std::vector<std::shared_ptr<Neuron>> &, float, Board);
 	Neuron(const Neuron & other);
 	Neuron & operator=(const Neuron & other);
 	void spawnChildren(int depth);

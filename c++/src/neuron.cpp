@@ -13,7 +13,7 @@ Neuron::Neuron(Board &board) {
 	_board = make_unique<Board>(board);
 }
 
-Neuron::Neuron(float weight, float averageWeight, std::vector<std::shared_ptr<Neuron>> children, float riskFactor, Board board) 
+Neuron::Neuron(float weight, float averageWeight, const std::vector<std::shared_ptr<Neuron>> & children, float riskFactor, Board board) 
 	: _weight(weight), _averageWeight(averageWeight), _children(children), _riskFactor(riskFactor)
 {
 	_board = make_unique<Board>(board);
