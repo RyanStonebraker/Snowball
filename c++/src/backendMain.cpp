@@ -135,6 +135,7 @@ int main()
 				vector <Board> validMoves {nextMove};
 				// vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
 				// std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
+
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/

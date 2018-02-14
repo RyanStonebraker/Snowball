@@ -16,6 +16,7 @@ BranchTracker::BranchTracker(const Board &startBoard, WeightedNode &branchWeight
   _localBranch = Neuron(this->_startBoard);
 }
 
-BranchTracker::getBestMove() {
+Board BranchTracker::getBestMove() {
   
+  return this->_startBoard;
 }
