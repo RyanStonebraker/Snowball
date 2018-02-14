@@ -14,6 +14,16 @@ std::ostream & operator<< (std::ostream & output, const Board & b)
 	return output;
 }
 
+bool operator==(const Board & lhs, const Board & rhs)
+{
+	return lhs.getBoardStateString() == rhs.getBoardStateString();
+}
+
+bool operator!=(const Board & lhs, const Board & rhs)
+{
+	return !(lhs == rhs);
+}
+
 _96Bit Board::getBoardStateBits() const
 {
 	return _boardStateBits;
@@ -85,20 +95,20 @@ void Board::convertToBits(const int & boardVal, const unsigned long long int & b
 
 	switch (boardVal)
 	{
-	case 1: // red
+	case RED: // red
 		boardStateBitsSeg += (bitFactor >> 2);
 		break;
 
-	case 2: // black
+	case BLACK: // black
 		boardStateBitsSeg += (bitFactor >> 1);
 		break;
 
-	case 3: // red king
+	case RED_KING: // red king
 		boardStateBitsSeg += (bitFactor >> 1);
 		boardStateBitsSeg += (bitFactor >> 2);
 		break;
 
-	case 4: // black king
+	case BLACK_KING: // black king
 		boardStateBitsSeg += bitFactor;
 		break;
 	}
