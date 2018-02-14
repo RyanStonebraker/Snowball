@@ -14,6 +14,16 @@ std::ostream & operator<< (std::ostream & output, const Board & b)
 	return output;
 }
 
+bool operator==(const Board & lhs, const Board & rhs)
+{
+	return lhs.getBoardStateString() == rhs.getBoardStateString();
+}
+
+bool operator!=(const Board & lhs, const Board & rhs)
+{
+	return !(lhs == rhs);
+}
+
 _96Bit Board::getBoardStateBits() const
 {
 	return _boardStateBits;

@@ -24,6 +24,8 @@ class Board
 {
 	//stream insertion overload
 	friend std::ostream & operator<< (std::ostream & output, const Board & b);
+	friend bool operator==(const Board & lhs, const Board & rhs);
+	friend bool operator!=(const Board & lhs, const Board & rhs);
 
 public:
 
