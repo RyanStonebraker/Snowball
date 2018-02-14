@@ -85,20 +85,20 @@ void Board::convertToBits(const int & boardVal, const unsigned long long int & b
 
 	switch (boardVal)
 	{
-	case 1: // red
+	case RED: // red
 		boardStateBitsSeg += (bitFactor >> 2);
 		break;
 
-	case 2: // black
+	case BLACK: // black
 		boardStateBitsSeg += (bitFactor >> 1);
 		break;
 
-	case 3: // red king
+	case RED_KING: // red king
 		boardStateBitsSeg += (bitFactor >> 1);
 		boardStateBitsSeg += (bitFactor >> 2);
 		break;
 
-	case 4: // black king
+	case BLACK_KING: // black king
 		boardStateBitsSeg += bitFactor;
 		break;
 	}

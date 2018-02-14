@@ -62,12 +62,12 @@ size_t Neuron::size() const
 	return _children.size();
 }
 
-std::shared_ptr<Neuron> & Neuron::operator[](int index)
+Neuron & Neuron::operator[](int index)
 {
-	return _children[index];
+	return *_children[index];
 }
 
-const std::shared_ptr<Neuron> & Neuron::operator[](int index) const
+const Neuron & Neuron::operator[](int index) const
 {
-	return _children[index];
+	return *_children[index];
 }

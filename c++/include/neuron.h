@@ -18,8 +18,8 @@ public:
 	size_t size() const;
 
 	//[] overloads
-	std::shared_ptr<Neuron> & operator[](int index);
-	const std::shared_ptr<Neuron> & operator[](int index) const;
+	Neuron & operator[](int index);
+	const Neuron & operator[](int index) const;
 
 private:
 	float _weight;

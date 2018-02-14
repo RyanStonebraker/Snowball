@@ -54,7 +54,7 @@ public:
 	std::string getBoardStateString() const;
 	int getQuality() const;
 
-	//pice retrieval functions
+	//piece retrieval functions
 	int getRedKingCount() const;
 	int getBlackKingCount() const;
 	int getBlackPieceCount() const;
