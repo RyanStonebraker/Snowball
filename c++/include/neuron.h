@@ -10,6 +10,16 @@ public:
 	Neuron(Board &board);
 	void spawnChildren(int depth);
 	void updateAverageWeights();
+	int getQuality() const;
+	int getRedKingCount() const;
+	int getBlackKingCount() const;
+	int getBlackPieceCount() const;
+	int getRedPieceCount() const;
+	size_t size() const;
+
+	//[] overloads
+	std::shared_ptr<Neuron> & operator[](int index);
+	const std::shared_ptr<Neuron> & operator[](int index) const;
 
 private:
 	float _weight;

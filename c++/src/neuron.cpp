@@ -31,3 +31,43 @@ void Neuron::spawnChildren(int depth) {
 		}
 	}
 }
+
+int Neuron::getQuality() const
+{
+	return _board->getQuality();
+}
+
+int Neuron::getRedKingCount() const
+{
+	return _board->getRedKingCount();
+}
+
+int Neuron::getBlackKingCount() const
+{
+	return _board->getBlackKingCount();
+}
+
+int Neuron::getBlackPieceCount() const
+{
+	return _board->getBlackPieceCount();
+}
+
+int Neuron::getRedPieceCount() const
+{
+	return _board->getRedPieceCount();
+}
+
+size_t Neuron::size() const
+{
+	return _children.size();
+}
+
+std::shared_ptr<Neuron> & Neuron::operator[](int index)
+{
+	return _children[index];
+}
+
+const std::shared_ptr<Neuron> & Neuron::operator[](int index) const
+{
+	return _children[index];
+}
