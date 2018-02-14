@@ -1,5 +1,5 @@
 CC := clang++
-CFLAGS := -std=c++14 -I include -I dependencies -g -Wall -O3
+CFLAGS := -std=c++14 -I include -I ../dependencies -g -Wall -O3
 SOURCES := $(wildcard src/*.cpp)
 TEST_SOURCES := $(wildcard test/*.cpp)
 TARGET := bin/ai_run

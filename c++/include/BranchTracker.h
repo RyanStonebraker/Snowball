@@ -1,8 +1,15 @@
+// BranchTracker.h
+// 2/13/2018
+// Snowball AI
+// Wrapper for neuron class that checks a given path and only appends it to the
+// main _head if it is within a certain %
+
 #ifndef BRANCH_TRACKER_H
 #define BRANCH_TRACKER_H
 
 #include "board.h"
 #include "WeightedNode.h"
+#include "neuron.h"
 
 // *** NOTE: REPLACE LIST WITH CUSTOM NEURON NETWORK IMPLEMENTATION ***
 #include <list>
@@ -19,10 +26,11 @@ public:
   BranchTracker() = delete;
   BranchTracker(const Board &, WeightedNode);
 
-  BranchTracker(const BranchTracker &);
-  BranchTracker(BranchTracker &&);
-  BranchTracker operator=(const BranchTracker &);
-  BranchTracker operator=(BranchTracker &&);
+  // TODO: Fill these in if they become necessary
+  // BranchTracker(const BranchTracker &);
+  // BranchTracker(BranchTracker &&);
+  // BranchTracker operator=(const BranchTracker &);
+  // BranchTracker operator=(BranchTracker &&);
 
   ~BranchTracker() = default;
 
@@ -30,16 +38,16 @@ public:
   double getQuality();
 
   // appends current board to private variables
-  double getCurrentBoardWeight();
+  // double getCurrentBoardWeight();
 
   // recursive/iterative function to go through all children down to a depth of
   // _branchWeightings.depth
-  // NeuralNode cumulativeBranchWeight();
+  double cumulativeBranchWeight();
 
 private:
   WeightedNode _branchWeightings;
 
-  // The below private vars could be replaced by a neuron type
+  // The below private vars could be put in the neuron type
   std::tuple<int,int> _totalKings;
   std::tuple<int,int> _totalMovesAvailable;
   std::tuple<int,int> _totalQuality;
@@ -48,9 +56,10 @@ private:
   std::tuple<int,int> _maxMoves;
   std::tuple<int,int> _maxQuality;
 
-  // NOTE: Replace list w/custom neuron network and type should be a neuron
-  // instead of board
-  std::list<Board> _localBranch;
+  // temp neuron to explore a path before appending to the global _head Neuron
+  Neuron _localBranch;
+
+  Board _startBoard;
 };
 
 #endif
