@@ -165,7 +165,7 @@ std::string MoveGenerator::workhorse(int position, const Board & currentBoard, s
 	return visited;
 }
 
-std::vector<Board> MoveGenerator::generateRandomMoves(Board currentBoard)
+std::vector<Board> MoveGenerator::generateRandomMoves(const Board & currentBoard)
 {
 	std::vector<Board> validMoves;
 	std::string visited = currentBoard.getBoardStateString();
