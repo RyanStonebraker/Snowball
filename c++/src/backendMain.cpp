@@ -93,14 +93,17 @@ int main()
 				ioHandler.updateFileName();
 				Board b(ioHandler.readBoardState());
 
-				//for manual control:
-				// if (std::cin.get())
-				//		std::cout << "Next Turn" << std::endl;
+				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
-				/**TIMING**/
+				// TODO: POPULATE VALID MOVES WITH WEIGHTED MOVES, TAKES BOARD B
+				// NOTE: QUALITY IS A RANKING OF VALID KILLS AVAILABLE ON THE POTENTIAL NEXT MOVE
 
+<<<<<<< HEAD
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
+=======
+				vector<Board> validMoves = generateRandomMoves(b);
+>>>>>>> experimental_weighting
 				std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
@@ -138,6 +141,7 @@ int main()
 			{
 				auto startFullTurnCycleTime = system_clock::now();
 
+<<<<<<< HEAD
 				ioHandler.updateFileName();
 				//for manual control:
 
@@ -146,6 +150,15 @@ int main()
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
+=======
+				updateFileName();
+
+				auto startGenMoves = system_clock::now(); /***DEBUG***/
+
+				// TODO: POPULATE VALID MOVES WITH WEIGHTED MOVES, TAKES BOARD B
+
+				vector<Board> validMoves = generateRandomMoves(b);
+>>>>>>> experimental_weighting
 				vector<Board> flippedValidMoves = flipColor(validMoves);
 				std::sort(flippedValidMoves.begin(), flippedValidMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
@@ -158,10 +171,16 @@ int main()
 				if (validMoves.size() == 0)
 					break;
 
+<<<<<<< HEAD
 				// vector<Board> flippedValidMoves = flipColor(validMoves);
 				ioHandler.outputNewBoardState(flippedValidMoves);
 				// b = validMoves[indexOfMoveChosen];
 				ioHandler.updateFileName();
+=======
+				outputNewBoardState(flippedValidMoves);
+
+				updateFileName();
+>>>>>>> experimental_weighting
 
 				vector <Board> flipInputBoard = {ioHandler.readBoardState()};
 				b = flipColor(flipInputBoard)[0];

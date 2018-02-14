@@ -210,6 +210,9 @@ int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 
 	/***DEBUG***/
 	 // std::cout << "Black Center Move Generations: \n" << std::endl;
+
+
+	 // TODO: CHANGE QUALITY CHECKING TO WEIGHT CHECKING
 	 for (auto & n : validMoves)
 	 {
 		 if (n.getQuality() == highestQualityMove)
