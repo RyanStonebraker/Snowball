@@ -193,7 +193,7 @@ string IOHandler::readBoardState()
 	//}
 
 		/***DEBUG***/
-	/*	 std::cout << "RECEIVED BOARD: " << boardState << std::endl;
+		 /*std::cout << "RECEIVED BOARD: " << boardState << std::endl;
 		 std::cout << "INTERPRETATION: \n";
 		 print({ boardState });*/
 
@@ -223,8 +223,9 @@ int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 	/***DEBUG***/
 	/*std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
 	std::cout << "INTERPRETATION: \n";
-	print(validMoves[choice]);*/
-
+	print(validMoves[choice]); 
+	std::cout << "Black Kings: " << validMoves[choice].getBlackKingCount() << "\nRed Kings: " << validMoves[choice].getRedKingCount() << "\nBlack Pieces: " << validMoves[choice].getBlackPieceCount() << "\nRed Pieces: " << validMoves[choice].getRedPieceCount() << std::endl;
+*/
 	boardStateOutFile << validMoves[choice].getBoardStateString();
 
 	return choice;

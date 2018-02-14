@@ -6,6 +6,7 @@ Contains function definitions for board class
 */
 
 #include "board.h"
+#include "constants.h"
 
 std::ostream & operator<< (std::ostream & output, const Board & b)
 {
@@ -31,6 +32,31 @@ std::string Board::getBoardStateString() const
 int Board::getQuality() const
 {
 	return _quality;
+}
+
+int Board::getRedKingCount() const
+{
+	return _redKingCount;
+}
+
+int Board::getBlackKingCount() const
+{
+	return _blackKingCount;
+}
+
+int Board::getBlackPieceCount() const
+{
+	return _blackPieceCount;
+}
+
+int Board::getRedPieceCount() const
+{
+	return _redPieceCount;
+}
+
+int Board::getMovesAvailable() const
+{
+	return 0;
 }
 
 void Board::setBoardStateString(const std::string & newState)
@@ -88,6 +114,11 @@ void Board::updateBoard()
 {
 	unsigned long long int bitFactor = 1;
 
+	_redKingCount = 0;
+	_redPieceCount = 0;
+	_blackKingCount = 0;
+	_blackPieceCount = 0;
+
 	for (unsigned int i = 0; i < _boardStateString.length(); i++)
 	{
 		_board.push_back(_boardStateString[i] - '0');
@@ -96,5 +127,20 @@ void Board::updateBoard()
 			convertToBits(_board[i], (bitFactor << (2 + 3 * i)));
 		else
 			convertToBits(_board[i], (bitFactor << (2 + 3 * (i - 19))), true);
+
+		if (_board[i] == RED)
+			_redPieceCount++;
+		else if (_board[i] == RED_KING)
+		{
+			_redPieceCount++;
+			_redKingCount++;
+		}
+		else if (_board[i] == BLACK)
+			_blackPieceCount++;
+		else if (_board[i] == BLACK_KING)
+		{
+			_blackPieceCount++;
+			_blackKingCount++;
+		}
 	}
 }

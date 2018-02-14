@@ -55,7 +55,11 @@ public:
 	int getQuality() const;
 
 	//pice retrieval functions
-	int getKingCount() const;
+	int getRedKingCount() const;
+	int getBlackKingCount() const;
+	int getBlackPieceCount() const;
+	int getRedPieceCount() const;
+	int getMovesAvailable() const;
 
 	//mutator functions
 	void setBoardStateString(const std::string & newState);
@@ -81,6 +85,10 @@ private:
 	//_declspec (align(16)) __m128i _boardStateBits;
 	_96Bit _boardStateBits;
 	std::vector<int> _board;
+	int _redKingCount;
+	int _blackKingCount;
+	int _redPieceCount;
+	int _blackPieceCount;
 };
 
 #endif // !FILE_BOARD_H_INCLUDED

@@ -105,6 +105,7 @@ int main()
 
 	while (true)
 	{
+		std::cout << "Game Start" << std::endl;
 		// Board b(readBoardState());
 		if (ioHandler.startGame(ioHandler.setupGame())) //computer is black and goes second
 		{
