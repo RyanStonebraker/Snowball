@@ -211,8 +211,8 @@ int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 
 	 // TODO: CHANGE QUALITY CHECKING TO WEIGHT CHECKING
 
-	
-	 
+
+
 
 	random_device rd;
 	mt19937 gen(rd());
@@ -223,7 +223,7 @@ int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 	/***DEBUG***/
 	/*std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
 	std::cout << "INTERPRETATION: \n";
-	print(validMoves[choice]); 
+	print(validMoves[choice]);
 	std::cout << "Black Kings: " << validMoves[choice].getBlackKingCount() << "\nRed Kings: " << validMoves[choice].getRedKingCount() << "\nBlack Pieces: " << validMoves[choice].getBlackPieceCount() << "\nRed Pieces: " << validMoves[choice].getRedPieceCount() << std::endl;
 */
 	boardStateOutFile << validMoves[choice].getBoardStateString();

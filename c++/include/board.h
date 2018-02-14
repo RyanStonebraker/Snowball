@@ -36,7 +36,17 @@ public:
 	~Board() = default;
 
 	//copy ctor
-	Board(const Board & other) = default;
+	Board(const Board & other) {
+		this->_boardStateString = other._boardStateString;
+		this->_quality = other._quality;
+		this->_board = other._board;
+		this->_boardStateBits = other._boardStateBits;
+
+		this->_redKingCount = other._redKingCount;
+		this->_blackKingCount = other._blackKingCount;
+		this->_redPieceCount = other._redPieceCount;
+		this->_blackPieceCount = other._blackPieceCount;
+	}
 
 	//copy assignment
 	Board & operator=(const Board & other) = default;
@@ -46,11 +56,11 @@ public:
 
 	//move assignment
 	Board & operator=(Board && other) = default;
-	
+
 
 	//retrieval functions
-	_96Bit getBoardStateBits() const; 
-	std::vector<int> getBoardArray() const; 
+	_96Bit getBoardStateBits() const;
+	std::vector<int> getBoardArray() const;
 	std::string getBoardStateString() const;
 	int getQuality() const;
 

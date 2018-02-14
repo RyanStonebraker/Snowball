@@ -7,6 +7,8 @@
 class Neuron {
 public:
 	Neuron() = default;
+	Neuron(Neuron & rhs) :  _weight(rhs._weight), _averageWeight(rhs._averageWeight),
+												 _children(rhs._children),_riskFactor(rhs._riskFactor), _board(rhs._board){}
 	Neuron(Board &board);
 	void spawnChildren(int depth);
 	void updateAverageWeights();
@@ -15,6 +17,7 @@ public:
 	int getBlackKingCount() const;
 	int getBlackPieceCount() const;
 	int getRedPieceCount() const;
+	Board getBoard();
 	size_t size() const;
 
 	//[] overloads
@@ -26,7 +29,7 @@ private:
 	float _averageWeight;
 	std::vector<std::shared_ptr<Neuron>> _children;
 	float _riskFactor;
-	std::unique_ptr<Board> _board;
+	std::shared_ptr<Board> _board;
 };
 
 #endif

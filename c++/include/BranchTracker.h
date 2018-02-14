@@ -16,9 +16,9 @@
 #include <tuple>
 
 struct NodeFactors {
-  std::tuple<int,int> totalKings;
-  std::tuple<int,int> totalMovesAvailable;
-  std::tuple<int,int> totalQuality;
+  std::tuple<size_t,size_t> totalKings;
+  std::tuple<size_t,size_t> totalPieceCount;
+  std::tuple<size_t,size_t> totalQuality;
   unsigned int childrenAmount;
 };
 
@@ -57,12 +57,12 @@ public:
 private:
   // recursive/iterative function to go through all children down to a depth of
   // _branchWeightings.depth
-  NodeFactors _cumulativeBranchWeight(Neuron, unsigned int);
+  NodeFactors _cumulativeBranchWeight(Neuron, unsigned);
 
   float _sigmoidNormalizer(double);
 
   // Gets the weight of the branch for given color before sigmoid function
-  double raw_weighting(NodeFactors, Color);
+  double raw_weighting(NodeFactors, const Color);
 
 // private members
 private:
@@ -70,7 +70,7 @@ private:
 
   // The below private vars could be put in the neuron type
   std::tuple<int,int> _totalKings;
-  std::tuple<int,int> _totalMovesAvailable;
+  std::tuple<int,int> _totalPieceCount;
   std::tuple<int,int> _totalQuality;
 
   // TODO: Do something with max counts and risk factor later...
@@ -81,8 +81,6 @@ private:
   unsigned int _childrenAmount;
 
   float _weight;
-
-
 
   // temp neuron to explore a path before appending to the global _head Neuron
   Neuron _localBranch;

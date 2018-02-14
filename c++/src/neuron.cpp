@@ -10,14 +10,14 @@ using std::weak_ptr;
 #include <iostream>
 
 Neuron::Neuron(Board &board) {
-	_board = make_unique<Board>(board);
+	_board = make_shared<Board>(board);
 }
 
 unsigned int evals = 0;
 
 void Neuron::spawnChildren(int depth) {
-	std::cout << "Spawning children at level " << depth << "\n";
-	std::cout << "Boards generated: " << evals << "\n";
+	// std::cout << "Spawning children at level " << depth << "\n";
+	// std::cout << "Boards generated: " << evals << "\n";
 	MoveGenerator moveGenerator;
 	auto validMoves = moveGenerator.generateRandomMoves(*_board.get());
 	for (auto board : validMoves) {
@@ -70,4 +70,8 @@ std::shared_ptr<Neuron> & Neuron::operator[](int index)
 const std::shared_ptr<Neuron> & Neuron::operator[](int index) const
 {
 	return _children[index];
+}
+
+Board Neuron::getBoard() {
+	return *this->_board;
 }
