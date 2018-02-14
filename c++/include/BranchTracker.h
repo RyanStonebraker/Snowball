@@ -21,7 +21,7 @@
 // branches will not be appended to the global neuron network.
 class BranchTracker {
 public:
-  enum Color { RED, BLACK };
+  enum Color { RED_PIECE, BLACK_PIECE };
 
   BranchTracker() = delete;
   BranchTracker(const Board &, WeightedNode&);
@@ -66,6 +66,8 @@ private:
 
   // temp neuron to explore a path before appending to the global _head Neuron
   Neuron _localBranch;
+
+  Neuron _bestMoveNode;
 
   Board _startBoard;
 };
