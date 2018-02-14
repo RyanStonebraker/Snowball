@@ -9,7 +9,7 @@
 // 2 param ctor for BranchTracker, NOTE WeightedNode is passed by reference to
 // allow for updating given a branches returned values
 BranchTracker::BranchTracker(const Board &startBoard, WeightedNode &branchWeight)
-    : _startBoard(startBoard), _branchWeightings(branchWeight) {
+    : _branchWeightings(branchWeight), _startBoard(startBoard) {
   // Update Neuron starting board
   _localBranch = Neuron(this->_startBoard);
 }

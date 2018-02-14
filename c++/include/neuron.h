@@ -6,6 +6,7 @@
 
 class Neuron {
 public:
+	Neuron() = default;
 	Neuron(Board &board);
 	void spawnChildren(int depth);
 	void updateAverageWeights();

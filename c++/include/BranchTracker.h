@@ -24,7 +24,7 @@ public:
   enum Color { RED, BLACK };
 
   BranchTracker() = delete;
-  BranchTracker(const Board &, WeightedNode);
+  BranchTracker(const Board &, WeightedNode&);
 
   // TODO: Fill these in if they become necessary
   // BranchTracker(const BranchTracker &);
