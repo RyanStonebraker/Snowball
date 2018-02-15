@@ -30,6 +30,10 @@ BranchTracker::BranchTracker(Board &startBoard, WeightedNode &branchWeight)
 
 }
 
+Board BranchTracker::getStartBoard() const {
+  return _startBoard;
+}
+
 Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   this->_localBranch.spawnChildren(this->_branchWeightings.depth);
 
@@ -37,6 +41,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
 
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
+    std::cout << "Starting Child " << child << std::endl;
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
 
     std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor;

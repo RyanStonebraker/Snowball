@@ -52,6 +52,8 @@ public:
 
   Neuron fastForwardHead();
 
+  Board getStartBoard() const;
+
   // appends current board to private variables
   // double getCurrentBoardWeight();
 

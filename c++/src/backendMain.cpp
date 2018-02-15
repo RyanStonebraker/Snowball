@@ -125,7 +125,10 @@ int main()
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
 				BranchTracker potentialBranch(b, currentWeights);
+
 				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::BLACK_PIECE);
+
+				std::cout << "BEST BOARD: " << nextMove << std::endl;
 
 				// ***** TODO: Neuron class should have an append function to add children to it
 				// and it should have a copy constructor so the below works ******
