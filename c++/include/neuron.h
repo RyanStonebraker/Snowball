@@ -16,7 +16,7 @@ public:
 	Neuron(float, float, std::vector<std::shared_ptr<Neuron>> &, float, Board);
 	Neuron(Neuron & other);
 	Neuron & operator=(Neuron & other);
-	void spawnChildren(int depth);
+	void spawnChildren(int depth, bool flipColor);
 	void updateAverageWeights();
 	size_t size() const;
 
