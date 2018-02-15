@@ -101,6 +101,8 @@ int main()
 	currentWeights.availableMovesWeight = rand_weight(rand_gen);
 	currentWeights.riskFactor = rand_weight(rand_gen);
 	currentWeights.enemyFactor = rand_weight(rand_gen);
+
+	// Depth must be at least 1 so that it can see every possible move it can make
 	currentWeights.depth = 2;
 
 	while (true)
