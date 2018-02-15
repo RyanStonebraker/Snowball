@@ -16,9 +16,9 @@
 #include <tuple>
 
 struct NodeFactors {
-  std::tuple<size_t,size_t> totalKings;
-  std::tuple<size_t,size_t> totalPieceCount;
-  std::tuple<size_t,size_t> totalQuality;
+  std::tuple<unsigned,unsigned> totalKings;
+  std::tuple<unsigned, unsigned> totalPieceCount;
+  std::tuple<long long,long long> totalQuality;
   unsigned int childrenAmount;
 
   friend std::ostream & operator<< (std::ostream &, const NodeFactors &);
@@ -52,6 +52,8 @@ public:
 
   Neuron fastForwardHead();
 
+  Board getStartBoard() const;
+
   // appends current board to private variables
   // double getCurrentBoardWeight();
 
@@ -59,7 +61,7 @@ public:
 private:
   // recursive/iterative function to go through all children down to a depth of
   // _branchWeightings.depth
-  NodeFactors _cumulativeBranchWeight(Neuron, unsigned);
+  NodeFactors _cumulativeBranchWeight(Neuron &, unsigned);
 
   double _sigmoidNormalizer(double);
 

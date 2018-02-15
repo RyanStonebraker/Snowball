@@ -101,6 +101,8 @@ int main()
 	currentWeights.availableMovesWeight = rand_weight(rand_gen);
 	currentWeights.riskFactor = rand_weight(rand_gen);
 	currentWeights.enemyFactor = rand_weight(rand_gen);
+
+	// Depth must be at least 1 so that it can see every possible move it can make
 	currentWeights.depth = 2;
 
 	while (true)
@@ -123,7 +125,10 @@ int main()
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
 				BranchTracker potentialBranch(b, currentWeights);
+
 				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::BLACK_PIECE);
+
+				std::cout << "BEST BOARD: " << nextMove << std::endl;
 
 				// ***** TODO: Neuron class should have an append function to add children to it
 				// and it should have a copy constructor so the below works ******

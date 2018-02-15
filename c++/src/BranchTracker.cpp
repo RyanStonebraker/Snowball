@@ -25,24 +25,32 @@ std::ostream & operator<< (std::ostream & os, const NodeFactors & nf) {
 BranchTracker::BranchTracker(Board &startBoard, WeightedNode &branchWeight)
     : _branchWeightings(branchWeight), _childrenAmount(0), _startBoard(startBoard) {
   // Update Neuron starting board
-  Neuron test(startBoard);
-  _localBranch = test;
+  Neuron currLevel(startBoard);
+  _localBranch = currLevel;
 
+}
+
+Board BranchTracker::getStartBoard() const {
+  return _startBoard;
 }
 
 Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   this->_localBranch.spawnChildren(this->_branchWeightings.depth);
 
   // This returns the first valid move!
-  // return (*_localBranch[0]).getBoard();
 
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
+    std::cout << "Starting Child " << child << std::endl;
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
 
-    std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor << std::endl;
+    std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor;
 
     double childWeight = _sigmoidNormalizer(raw_weighting(firstChildFactor, pieceColor));
+
+    // std::cout << "Immediate Childs Quality: " << (*this->_localBranch[child])[0]->getQuality() << "\n";
+
+    std::cout << "Normalized Weight: " << childWeight << "\n" << std::endl;
     if (childWeight > this->_weight) {
       this->_bestMoveNode = *this->_localBranch[child];
 
@@ -96,7 +104,10 @@ double BranchTracker::raw_weighting(const NodeFactors & factors, const Color pie
   return raw_total;
 }
 
-NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron temp_head, unsigned int depthLimit) {
+
+// START NEW ******
+
+NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned int depthLimit) {
   std::tuple<int,int> tempTotalKings;
   std::tuple<int,int> tempTotalPieceCount;
   std::tuple<int,int> tempTotalQuality;
@@ -105,46 +116,81 @@ NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron temp_head, unsigned in
 
   unsigned int tempNumChildren = 0;
 
-    // Loop through every child of temp_head
-  for (unsigned int child = 0; child < temp_head.size(); ++child) {
+  // Loop through children
+  for (unsigned child = 0; child < temp_head.size(); ++child) {
     std::get<RED_PIECE>(tempTotalKings) += temp_head[child]->getRedKingCount();
     std::get<BLACK_PIECE>(tempTotalKings) += temp_head[child]->getBlackKingCount();
 
     std::get<RED_PIECE>(tempTotalPieceCount) += temp_head[child]->getRedPieceCount();
     std::get<BLACK_PIECE>(tempTotalPieceCount) += temp_head[child]->getBlackPieceCount();
 
-    std::get<RED_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
+    std::get<RED_PIECE>(tempTotalQuality) -= temp_head[child]->getQuality();
 
     // TODO: Make more versatile for Red/Black, this might not work to get accurate black piece quality
-    std::get<BLACK_PIECE>(tempTotalQuality) -= temp_head[child]->getQuality();
-
-    tempFactors.totalKings = tempTotalKings;
-    tempFactors.totalPieceCount = tempTotalPieceCount;
-    tempFactors.totalQuality = tempTotalQuality;
-
-    // if child has children and haven't reached our depth limit, then recursive case
-    if (temp_head[child]->size() > 0 && depthLimit > 0) {
-      NodeFactors childFactors = _cumulativeBranchWeight(*temp_head[child], depthLimit - 1);
-
-      std::get<RED_PIECE>(tempFactors.totalKings) += std::get<RED_PIECE>(childFactors.totalKings);
-      std::get<BLACK_PIECE>(tempFactors.totalKings) += std::get<BLACK_PIECE>(childFactors.totalKings);
-
-      std::get<RED_PIECE>(tempFactors.totalPieceCount) += std::get<RED_PIECE>(childFactors.totalPieceCount);
-      std::get<BLACK_PIECE>(tempFactors.totalPieceCount) += std::get<BLACK_PIECE>(childFactors.totalPieceCount);
-
-      std::get<RED_PIECE>(tempFactors.totalKings) += std::get<RED_PIECE>(childFactors.totalKings);
-      std::get<BLACK_PIECE>(tempFactors.totalKings) += std::get<BLACK_PIECE>(childFactors.totalKings);
-
-      std::get<RED_PIECE>(tempFactors.totalQuality) += std::get<RED_PIECE>(childFactors.totalQuality);
-      std::get<BLACK_PIECE>(tempFactors.totalQuality) += std::get<BLACK_PIECE>(childFactors.totalQuality);
-
-      tempNumChildren += tempFactors.childrenAmount;
-    }
-
-    ++tempNumChildren;
+    std::get<BLACK_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
   }
+  tempNumChildren += temp_head.size();
+
+  tempFactors.totalKings = tempTotalKings;
+  tempFactors.totalPieceCount = tempTotalPieceCount;
+  tempFactors.totalQuality = tempTotalQuality;
+  tempFactors.childrenAmount = tempNumChildren;
+
   return tempFactors;
 }
+
+// END NEW ********
+
+
+// NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned int depthLimit) {
+//   std::tuple<int,int> tempTotalKings;
+//   std::tuple<int,int> tempTotalPieceCount;
+//   std::tuple<int,int> tempTotalQuality;
+//
+//   NodeFactors tempFactors;
+//
+//   unsigned int tempNumChildren = 0;
+//
+//     // Loop through every child of temp_head
+//   for (unsigned int child = 0; child < temp_head.size(); ++child) {
+    // std::get<RED_PIECE>(tempTotalKings) += temp_head[child]->getRedKingCount();
+    // std::get<BLACK_PIECE>(tempTotalKings) += temp_head[child]->getBlackKingCount();
+    //
+    // std::get<RED_PIECE>(tempTotalPieceCount) += temp_head[child]->getRedPieceCount();
+    // std::get<BLACK_PIECE>(tempTotalPieceCount) += temp_head[child]->getBlackPieceCount();
+    //
+    // std::get<RED_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
+    //
+    // // TODO: Make more versatile for Red/Black, this might not work to get accurate black piece quality
+    // std::get<BLACK_PIECE>(tempTotalQuality) -= temp_head[child]->getQuality();
+    //
+    // tempFactors.totalKings = tempTotalKings;
+    // tempFactors.totalPieceCount = tempTotalPieceCount;
+    // tempFactors.totalQuality = tempTotalQuality;
+//
+//     // if child has children and haven't reached our depth limit, then recursive case
+//     if (temp_head[child]->size() > 0 && depthLimit > 1) {
+//       NodeFactors childFactors = _cumulativeBranchWeight(*temp_head[child], depthLimit - 1);
+//
+//       std::get<RED_PIECE>(tempFactors.totalKings) += std::get<RED_PIECE>(childFactors.totalKings);
+//       std::get<BLACK_PIECE>(tempFactors.totalKings) += std::get<BLACK_PIECE>(childFactors.totalKings);
+//
+//       std::get<RED_PIECE>(tempFactors.totalPieceCount) += std::get<RED_PIECE>(childFactors.totalPieceCount);
+//       std::get<BLACK_PIECE>(tempFactors.totalPieceCount) += std::get<BLACK_PIECE>(childFactors.totalPieceCount);
+//
+//       std::get<RED_PIECE>(tempFactors.totalKings) += std::get<RED_PIECE>(childFactors.totalKings);
+//       std::get<BLACK_PIECE>(tempFactors.totalKings) += std::get<BLACK_PIECE>(childFactors.totalKings);
+//
+//       std::get<RED_PIECE>(tempFactors.totalQuality) += std::get<RED_PIECE>(childFactors.totalQuality);
+//       std::get<BLACK_PIECE>(tempFactors.totalQuality) += std::get<BLACK_PIECE>(childFactors.totalQuality);
+//
+//       tempNumChildren += tempFactors.childrenAmount;
+//     }
+//
+//     ++tempNumChildren;
+//   }
+//   return tempFactors;
+// }
 
 Neuron BranchTracker::fastForwardHead() {
   // TODO: Do error checking?
