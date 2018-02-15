@@ -4,8 +4,6 @@
 #include <memory>
 using std::shared_ptr;
 using std::make_shared;
-using std::unique_ptr;
-using std::make_unique;
 using std::weak_ptr;
 #include <iostream>
 
@@ -25,7 +23,7 @@ Neuron::Neuron(Neuron & other)
 	_averageWeight = other.getAverageWeight();
 	_children = other.getChildren();
 	_riskFactor = other.getRiskFactor();
-	_board = make_unique<Board>(other.getBoard());
+	_board = other._board;
 }
 
 Neuron & Neuron::operator=(Neuron & other)
@@ -34,7 +32,7 @@ Neuron & Neuron::operator=(Neuron & other)
 	_averageWeight = other.getAverageWeight();
 	_children = other.getChildren();
 	_riskFactor = other.getRiskFactor();
-	_board = make_shared<Board>(other.getBoard());
+	_board = other._board;
 
 	return *this;
 }

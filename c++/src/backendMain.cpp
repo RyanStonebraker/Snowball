@@ -101,7 +101,7 @@ int main()
 	currentWeights.availableMovesWeight = rand_weight(rand_gen);
 	currentWeights.riskFactor = rand_weight(rand_gen);
 	currentWeights.enemyFactor = rand_weight(rand_gen);
-	currentWeights.depth = 1;
+	currentWeights.depth = 2;
 
 	while (true)
 	{

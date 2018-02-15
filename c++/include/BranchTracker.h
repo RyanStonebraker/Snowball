@@ -20,6 +20,8 @@ struct NodeFactors {
   std::tuple<size_t,size_t> totalPieceCount;
   std::tuple<size_t,size_t> totalQuality;
   unsigned int childrenAmount;
+
+  friend std::ostream & operator<< (std::ostream &, const NodeFactors &);
 };
 
 // A class that recursive/iteratively goes through every possible future move
@@ -62,7 +64,7 @@ private:
   double _sigmoidNormalizer(double);
 
   // Gets the weight of the branch for given color before sigmoid function
-  double raw_weighting(NodeFactors, const Color);
+  double raw_weighting(const NodeFactors &, const Color);
 
 // private members
 private:

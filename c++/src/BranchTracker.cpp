@@ -10,27 +10,38 @@
 #include <math.h>
 #include <iostream>
 
+// DEBUG: Output for debugging
+std::ostream & operator<< (std::ostream & os, const NodeFactors & nf) {
+  os << "Red Total Kings: " << std::get<0>(nf.totalKings) << " Black Total Kings: " << std::get<1>(nf.totalKings) << "\n";
+  os << "Red Total Piece Count: " << std::get<0>(nf.totalPieceCount) << " Black Total Piece Count: " << std::get<1>(nf.totalPieceCount) << "\n";
+  os << "Red Total Quality: " << std::get<0>(nf.totalQuality) << " Black Total Quality: " << std::get<1>(nf.totalQuality) << "\n";
+  os << "Children Amount: " << nf.childrenAmount << std::endl;
+
+  return os;
+}
+
 // 2 param ctor for BranchTracker, NOTE WeightedNode is passed by reference to
 // allow for updating given a branches returned values
 BranchTracker::BranchTracker(Board &startBoard, WeightedNode &branchWeight)
     : _branchWeightings(branchWeight), _childrenAmount(0), _startBoard(startBoard) {
   // Update Neuron starting board
-  std::cout << "BranchTracker Side: " << this->_startBoard << std::endl;
-  try {
-    std::cout << "BEFORE" << std::endl;
-    _localBranch = Neuron (this->_startBoard);
-  std::cout << "Neuron Side: " << _localBranch.getBoard() << std::endl;
-} catch(...) {
-  std::cout << "Neuron FAILED!!!" << std::endl;
-}
+  Neuron test(startBoard);
+  _localBranch = test;
+
 }
 
 Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   this->_localBranch.spawnChildren(this->_branchWeightings.depth);
 
+  // This returns the first valid move!
+  // return (*_localBranch[0]).getBoard();
+
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
+
+    std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor << std::endl;
+
     double childWeight = _sigmoidNormalizer(raw_weighting(firstChildFactor, pieceColor));
     if (childWeight > this->_weight) {
       this->_bestMoveNode = *this->_localBranch[child];
@@ -43,6 +54,8 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
     }
   }
 
+  // return (*this->_localBranch[0]).getBoard();
+
   return this->_bestMoveNode.getBoard();
 }
 
@@ -50,7 +63,7 @@ double BranchTracker::_sigmoidNormalizer (double raw_weight) {
   return tanh(raw_weight);
 }
 
-double BranchTracker::raw_weighting(NodeFactors factors, const Color pieceColor) {
+double BranchTracker::raw_weighting(const NodeFactors & factors, const Color pieceColor) {
   double raw_total = 0;
 
   double kingFactor = 0;
@@ -61,22 +74,22 @@ double BranchTracker::raw_weighting(NodeFactors factors, const Color pieceColor)
   double enemyQualityFactor = 0;
 
   if (pieceColor == RED_PIECE) {
-    kingFactor = (std::get<RED_PIECE>(this->_totalKings)) / this->_childrenAmount * _branchWeightings.kingingWeight;
-    freedomFactor = std::get<RED_PIECE>(this->_totalPieceCount) / this->_childrenAmount * _branchWeightings.availableMovesWeight;
-    qualityFactor = std::get<RED_PIECE>(this->_totalQuality) / this->_childrenAmount * _branchWeightings.qualityWeight;
+    kingFactor = (std::get<RED_PIECE>(factors.totalKings)) / factors.childrenAmount * _branchWeightings.kingingWeight;
+    freedomFactor = std::get<RED_PIECE>(factors.totalPieceCount) / factors.childrenAmount * _branchWeightings.availableMovesWeight;
+    qualityFactor = std::get<RED_PIECE>(factors.totalQuality) / factors.childrenAmount * _branchWeightings.qualityWeight;
 
-    enemyKingFactor = std::get<BLACK_PIECE>(this->_totalKings) / this->_childrenAmount * _branchWeightings.kingingWeight * _branchWeightings.enemyFactor;
-    enemyFreedomFactor = std::get<BLACK_PIECE>(this->_totalPieceCount) / this->_childrenAmount * _branchWeightings.availableMovesWeight * _branchWeightings.enemyFactor;
-    enemyQualityFactor = std::get<BLACK_PIECE>(this->_totalQuality) / this->_childrenAmount * _branchWeightings.qualityWeight * _branchWeightings.enemyFactor;
+    enemyKingFactor = std::get<BLACK_PIECE>(factors.totalKings) / factors.childrenAmount * _branchWeightings.kingingWeight * _branchWeightings.enemyFactor;
+    enemyFreedomFactor = std::get<BLACK_PIECE>(factors.totalPieceCount) / factors.childrenAmount * _branchWeightings.availableMovesWeight * _branchWeightings.enemyFactor;
+    enemyQualityFactor = std::get<BLACK_PIECE>(factors.totalQuality) / factors.childrenAmount * _branchWeightings.qualityWeight * _branchWeightings.enemyFactor;
   }
   else {
-    kingFactor = (std::get<BLACK_PIECE>(this->_totalKings)) / this->_childrenAmount * _branchWeightings.kingingWeight;
-    freedomFactor = std::get<BLACK_PIECE>(this->_totalPieceCount) / this->_childrenAmount * _branchWeightings.availableMovesWeight;
-    qualityFactor = std::get<BLACK_PIECE>(this->_totalQuality) / this->_childrenAmount * _branchWeightings.qualityWeight;
+    kingFactor = (std::get<BLACK_PIECE>(factors.totalKings)) / factors.childrenAmount * _branchWeightings.kingingWeight;
+    freedomFactor = std::get<BLACK_PIECE>(factors.totalPieceCount) / factors.childrenAmount * _branchWeightings.availableMovesWeight;
+    qualityFactor = std::get<BLACK_PIECE>(factors.totalQuality) / factors.childrenAmount * _branchWeightings.qualityWeight;
 
-    enemyKingFactor = std::get<RED_PIECE>(this->_totalKings) / this->_childrenAmount * _branchWeightings.kingingWeight * _branchWeightings.enemyFactor;
-    enemyFreedomFactor = std::get<RED_PIECE>(this->_totalPieceCount) / this->_childrenAmount * _branchWeightings.availableMovesWeight * _branchWeightings.enemyFactor;
-    enemyQualityFactor = std::get<RED_PIECE>(this->_totalQuality) / this->_childrenAmount * _branchWeightings.qualityWeight * _branchWeightings.enemyFactor;
+    enemyKingFactor = std::get<RED_PIECE>(factors.totalKings) / factors.childrenAmount * _branchWeightings.kingingWeight * _branchWeightings.enemyFactor;
+    enemyFreedomFactor = std::get<RED_PIECE>(factors.totalPieceCount) / factors.childrenAmount * _branchWeightings.availableMovesWeight * _branchWeightings.enemyFactor;
+    enemyQualityFactor = std::get<RED_PIECE>(factors.totalQuality) / factors.childrenAmount * _branchWeightings.qualityWeight * _branchWeightings.enemyFactor;
   }
 
   raw_total = kingFactor + freedomFactor + qualityFactor - enemyKingFactor - enemyFreedomFactor - enemyQualityFactor;
