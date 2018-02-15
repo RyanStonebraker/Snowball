@@ -1,3 +1,5 @@
 ai_run
 ai_test
 *.dSYM
+node_modules
+.clang_complete

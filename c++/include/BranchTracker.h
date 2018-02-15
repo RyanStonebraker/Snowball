@@ -31,7 +31,7 @@ public:
   enum Color { RED_PIECE, BLACK_PIECE };
 
   BranchTracker() = delete;
-  BranchTracker(const Board &, WeightedNode&);
+  BranchTracker(Board &, WeightedNode&);
 
   // TODO: Fill these in if they become necessary
   // BranchTracker(const BranchTracker &);
@@ -59,7 +59,7 @@ private:
   // _branchWeightings.depth
   NodeFactors _cumulativeBranchWeight(Neuron, unsigned);
 
-  float _sigmoidNormalizer(double);
+  double _sigmoidNormalizer(double);
 
   // Gets the weight of the branch for given color before sigmoid function
   double raw_weighting(NodeFactors, const Color);
@@ -80,7 +80,7 @@ private:
 
   unsigned int _childrenAmount;
 
-  float _weight;
+  double _weight;
 
   // temp neuron to explore a path before appending to the global _head Neuron
   Neuron _localBranch;

@@ -8,13 +8,21 @@
 #include "neuron.h"
 #include "board.h"
 #include <math.h>
+#include <iostream>
 
 // 2 param ctor for BranchTracker, NOTE WeightedNode is passed by reference to
 // allow for updating given a branches returned values
-BranchTracker::BranchTracker(const Board &startBoard, WeightedNode &branchWeight)
+BranchTracker::BranchTracker(Board &startBoard, WeightedNode &branchWeight)
     : _branchWeightings(branchWeight), _childrenAmount(0), _startBoard(startBoard) {
   // Update Neuron starting board
-  _localBranch = Neuron(this->_startBoard);
+  std::cout << "BranchTracker Side: " << this->_startBoard << std::endl;
+  try {
+    std::cout << "BEFORE" << std::endl;
+    _localBranch = Neuron (this->_startBoard);
+  std::cout << "Neuron Side: " << _localBranch.getBoard() << std::endl;
+} catch(...) {
+  std::cout << "Neuron FAILED!!!" << std::endl;
+}
 }
 
 Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
@@ -23,7 +31,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
-    float childWeight = _sigmoidNormalizer(raw_weighting(firstChildFactor, pieceColor));
+    double childWeight = _sigmoidNormalizer(raw_weighting(firstChildFactor, pieceColor));
     if (childWeight > this->_weight) {
       this->_bestMoveNode = *this->_localBranch[child];
 
@@ -38,7 +46,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   return this->_bestMoveNode.getBoard();
 }
 
-float BranchTracker::_sigmoidNormalizer (double raw_weight) {
+double BranchTracker::_sigmoidNormalizer (double raw_weight) {
   return tanh(raw_weight);
 }
 
