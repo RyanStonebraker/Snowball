@@ -3,3 +3,4 @@ ai_test
 *.dSYM
 node_modules
 .clang_complete
+*.cson

@@ -1,5 +1,7 @@
 CC := clang++
-CFLAGS := -std=c++14 -I include -I ../dependencies -g -Wall -O3
+CFLAGS := -std=c++14 -I include -I ../dependencies -Wall
+OPTIMALPERF := -O3
+DBGFLAGS := -g -O0
 SOURCES := $(wildcard src/*.cpp)
 TEST_SOURCES := $(wildcard test/*.cpp)
 TARGET := bin/ai_run
@@ -7,14 +9,14 @@ GUI_TARGET := ../index.js
 TEST_TARGET := bin/ai_test
 TEMP_OBJECTS := $(wildcard ../comm/currentgame/turn*.txt) $(wildcard ../comm/handshake*.txt)
 
-ai_run: $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
+build: $(SOURCES)
+	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
+
+debug: $(SOURCES)
+	$(CC) $(CFLAGS) $(DBGFLAGS) -o $(TARGET) $(SOURCES)
 
 front_run:
 	electron $(GUI_TARGET)
-
-build_run: $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) && $(RUN)
 
 run_ai:
 	$(TARGET)

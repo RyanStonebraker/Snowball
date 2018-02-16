@@ -9,6 +9,7 @@
 #include "board.h"
 #include <math.h>
 #include <iostream>
+#include <unistd.h>
 
 // DEBUG: Output for debugging
 std::ostream & operator<< (std::ostream & os, const NodeFactors & nf) {
@@ -35,13 +36,17 @@ Board BranchTracker::getStartBoard() const {
 }
 
 Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
-  this->_localBranch.spawnChildren(this->_branchWeightings.depth);
+  this->_localBranch.spawnChildren(this->_branchWeightings.depth, true);
 
   // This returns the first valid move!
 
+
+  int bestChild = -1;
+  double bestWeight = -1;
+
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
-    std::cout << "Starting Child " << child << std::endl;
+    std::cout << "\nStarting Child " << child << std::endl;
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
 
     std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor;
@@ -51,7 +56,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
     // std::cout << "Immediate Childs Quality: " << (*this->_localBranch[child])[0]->getQuality() << "\n";
 
     std::cout << "Normalized Weight: " << childWeight << "\n" << std::endl;
-    if (childWeight > this->_weight) {
+    if (childWeight > bestWeight) {
       this->_bestMoveNode = *this->_localBranch[child];
 
       this->_totalKings = firstChildFactor.totalKings;
@@ -59,12 +64,25 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
       this->_totalQuality = firstChildFactor.totalQuality;
 
       this->_weight = childWeight;
+      bestWeight = childWeight;
+      bestChild = child;
     }
+    this->_childrenAmount += firstChildFactor.childrenAmount;
+
+    std::cout << "ENDING CHILD " << child << std::endl;
   }
 
   // return (*this->_localBranch[0]).getBoard();
 
-  return this->_bestMoveNode.getBoard();
+  if (bestChild >= 0)
+    return (*this->_localBranch[bestChild]).getBoard();
+  else {
+    if (this->_localBranch.size() > 0)
+      return (*this->_localBranch[0]).getBoard();
+    std::cout << "SIZE OF ENDING LOCAL BRANCH: " << this->_localBranch.size() << std::endl;
+    std::cout << "NO MOVES LEFT TO MAKE, GAME OVER!" << std::endl;
+    _exit(0);
+  }
 }
 
 double BranchTracker::_sigmoidNormalizer (double raw_weight) {
@@ -130,6 +148,10 @@ NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned 
     std::get<BLACK_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
   }
   tempNumChildren += temp_head.size();
+
+  if (tempNumChildren <= 0) {
+    throw "No Children!";
+  }
 
   tempFactors.totalKings = tempTotalKings;
   tempFactors.totalPieceCount = tempTotalPieceCount;
