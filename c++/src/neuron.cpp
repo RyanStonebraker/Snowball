@@ -91,36 +91,48 @@ void Neuron::spawnChildren(int depth, bool flipColorFlag) {
 
 	MoveGenerator moveGenerator;
 	auto validMoves = moveGenerator.generateRandomMoves(*_board);
-	if (!flipColorFlag)
-	{
+	/*if (!flipColorFlag)
+	{*/
 		for (auto board : validMoves) {
 			evals++;
 			_children.push_back(make_shared<Neuron>(board));
 		}
+
+		int originalSize = _children.size();
+		for (int i = 0; i < originalSize; i++)
+		{
+			auto blackGen = moveGenerator.generateRandomMoves(_flipColor({ *_children[i]->_board })[0]);
+			for (auto n : blackGen)
+			{
+				evals++;
+				_children.push_back(make_shared<Neuron>(n));
+			}
+		}
+
 		depth--; 
 		if (depth > 0) {
-			for (auto child : _children) {
+			for (int k = 0; k < originalSize; k++) {
 				flipOccured = false;
-				child->spawnChildren(depth, !flipColorFlag);
+				_children[k]->spawnChildren(depth, !flipColorFlag);
 			}
 		}
-	}
-	else
-	{
-		auto flippedValidMoves = _flipColor(validMoves); //flip the board
+	/*}*/
+	//else
+	//{
+	//	auto flippedValidMoves = _flipColor(validMoves); //flip the board
 
-		for (auto flipBoard : flippedValidMoves) {
-			evals++;
-			_children.push_back(make_shared<Neuron>(flipBoard)); //push flipped boards back as children
-		}
+	//	for (auto flipBoard : flippedValidMoves) {
+	//		evals++;
+	//		_children.push_back(make_shared<Neuron>(flipBoard)); //push flipped boards back as children
+	//	}
 
-		if (depth > 0) {
-			for (auto flipChild : _children) {
-				flipOccured = true;
-				flipChild->spawnChildren(depth, !flipColorFlag);
-			}
-		}
-	}
+	//	if (depth > 0) {
+	//		for (auto flipChild : _children) {
+	//			flipOccured = true;
+	//			flipChild->spawnChildren(depth, !flipColorFlag);
+	//		}
+	//	}
+	//}
 }
 
 //Accessors for indirect board interfacing
