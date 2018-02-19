@@ -79,32 +79,6 @@ Neuron & Neuron::operator=(Neuron & other)
 	return *this;
 }
 
-Neuron::Neuron(float weight, float averageWeight, const std::vector<std::shared_ptr<Neuron>> & children, float riskFactor, Board board) 
-	: _weight(weight), _averageWeight(averageWeight), _children(children), _riskFactor(riskFactor)
-{
-	_board = make_unique<Board>(board);
-}
-
-Neuron::Neuron(const Neuron & other)
-{
-	_weight = other.getWeight();
-	_averageWeight = other.getAverageWeight();
-	_children = other.getChildren();
-	_riskFactor = other.getRiskFactor();
-	_board = make_unique<Board>(other.getBoard());
-}
-
-Neuron & Neuron::operator=(const Neuron & other)
-{
-	Neuron temp = { other.getWeight(), 
-					other.getAverageWeight(), 
-					other.getChildren(),
-					other.getRiskFactor(), 
-					other.getBoard() };
-
-	return temp;
-}
-
 unsigned int evals = 0;
 bool flipOccured = false;
 
@@ -201,7 +175,6 @@ float Neuron::getAverageWeight() const
 }
 
 std::vector<std::shared_ptr<Neuron>> Neuron::getChildren()
-
 {
 	return _children;
 }
@@ -211,9 +184,7 @@ float Neuron::getRiskFactor() const
 	return _riskFactor;
 }
 
-
 Board Neuron::getBoard()
-
 {
 	return *_board;
 }
@@ -223,18 +194,12 @@ size_t Neuron::size() const
 	return _children.size();
 }
 
-Neuron & Neuron::operator[](int index)
+std::shared_ptr<Neuron> & Neuron::operator[](int index)
 {
-	return *_children[index];
-}
-
-const Neuron & Neuron::operator[](int index) const
-{
-	return *_children[index];
+	return _children[index];
 }
 
 bool operator==(Neuron & lhs, Neuron & rhs)
-
 {
 	return ((lhs.getWeight() == rhs.getWeight()) &&
 		(lhs.getAverageWeight() == rhs.getAverageWeight()) &&
@@ -244,7 +209,6 @@ bool operator==(Neuron & lhs, Neuron & rhs)
 }
 
 bool operator!=(Neuron & lhs, Neuron & rhs)
-
 {
 	return !(lhs == rhs);
 }

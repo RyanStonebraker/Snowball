@@ -13,7 +13,6 @@ class Neuron {
 public:
 	Neuron() = default;
 	Neuron(Board &board);
-
 	Neuron(float, float, std::vector<std::shared_ptr<Neuron>> &, float, Board);
 	Neuron(Neuron & other);
 	Neuron & operator=(Neuron & other);
@@ -26,7 +25,6 @@ public:
 	int getBlackKingCount() const;
 	int getBlackPieceCount() const;
 	int getRedPieceCount() const;
-
 
 	// Accessors for Neuron
 	float getWeight() const;
