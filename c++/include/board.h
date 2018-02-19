@@ -48,11 +48,11 @@ public:
 
 	//move assignment
 	Board & operator=(Board && other) = default;
-	
+
 
 	//retrieval functions
-	_96Bit getBoardStateBits() const; 
-	std::vector<int> getBoardArray() const; 
+	_96Bit getBoardStateBits() const;
+	std::vector<int> getBoardArray() const;
 	std::string getBoardStateString() const;
 	int getQuality() const;
 

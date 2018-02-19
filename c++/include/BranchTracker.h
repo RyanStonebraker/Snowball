@@ -15,6 +15,15 @@
 #include <list>
 #include <tuple>
 
+struct NodeFactors {
+  std::tuple<unsigned,unsigned> totalKings;
+  std::tuple<unsigned, unsigned> totalPieceCount;
+  std::tuple<long long,long long> totalQuality;
+  unsigned int childrenAmount;
+
+  friend std::ostream & operator<< (std::ostream &, const NodeFactors &);
+};
+
 // A class that recursive/iteratively goes through every possible future move
 // to a depth specified in the WeightedNode and weights various components to
 // come up with a cumulative score of branch. The lowest percentage of same level
@@ -24,7 +33,7 @@ public:
   enum Color { RED_PIECE, BLACK_PIECE };
 
   BranchTracker() = delete;
-  BranchTracker(const Board &, WeightedNode&);
+  BranchTracker(Board &, WeightedNode&);
 
   // TODO: Fill these in if they become necessary
   // BranchTracker(const BranchTracker &);
@@ -37,19 +46,29 @@ public:
   // double getKingingChange();
   // double getQuality();
 
-  Board getBestMove();
+  // gets the best move by calling a recursive traversal function.
+  // takes an enumerated Color type (RED_PIECE/BLACK_PIECE)
+  Board getBestMove(Color);
 
   Neuron fastForwardHead();
+
+  Board getStartBoard() const;
 
   // appends current board to private variables
   // double getCurrentBoardWeight();
 
-  // recursive/iterative function to go through all children down to a depth of
-  // _branchWeightings.depth
-  double cumulativeBranchWeight();
-
 // private helper functions
 private:
+  // recursive/iterative function to go through all children down to a depth of
+  // _branchWeightings.depth
+  NodeFactors _cumulativeBranchWeight(Neuron &, unsigned);
+
+  void _recursivelyAddWeight(NodeFactors &, Neuron, unsigned);
+
+  double _sigmoidNormalizer(double);
+
+  // Gets the weight of the branch for given color before sigmoid function
+  double raw_weighting(const NodeFactors &, const Color);
 
 // private members
 private:
@@ -57,12 +76,17 @@ private:
 
   // The below private vars could be put in the neuron type
   std::tuple<int,int> _totalKings;
-  std::tuple<int,int> _totalMovesAvailable;
+  std::tuple<int,int> _totalPieceCount;
   std::tuple<int,int> _totalQuality;
 
-  std::tuple<int,int> _maxKings;
-  std::tuple<int,int> _maxMoves;
-  std::tuple<int,int> _maxQuality;
+  // TODO: Do something with max counts and risk factor later...
+  // std::tuple<int,int> _maxKings;
+  // std::tuple<int,int> _maxMoves;
+  // std::tuple<int,int> _maxQuality;
+
+  unsigned int _childrenAmount;
+
+  double _weight;
 
   // temp neuron to explore a path before appending to the global _head Neuron
   Neuron _localBranch;

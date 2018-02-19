@@ -7,43 +7,43 @@
 class Neuron {
 
 	//Equality overloads
-	friend bool operator==(const Neuron & lhs, const Neuron & rhs);
-	friend bool operator!=(const Neuron & lhs, const Neuron & rhs);
+	friend bool operator==(Neuron & lhs, Neuron & rhs);
+	friend bool operator!=(Neuron & lhs, Neuron & rhs);
 
 public:
 	Neuron() = default;
 	Neuron(Board &board);
-	Neuron(float, float, const std::vector<std::shared_ptr<Neuron>> &, float, Board);
-	Neuron(const Neuron & other);
-	Neuron & operator=(const Neuron & other);
-	void spawnChildren(int depth);
+
+	Neuron(float, float, std::vector<std::shared_ptr<Neuron>> &, float, Board);
+	Neuron(Neuron & other);
+	Neuron & operator=(Neuron & other);
+	void spawnChildren(int depth, bool flipColor);
 	void updateAverageWeights();
 	size_t size() const;
 
-	//Accessors for indirect board interfacing
 	int getQuality() const;
 	int getRedKingCount() const;
 	int getBlackKingCount() const;
 	int getBlackPieceCount() const;
 	int getRedPieceCount() const;
 
-	//Accessors for Neuron
+
+	// Accessors for Neuron
 	float getWeight() const;
 	float getAverageWeight() const;
-	std::vector<std::shared_ptr<Neuron>> getChildren() const;
+	std::vector<std::shared_ptr<Neuron>> getChildren();
 	float getRiskFactor() const;
-	Board getBoard() const;
+	Board getBoard();
 
 	//[] overloads
-	Neuron & operator[](int index);
-	const Neuron & operator[](int index) const;
+	std::shared_ptr<Neuron> & operator[](int index);
 
 private:
 	float _weight;
 	float _averageWeight;
 	std::vector<std::shared_ptr<Neuron>> _children;
 	float _riskFactor;
-	std::unique_ptr<Board> _board;
+	std::shared_ptr<Board> _board;
 };
 
 #endif

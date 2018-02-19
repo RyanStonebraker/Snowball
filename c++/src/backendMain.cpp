@@ -43,6 +43,7 @@ using std::chrono::duration;
 using std::random_device;
 using std::mt19937;
 using std::uniform_real_distribution;
+#include <stdlib.h>
 
 vector<Board> flipColor(vector<Board> validMoves)
 {
@@ -81,7 +82,7 @@ vector<Board> flipColor(vector<Board> validMoves)
 	return validMoves;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	IOHandler ioHandler;
 	MoveGenerator moveGenerator;
@@ -101,7 +102,13 @@ int main()
 	currentWeights.availableMovesWeight = rand_weight(rand_gen);
 	currentWeights.riskFactor = rand_weight(rand_gen);
 	currentWeights.enemyFactor = rand_weight(rand_gen);
-	currentWeights.depth = 3;
+
+	// Depth must be at least 1 so that it can see every possible move it can make
+	currentWeights.depth = 2;
+
+	if (argc == 2) {
+		currentWeights.depth = atoi(argv[1]);
+	}
 
 	while (true)
 	{
@@ -123,7 +130,8 @@ int main()
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
 
 				BranchTracker potentialBranch(b, currentWeights);
-				Board nextMove = potentialBranch.getBestMove();
+
+				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::BLACK_PIECE);
 
 				// ***** TODO: Neuron class should have an append function to add children to it
 				// and it should have a copy constructor so the below works ******
