@@ -44,6 +44,9 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   int bestChild = -1;
   double bestWeight = -1;
 
+  // DEBUG: for debugging purposes
+  NodeFactors bestFactor;
+
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
     std::cout << "\nStarting Child " << child << std::endl;
@@ -57,6 +60,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
 
     std::cout << "Normalized Weight: " << childWeight << "\n" << std::endl;
     if (childWeight > bestWeight) {
+      bestFactor = firstChildFactor;
       this->_bestMoveNode = *this->_localBranch[child];
 
       this->_totalKings = firstChildFactor.totalKings;
@@ -70,12 +74,15 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
     this->_childrenAmount += firstChildFactor.childrenAmount;
 
     std::cout << "ENDING CHILD " << child << std::endl;
+    std::cout << "ENDING BOARD: " << (*this->_localBranch[child]).getBoard() << std::endl;
   }
 
   // return (*this->_localBranch[0]).getBoard();
 
-  if (bestChild >= 0)
+  if (bestChild >= 0) {
+    std::cout << "\n*** BEST BOARD FACTOR: " << bestFactor << std::endl;
     return (*this->_localBranch[bestChild]).getBoard();
+  }
   else {
     if (this->_localBranch.size() > 0)
       return (*this->_localBranch[0]).getBoard();
@@ -98,6 +105,11 @@ double BranchTracker::raw_weighting(const NodeFactors & factors, const Color pie
   double enemyKingFactor = 0;
   double enemyFreedomFactor = 0;
   double enemyQualityFactor = 0;
+
+  // Prevents dividing by 0 if no children
+  if (factors.childrenAmount == 0) {
+    return 0;
+  }
 
   if (pieceColor == RED_PIECE) {
     kingFactor = (std::get<RED_PIECE>(factors.totalKings)) / factors.childrenAmount * _branchWeightings.kingingWeight;
@@ -131,6 +143,10 @@ NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned 
   std::tuple<int,int> tempTotalQuality;
 
   NodeFactors tempFactors;
+  tempFactors.totalKings = {0, 0};
+  tempFactors.totalPieceCount = {0, 0};
+  tempFactors.totalQuality = {0, 0};
+  tempFactors.childrenAmount = 0;
 
   unsigned int tempNumChildren = 0;
 
@@ -150,7 +166,7 @@ NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned 
   tempNumChildren += temp_head.size();
 
   if (tempNumChildren <= 0) {
-    throw "No Children!";
+    return tempFactors;
   }
 
   tempFactors.totalKings = tempTotalKings;
