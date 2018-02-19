@@ -9,6 +9,9 @@ GUI_TARGET := ../index.js
 TEST_TARGET := bin/ai_test
 TEMP_OBJECTS := $(wildcard ../comm/currentgame/turn*.txt) $(wildcard ../comm/handshake*.txt)
 
+# User Vars
+depth = 2
+
 build: $(SOURCES)
 	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
 
@@ -19,11 +22,11 @@ front_run:
 	electron $(GUI_TARGET)
 
 run_ai:
-	$(TARGET)
+	$(TARGET) $(depth)
 
 run :
 	electron $(GUI_TARGET) &
-	$(TARGET)
+	$(TARGET) $(depth)
 
 ai_test: $(TEST_SOURCES)
 	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES) $(filter-out src/backendMain.cpp, $(SOURCES))

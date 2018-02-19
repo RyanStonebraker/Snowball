@@ -47,6 +47,7 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
   // DEBUG: for debugging purposes
   NodeFactors bestFactor;
 
+  #pragma omp parallel for
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
     std::cout << "\nStarting Child " << child << std::endl;
@@ -150,31 +151,55 @@ NodeFactors BranchTracker::_cumulativeBranchWeight(Neuron & temp_head, unsigned 
 
   unsigned int tempNumChildren = 0;
 
+  // greater than 1 because this is already a child of the first move
   // Loop through children
+  #pragma omp parallel for
   for (unsigned child = 0; child < temp_head.size(); ++child) {
-    std::get<RED_PIECE>(tempTotalKings) += temp_head[child]->getRedKingCount();
-    std::get<BLACK_PIECE>(tempTotalKings) += temp_head[child]->getBlackKingCount();
-
-    std::get<RED_PIECE>(tempTotalPieceCount) += temp_head[child]->getRedPieceCount();
-    std::get<BLACK_PIECE>(tempTotalPieceCount) += temp_head[child]->getBlackPieceCount();
-
-    std::get<RED_PIECE>(tempTotalQuality) -= temp_head[child]->getQuality();
-
-    // TODO: Make more versatile for Red/Black, this might not work to get accurate black piece quality
-    std::get<BLACK_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
+    _recursivelyAddWeight(tempFactors, temp_head, depthLimit);
+  //   std::get<RED_PIECE>(tempTotalKings) += temp_head[child]->getRedKingCount();
+  //   std::get<BLACK_PIECE>(tempTotalKings) += temp_head[child]->getBlackKingCount();
+  //
+  //   std::get<RED_PIECE>(tempTotalPieceCount) += temp_head[child]->getRedPieceCount();
+  //   std::get<BLACK_PIECE>(tempTotalPieceCount) += temp_head[child]->getBlackPieceCount();
+  //
+  //   std::get<RED_PIECE>(tempTotalQuality) -= temp_head[child]->getQuality();
+  //
+  //   // TODO: Make more versatile for Red/Black, this might not work to get accurate black piece quality
+  //   std::get<BLACK_PIECE>(tempTotalQuality) += temp_head[child]->getQuality();
+  // }
+  // tempNumChildren += temp_head.size();
+  // --depthLimit;
+  //
   }
-  tempNumChildren += temp_head.size();
 
   if (tempNumChildren <= 0) {
     return tempFactors;
   }
 
-  tempFactors.totalKings = tempTotalKings;
-  tempFactors.totalPieceCount = tempTotalPieceCount;
-  tempFactors.totalQuality = tempTotalQuality;
-  tempFactors.childrenAmount = tempNumChildren;
+  // tempFactors.totalKings = tempTotalKings;
+  // tempFactors.totalPieceCount = tempTotalPieceCount;
+  // tempFactors.totalQuality = tempTotalQuality;
+  // tempFactors.childrenAmount = tempNumChildren;
 
   return tempFactors;
+}
+
+void BranchTracker::_recursivelyAddWeight (NodeFactors & tempFactors, Neuron temp_head, unsigned depthLimit) {
+  for (unsigned child = 0; child < temp_head.size(); ++child) {
+    std::get<RED_PIECE>(tempFactors.totalKings) += temp_head[child]->getRedKingCount();
+    std::get<BLACK_PIECE>(tempFactors.totalKings) += temp_head[child]->getBlackKingCount();
+
+    std::get<RED_PIECE>(tempFactors.totalPieceCount) += temp_head[child]->getRedPieceCount();
+    std::get<BLACK_PIECE>(tempFactors.totalPieceCount) += temp_head[child]->getBlackPieceCount();
+
+    std::get<RED_PIECE>(tempFactors.totalQuality) -= temp_head[child]->getQuality();
+
+    // TODO: Make more versatile for Red/Black, this might not work to get accurate black piece quality
+    std::get<BLACK_PIECE>(tempFactors.totalQuality) += temp_head[child]->getQuality();
+    tempFactors.childrenAmount += temp_head.size();
+    if (depthLimit > 1 && temp_head.size() > 0)
+      _recursivelyAddWeight(tempFactors, *temp_head[child], depthLimit - 1);
+  }
 }
 
 // END NEW ********

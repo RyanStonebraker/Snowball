@@ -63,6 +63,8 @@ private:
   // _branchWeightings.depth
   NodeFactors _cumulativeBranchWeight(Neuron &, unsigned);
 
+  void _recursivelyAddWeight(NodeFactors &, Neuron, unsigned);
+
   double _sigmoidNormalizer(double);
 
   // Gets the weight of the branch for given color before sigmoid function

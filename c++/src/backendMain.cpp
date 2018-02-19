@@ -43,6 +43,7 @@ using std::chrono::duration;
 using std::random_device;
 using std::mt19937;
 using std::uniform_real_distribution;
+#include <stdlib.h>
 
 vector<Board> flipColor(vector<Board> validMoves)
 {
@@ -81,7 +82,7 @@ vector<Board> flipColor(vector<Board> validMoves)
 	return validMoves;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	IOHandler ioHandler;
 	MoveGenerator moveGenerator;
@@ -104,6 +105,10 @@ int main()
 
 	// Depth must be at least 1 so that it can see every possible move it can make
 	currentWeights.depth = 2;
+
+	if (argc == 2) {
+		currentWeights.depth = atoi(argv[1]);
+	}
 
 	while (true)
 	{
