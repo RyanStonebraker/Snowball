@@ -7,6 +7,7 @@
 
 class MoveGenerator {
 public:
+	static unsigned totalMoveGens;
 	bool indexIsValid(int position);
 	bool canMove(int position, int nextPosition, int piece, std::string boardString, bool isSideAttack = false);
 	std::string checkKill(int position, const Board & currentBoard, std::string & visited, std::string & updateVisited, int & quality);

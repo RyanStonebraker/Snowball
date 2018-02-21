@@ -30,7 +30,7 @@ bool MoveGenerator::canMove(int position, int nextPosition, int piece, std::stri
 	else if (isSide && std::abs(position - nextPosition) != 4)
 		return false;
 
-	if (piece == BLACK || piece == BLACK_KING) 
+	if (piece == BLACK || piece == BLACK_KING)
 	{
 		return nextLocationState == 0;
 	}
@@ -167,6 +167,8 @@ std::string MoveGenerator::checkKill(int position, const Board & currentBoard, s
 
 }
 
+unsigned MoveGenerator::totalMoveGens = 0;
+
 std::string MoveGenerator::workhorse(int position, const Board & currentBoard, std::vector<Board> & validMoves, std::string visited)
 {
 	std::string updateVisited = visited; //might remove ***
@@ -183,6 +185,7 @@ std::string MoveGenerator::workhorse(int position, const Board & currentBoard, s
 			if(nextBoard[kingCheck] == BLACK + '0')
 				nextBoard[kingCheck] = BLACK_KING + '0';
 
+		++this->totalMoveGens;
 		validMoves.push_back({ nextBoard, quality });
 	}
 

@@ -80,59 +80,97 @@ Neuron & Neuron::operator=(Neuron & other)
 }
 
 unsigned int evals = 0;
-bool flipOccured = false;
 
-void Neuron::spawnChildren(int depth, bool flipColorFlag) {
-	// std::cout << "Spawning children at level " << depth << "\n";
-	// std::cout << "Boards generated: " << evals << "\n";
+// void Neuron::spawnChildren(int depth) {
+// 	MoveGenerator moveGenerator;
+// 	auto validMoves = moveGenerator.generateRandomMoves(*_board);
+// 		for (auto board : validMoves) {
+// 			evals++;
+// 			_children.push_back(make_shared<Neuron>(board));
+// 		}
+//
+// 		int originalSize = _children.size();
+// 		for (int i = 0; i < originalSize; i++)
+// 		{
+// 			auto blackGen = moveGenerator.generateRandomMoves(_flipColor({ *_children[i]->_board })[0]);
+// 			for (auto n : blackGen)
+// 			{
+// 				evals++;
+// 				_children.push_back(make_shared<Neuron>(n));
+// 			}
+// 		}
+//
+// 		depth--;
+// 		if (depth > 0) {
+// 			for (int k = 0; k < originalSize; k++) {
+// 				_children[k]->spawnChildren(depth);
+// 			}
+// 		}
+//
+// }
 
-	if (flipOccured)
-		*_board = _flipColor({ *_board })[0];
+void Neuron::spawnChildrenBlackFirst(int depth) {
+	auto firstMoveSet = spawnBlack(*_board);
 
-	MoveGenerator moveGenerator;
-	auto validMoves = moveGenerator.generateRandomMoves(*_board);
-	/*if (!flipColorFlag)
-	{*/
-		for (auto board : validMoves) {
-			evals++;
-			_children.push_back(make_shared<Neuron>(board));
+	#pragma omp parallel for
+	for (unsigned possMove = 0; possMove < firstMoveSet.size(); ++possMove) {
+		this->_children.push_back(make_shared<Neuron>(firstMoveSet[possMove]));
+
+		this->_children[possMove] = recurseSpawning(depth, this->_children[possMove]);
+	}
+
+}
+
+void Neuron::spawnChildrenRedFirst(int depth) {
+	auto firstMoveSet = spawnRedOnce(*_board);
+
+	#pragma omp parallel for
+	for (unsigned possMove = 0; possMove < firstMoveSet.size(); ++possMove) {
+		this->_children.push_back(make_shared<Neuron>(firstMoveSet[possMove]));
+
+		this->_children[possMove] = recurseSpawning(depth, this->_children[possMove]);
+	}
+
+}
+
+std::shared_ptr<Neuron> Neuron::recurseSpawning(int depth, std::shared_ptr<Neuron> parentNeuron) {
+	auto rMoves = spawnRed(*parentNeuron->_board);
+	--depth;
+
+	#pragma omp parallel for
+	for (auto & rMove : rMoves) {
+		parentNeuron->_children.push_back(make_shared<Neuron>(rMove));
+		if (depth > 0)
+			parentNeuron->_children[parentNeuron->_children.size() - 1] = recurseSpawning(depth - 1, parentNeuron->_children[parentNeuron->_children.size() - 1]);
+	}
+
+	return parentNeuron;
+}
+
+vector<Board> Neuron::spawnBlack (Board & initBoard) {
+		MoveGenerator moveGen;
+		return moveGen.generateRandomMoves(initBoard);
+}
+
+vector<Board> Neuron::spawnRedOnce (Board & initBoard) {
+		MoveGenerator moveGen;
+		return _flipColor(moveGen.generateRandomMoves(initBoard));
+}
+
+vector<Board> Neuron::spawnRed (Board & rBoard) {
+	MoveGenerator moveGen;
+	auto rMoves = _flipColor(spawnBlack(rBoard));
+
+	vector <Board> bMoves;
+	#pragma omp parallel for
+	for (auto & firstMove : rMoves) {
+		auto childBoard = moveGen.generateRandomMoves(firstMove);
+		for (auto & child : childBoard) {
+			bMoves.push_back(child);
 		}
+	}
 
-		int originalSize = _children.size();
-		for (int i = 0; i < originalSize; i++)
-		{
-			auto blackGen = moveGenerator.generateRandomMoves(_flipColor({ *_children[i]->_board })[0]);
-			for (auto n : blackGen)
-			{
-				evals++;
-				_children.push_back(make_shared<Neuron>(n));
-			}
-		}
-
-		depth--;
-		if (depth > 0) {
-			for (int k = 0; k < originalSize; k++) {
-				flipOccured = false;
-				_children[k]->spawnChildren(depth, !flipColorFlag);
-			}
-		}
-	/*}*/
-	//else
-	//{
-	//	auto flippedValidMoves = _flipColor(validMoves); //flip the board
-
-	//	for (auto flipBoard : flippedValidMoves) {
-	//		evals++;
-	//		_children.push_back(make_shared<Neuron>(flipBoard)); //push flipped boards back as children
-	//	}
-
-	//	if (depth > 0) {
-	//		for (auto flipChild : _children) {
-	//			flipOccured = true;
-	//			flipChild->spawnChildren(depth, !flipColorFlag);
-	//		}
-	//	}
-	//}
+	return _flipColor(bMoves);
 }
 
 //Accessors for indirect board interfacing

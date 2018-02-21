@@ -32,11 +32,11 @@ class BranchTracker {
 public:
   enum Color { RED_PIECE, BLACK_PIECE };
 
-  BranchTracker() = delete;
+  BranchTracker() = default;
   BranchTracker(Board &, WeightedNode&);
 
   // TODO: Fill these in if they become necessary
-  // BranchTracker(const BranchTracker &);
+  // BranchTracker(BranchTracker &) = default;
   // BranchTracker(BranchTracker &&);
   // BranchTracker operator=(const BranchTracker &);
   // BranchTracker operator=(BranchTracker &&);
@@ -53,6 +53,8 @@ public:
   Neuron fastForwardHead();
 
   Board getStartBoard() const;
+
+  unsigned getTotalChildren() const;
 
   // appends current board to private variables
   // double getCurrentBoardWeight();
@@ -87,6 +89,8 @@ private:
   unsigned int _childrenAmount;
 
   double _weight;
+
+  unsigned int _totalChildren;
 
   // temp neuron to explore a path before appending to the global _head Neuron
   Neuron _localBranch;

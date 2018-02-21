@@ -82,10 +82,13 @@ vector<Board> flipColor(vector<Board> validMoves)
 	return validMoves;
 }
 
+// Statistics
+unsigned boardCount;
+double totalElapsedTime;
+
 int main(int argc, char* argv[])
 {
 	IOHandler ioHandler;
-	MoveGenerator moveGenerator;
 
 	Neuron _head;
 
@@ -117,7 +120,7 @@ int main(int argc, char* argv[])
 		if (ioHandler.startGame(ioHandler.setupGame())) //computer is black and goes second
 		{
 			auto startGameTime = system_clock::now(); /***DEBUG***/
-			double totalAverageMoveGenTimes = 0.; /***DEBUG***/
+			// double totalAverageMoveGenTimes = 0.; /***DEBUG***/
 
 			while (true)
 			{
@@ -147,9 +150,23 @@ int main(int argc, char* argv[])
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
-				totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
+				// totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
+				double totalChildrenCount = potentialBranch.getTotalChildren();
+
+				boardCount += totalChildrenCount;
+				totalElapsedTime += elapsedMoveGenTime.count();
+
+				// std::cout << "Running Average BPS: " << boardCount / totalElapsedTime << std::endl;
+				// std::cout << "Cumulative Board Count: " << boardCount << std::endl;
+
+				std::cout << "Cumulative Boards: " << MoveGenerator::totalMoveGens << std::endl;
+				std::cout << "Cumulative Elapsed Time: " << totalElapsedTime << std::endl;
+				std::cout << "Running Average BPS: " << MoveGenerator::totalMoveGens / totalElapsedTime << std::endl;
+
+				// std::cout << "Total Children Count: " << totalChildrenCount << std::endl;
+				// std::cout << "Boards/Sec: " << totalChildrenCount / elapsedMoveGenTime.count() << std::endl;
 				std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
-				std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
+				// std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
 
 				if (validMoves.size() == 0)
 					break;
@@ -167,12 +184,12 @@ int main(int argc, char* argv[])
 			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
 			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
 			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			std::cout << "Average " << totalAverageMoveGenTimes/ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
+			// std::cout << "Average " << totalAverageMoveGenTimes/ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
 		}
 		else //computer is red and goes first
 		{
 			auto startGameTime = system_clock::now(); /***DEBUG***/
-			double totalAverageMoveGenTimes = 0.; /***DEBUG***/
+			// double totalAverageMoveGenTimes = 0.; /***DEBUG***/
 			Board b(ioHandler.readBoardState());
 			// int indexOfMoveChosen;
 
@@ -187,13 +204,16 @@ int main(int argc, char* argv[])
 				// 	std::cout << "Next Turn" << std::endl;
 
 				auto startGenMoves = system_clock::now(); /***DEBUG***/
-				vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
-				vector<Board> flippedValidMoves = flipColor(validMoves);
-				std::sort(flippedValidMoves.begin(), flippedValidMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
+
+				BranchTracker potentialBranch(b, currentWeights);
+
+				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::RED_PIECE);
+				vector <Board> validMoves {nextMove};
+
 				auto endGenMoves = system_clock::now(); /***DEBUG***/
 
 				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
-				totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
+				// totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
 				std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
 				std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
 
@@ -201,7 +221,7 @@ int main(int argc, char* argv[])
 					break;
 
 				// vector<Board> flippedValidMoves = flipColor(validMoves);
-				ioHandler.outputNewBoardState(flippedValidMoves);
+				ioHandler.outputNewBoardState(validMoves);
 				// b = validMoves[indexOfMoveChosen];
 				ioHandler.updateFileName();
 
@@ -217,7 +237,7 @@ int main(int argc, char* argv[])
 			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
 			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
 			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			std::cout << "Average " << totalAverageMoveGenTimes / ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
+			// std::cout << "Average " << totalAverageMoveGenTimes / ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
 		}
 
 		std::cout << "gameover" << std::endl;

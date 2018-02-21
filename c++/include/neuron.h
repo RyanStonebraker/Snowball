@@ -16,7 +16,8 @@ public:
 	Neuron(float, float, std::vector<std::shared_ptr<Neuron>> &, float, Board);
 	Neuron(Neuron & other);
 	Neuron & operator=(Neuron & other);
-	void spawnChildren(int depth, bool flipColor);
+	void spawnChildrenBlackFirst(int depth);
+	void spawnChildrenRedFirst(int depth);
 	void updateAverageWeights();
 	size_t size() const;
 
@@ -37,6 +38,11 @@ public:
 	std::shared_ptr<Neuron> & operator[](int index);
 
 private:
+	std::vector<Board> spawnBlack (Board & initBoard);
+	std::vector<Board> spawnRed (Board & rBoard);
+	std::vector<Board> spawnRedOnce (Board & rBoard);
+	std::shared_ptr<Neuron> recurseSpawning(int depth, std::shared_ptr<Neuron> parentNeuron);
+
 	float _weight;
 	float _averageWeight;
 	std::vector<std::shared_ptr<Neuron>> _children;
