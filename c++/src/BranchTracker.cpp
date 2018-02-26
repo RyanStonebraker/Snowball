@@ -56,16 +56,16 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
 
   // update local info with best cumulative info
   for (unsigned int child = 0; child < this->_localBranch.size(); ++child) {
-    std::cout << "\nStarting Child " << child << std::endl;
+    // std::cout << "\nStarting Child " << child << std::endl;
     NodeFactors firstChildFactor = _cumulativeBranchWeight(*this->_localBranch[child], this->_branchWeightings.depth);
 
     this->_totalChildren += firstChildFactor.childrenAmount;
 
-    std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor;
+    // std::cout << "\nChild " << child << " Factor: \n" << firstChildFactor;
 
     double childWeight = _sigmoidNormalizer(raw_weighting(firstChildFactor, pieceColor));
 
-    std::cout << "Normalized Weight: " << childWeight << "\n" << std::endl;
+    // std::cout << "Normalized Weight: " << childWeight << "\n" << std::endl;
     if (childWeight > bestWeight) {
       bestFactor = firstChildFactor;
       this->_bestMoveNode = *this->_localBranch[child];
@@ -80,20 +80,20 @@ Board BranchTracker::getBestMove(BranchTracker::Color pieceColor) {
     }
     this->_childrenAmount += firstChildFactor.childrenAmount;
 
-    std::cout << "ENDING CHILD " << child << std::endl;
-    std::cout << "ENDING BOARD: " << (*this->_localBranch[child]).getBoard() << std::endl;
+    // std::cout << "ENDING CHILD " << child << std::endl;
+    // std::cout << "ENDING BOARD: " << (*this->_localBranch[child]).getBoard() << std::endl;
   }
 
 
   if (bestChild >= 0) {
-    std::cout << "\n*** BEST BOARD FACTOR: " << bestFactor << std::endl;
+    // std::cout << "\n*** BEST BOARD FACTOR: " << bestFactor << std::endl;
     return (*this->_localBranch[bestChild]).getBoard();
   }
   else {
     if (this->_localBranch.size() > 0)
       return (*this->_localBranch[0]).getBoard();
-    std::cout << "SIZE OF ENDING LOCAL BRANCH: " << this->_localBranch.size() << std::endl;
-    std::cout << "NO MOVES LEFT TO MAKE, GAME OVER!" << std::endl;
+    // std::cout << "SIZE OF ENDING LOCAL BRANCH: " << this->_localBranch.size() << std::endl;
+    // std::cout << "NO MOVES LEFT TO MAKE, GAME OVER!" << std::endl;
 
     _exit(0);
   }

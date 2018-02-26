@@ -88,7 +88,7 @@ double totalElapsedTime;
 
 int main(int argc, char* argv[])
 {
-	IOHandler ioHandler;
+	IOHandler ioHandler(true);
 
 	Neuron _head;
 
@@ -113,136 +113,99 @@ int main(int argc, char* argv[])
 		currentWeights.depth = atoi(argv[1]);
 	}
 
-	while (true)
+	std::cout << "Game Start" << std::endl;
+	if (ioHandler.startGame(ioHandler.setupGame())) //computer is black and goes second
 	{
-		std::cout << "Game Start" << std::endl;
-		// Board b(readBoardState());
-		if (ioHandler.startGame(ioHandler.setupGame())) //computer is black and goes second
+		auto startGameTime = system_clock::now(); /***DEBUG***/
+
+		while (true)
 		{
-			auto startGameTime = system_clock::now(); /***DEBUG***/
-			// double totalAverageMoveGenTimes = 0.; /***DEBUG***/
+			auto startFullTurnCycleTime = system_clock::now();
 
-			while (true)
-			{
-				auto startFullTurnCycleTime = system_clock::now();
-
-				ioHandler.updateFileName(); /***DEBUG WIN***/
-				Board b(ioHandler.readBoardState());
-				//std::cin.get(); /***DEBUG WIN***/
-
-				auto startGenMoves = system_clock::now(); /***DEBUG***/
-
-				BranchTracker potentialBranch(b, currentWeights);
-
-				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::BLACK_PIECE);
-
-				// ***** TODO: Neuron class should have an append function to add children to it
-				// and it should have a copy constructor so the below works ******
-
-				// _head.append(potentialBranch.getGoodChildren());
-				// _head = potentialBranch.fastForwardHead();
-
-				// ***** TODO: Refactor outputNewBoardState to just accept a Board to cut out some overhead *****
-				vector <Board> validMoves {nextMove};
-				// vector<Board> validMoves = moveGenerator.generateRandomMoves(b);
-				// std::sort(validMoves.begin(), validMoves.end(), [](const Board & a, const Board & b) { return a.getQuality() > b.getQuality(); });
-
-				auto endGenMoves = system_clock::now(); /***DEBUG***/
-
-				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
-				// totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
-				double totalChildrenCount = potentialBranch.getTotalChildren();
-
-				boardCount += totalChildrenCount;
-				totalElapsedTime += elapsedMoveGenTime.count();
-
-				// std::cout << "Running Average BPS: " << boardCount / totalElapsedTime << std::endl;
-				// std::cout << "Cumulative Board Count: " << boardCount << std::endl;
-
-				std::cout << "Cumulative Boards: " << MoveGenerator::totalMoveGens << std::endl;
-				std::cout << "Cumulative Elapsed Time: " << totalElapsedTime << std::endl;
-				std::cout << "Running Average BPS: " << MoveGenerator::totalMoveGens / totalElapsedTime << std::endl;
-
-				// std::cout << "Total Children Count: " << totalChildrenCount << std::endl;
-				// std::cout << "Boards/Sec: " << totalChildrenCount / elapsedMoveGenTime.count() << std::endl;
-				std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
-				// std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
-
-				if (validMoves.size() == 0)
-					break;
-
-				ioHandler.updateFileName();
-				ioHandler.outputNewBoardState(validMoves);
-
-				auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
-				duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
-				std::cout << "Turn complete in " << elapsedTurnTime.count() << " seconds" << std::endl; /***DEBUG***/
-
-			}
-
-			auto endGameTime = system_clock::now(); /***DEBUG***/
-			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
-			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
-			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			// std::cout << "Average " << totalAverageMoveGenTimes/ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
-		}
-		else //computer is red and goes first
-		{
-			auto startGameTime = system_clock::now(); /***DEBUG***/
-			// double totalAverageMoveGenTimes = 0.; /***DEBUG***/
+			ioHandler.updateFileName();
 			Board b(ioHandler.readBoardState());
-			// int indexOfMoveChosen;
 
-			while (true)
-			{
-				auto startFullTurnCycleTime = system_clock::now();
+			auto startGenMoves = system_clock::now(); /***DEBUG***/
 
-				ioHandler.updateFileName();
-				//for manual control:
+			BranchTracker potentialBranch(b, currentWeights);
+			Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::BLACK_PIECE);
+			vector <Board> validMoves {nextMove};
 
-				// if (std::cin.get())
-				// 	std::cout << "Next Turn" << std::endl;
+			auto endGenMoves = system_clock::now(); /***DEBUG***/
 
-				auto startGenMoves = system_clock::now(); /***DEBUG***/
+			duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
+			double totalChildrenCount = potentialBranch.getTotalChildren();
 
-				BranchTracker potentialBranch(b, currentWeights);
+			boardCount += totalChildrenCount;
+			totalElapsedTime += elapsedMoveGenTime.count();
 
-				Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::RED_PIECE);
-				vector <Board> validMoves {nextMove};
+			std::cout << "Cumulative Boards: " << MoveGenerator::totalMoveGens << std::endl;
+			std::cout << "Cumulative Elapsed Time: " << totalElapsedTime << std::endl;
+			std::cout << "Running Average BPS: " << MoveGenerator::totalMoveGens / totalElapsedTime << std::endl;
+			std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
 
-				auto endGenMoves = system_clock::now(); /***DEBUG***/
+			if (validMoves.size() == 0)
+				break;
 
-				duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
-				// totalAverageMoveGenTimes += validMoves.size() / elapsedMoveGenTime.count(); /***DEBUG***/
-				std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
-				std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
+			ioHandler.updateFileName();
+			ioHandler.outputNewBoardState(validMoves);
 
-				if (validMoves.size() == 0)
-					break;
-
-				// vector<Board> flippedValidMoves = flipColor(validMoves);
-				ioHandler.outputNewBoardState(validMoves);
-				// b = validMoves[indexOfMoveChosen];
-				ioHandler.updateFileName();
-
-				vector <Board> flipInputBoard = {ioHandler.readBoardState()};
-				b = flipColor(flipInputBoard)[0];
-
-				auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
-				duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
-				std::cout << "Turn complete in " << elapsedTurnTime.count() << " seconds" << std::endl; /***DEBUG***/
-			}
-
-			auto endGameTime = system_clock::now(); /***DEBUG***/
-			duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
-			std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
-			std::cout << "Average " << ioHandler.getFileIncrementer() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
-			// std::cout << "Average " << totalAverageMoveGenTimes / ioHandler.getFileIncrementer() << " moves/sec" << std::endl; /***DEBUG***/
+			auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
+			duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
+			std::cout << "Turn complete in " << elapsedTurnTime.count() << " seconds" << std::endl; /***DEBUG***/
 		}
 
-		std::cout << "gameover" << std::endl;
-
-		std::cin.get();
-		return 0; //this is for aesthetic appeal
+		auto endGameTime = system_clock::now(); /***DEBUG***/
+		duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
+		std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
+		std::cout << "Average " << ioHandler.getCurrentFileNumber() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
 	}
+	else //computer is red and goes first
+	{
+		auto startGameTime = system_clock::now(); /***DEBUG***/
+		Board b(ioHandler.readBoardState());
+
+		while (true)
+		{
+			auto startFullTurnCycleTime = system_clock::now();
+
+			ioHandler.updateFileName();
+
+			auto startGenMoves = system_clock::now(); /***DEBUG***/
+
+			BranchTracker potentialBranch(b, currentWeights);
+
+			Board nextMove = potentialBranch.getBestMove(BranchTracker::Color::RED_PIECE);
+			vector <Board> validMoves {nextMove};
+
+			auto endGenMoves = system_clock::now(); /***DEBUG***/
+
+			duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves; /***DEBUG***/
+			std::cout << "Moves generated in " << elapsedMoveGenTime.count() << " seconds" << std::endl; /***DEBUG***/
+			std::cout << "Average " << validMoves.size() / elapsedMoveGenTime.count() << " moves/sec" << std::endl; /***DEBUG***/
+
+			if (validMoves.size() == 0)
+				break;
+
+			ioHandler.outputNewBoardState(validMoves);
+			ioHandler.updateFileName();
+
+			vector <Board> flipInputBoard = {ioHandler.readBoardState()};
+			b = flipColor(flipInputBoard)[0];
+
+			auto endFullTurnCycleTime = system_clock::now(); /***DEBUG***/
+			duration<double> elapsedTurnTime = endFullTurnCycleTime - startFullTurnCycleTime; /***DEBUG***/
+			std::cout << "Turn complete in " << elapsedTurnTime.count() << " seconds" << std::endl; /***DEBUG***/
+		}
+
+		auto endGameTime = system_clock::now(); /***DEBUG***/
+		duration<double> elapsedGameTime = endGameTime - startGameTime; /***DEBUG***/
+		std::cout << "\nGame lasted " << elapsedGameTime.count() << " seconds" << std::endl; /***DEBUG***/
+		std::cout << "Average " << ioHandler.getCurrentFileNumber() / elapsedGameTime.count() << " turns/sec" << std::endl; /***DEBUG***/
+	}
+
+	std::cout << "gameover" << std::endl;
+
+	std::cin.get();
+	return 0; //this is for aesthetic appeal
 }

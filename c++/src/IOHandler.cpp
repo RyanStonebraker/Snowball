@@ -28,20 +28,62 @@ using std::vector;
 using std::random_device;
 using std::mt19937;
 using std::uniform_int_distribution;
-#include <unistd.h> /***DEBUG WIN***/
+#include <stdio.h>
 
-#define AVG_SLEEP_BLOCK 0
+#ifdef _WIN32
+	#include <windows.h>
+	#define usleep(tm) Sleep(tm * 0.001)
+#endif
+#ifndef _WIN32
+	#include <unistd.h>
+#endif
+
+#define AVG_SLEEP_BLOCK 10
 
 
-string shadowState = "../comm/shadowstate.txt";
-string boardState = "../comm/currentgame/turn0.txt";
-string handshake0 = "../comm/handshake0.txt";
-string handshake1 = "../comm/handshake1.txt";
-
-std::ifstream IOHandler::test(string pathName) {
-	ifstream idk(pathName);
-	return idk;
+IOHandler::IOHandler (bool cleanup) : _cleanUp(cleanup) {
+	this->shadowState = "../comm/shadowstate.txt";
+	this->currentGameDirectory = "../comm/currentgame/";
+	this->boardState = currentGameDirectory + "turn0.txt";
+	this->handshake0 = "../comm/handshake0.txt";
+	this->handshake1 = "../comm/handshake1.txt";
+	currentFileNumber = 1;
 }
+
+IOHandler::~IOHandler() {
+	if (this->_cleanUp) {
+		removeDirectoryFiles();
+	}
+}
+
+void IOHandler::removeDirectoryFiles() {
+	if (remove(handshake0.c_str()) != 0) {
+		std::cerr << "Error Removing handshake0!" << std::endl;
+	}
+	else if (remove(handshake1.c_str()) != 0) {
+		std::cerr << "Error Removing handshake1!" << std::endl;
+	}
+
+	for (unsigned i = 0; i < currentFileNumber; ++ i) {
+		std::string turnToRemove = this->currentGameDirectory + "turn" + std::to_string(i) + ".txt";
+		if (remove(turnToRemove.c_str()) != 0) {
+			std::cerr << "Error Removing " << turnToRemove << "!" << std::endl;
+		}
+	}
+}
+
+std::string IOHandler::getFirstHandshakeLocation() {
+	return handshake0;
+}
+
+std::string IOHandler::getSecondHandshakeLocation() {
+	return handshake1;
+}
+
+std::string IOHandler::getCurrentGameDirectory() {
+	return currentGameDirectory;
+}
+
 
 int IOHandler::setupGame()
 {
@@ -50,7 +92,7 @@ int IOHandler::setupGame()
 		ifstream interfaceInput(handshake0);
 
 		while (!interfaceInput) {
-			interfaceInput = test(handshake0);
+			interfaceInput = ifstream(handshake0);
 		}
 
 		ofstream computerOutput(handshake1, std::ofstream::trunc);
@@ -103,7 +145,7 @@ bool IOHandler::startGame(int startingDetails)
 
 		if (!computerOutput) //WIP
 		{
-			std::cout << "Failed to read Handshake0" << std::endl;
+			std::cout << "Failed to read handshake0" << std::endl;
 			setupGame();
 		}
 	}
@@ -116,21 +158,19 @@ bool IOHandler::startGame(int startingDetails)
 
 string IOHandler::updateFileName()
 {
-	const string beginningPath = "../comm/currentgame/";
-	// static int fileIncrementer = 1;
-	boardState = beginningPath + "turn" + std::to_string(fileIncrementer) + ".txt";
-	fileIncrementer++;
+	boardState = this->currentGameDirectory + "turn" + std::to_string(currentFileNumber) + ".txt";
+	++currentFileNumber;
 	return boardState;
 }
 
-int IOHandler::getFileIncrementer()
+int IOHandler::getCurrentFileNumber()
 {
-	return fileIncrementer;
+	return currentFileNumber;
 }
 
 void IOHandler::print(const Board & b)
 {
-	std::cout << "mUv NuM: " << fileIncrementer << std::endl;
+	std::cout << "mUv NuM: " << currentFileNumber << std::endl;
 	std::cout << "_________________________" << std::endl;
 
 	for (int k = 0; k < 8; k++)
@@ -156,46 +196,23 @@ string IOHandler::readBoardState()
 	while(!inFile || inputLine.size() < 32)
 	{
 		usleep(AVG_SLEEP_BLOCK); /***DEBUG WIN***/
-		inFile = test(boardState);
+		inFile = ifstream(boardState);
 
 		if (inFile) {
 			getline(inFile, inputLine);
 		}
-		// ifstream inFile(boardState);
-		/*cout << "Error opening file" << endl;
-		return "BOARDSTATE.TXT FAILED TO OPEN";
-		throw;*/
-		// cerr << "BOARDSTATE.TXT FAILED TO OPEN" << endl;
-		// throw;
 	}
 
-	//vector<string> allBoardStates;
-	/*while (true)
-	{*/
-		// string inputLine;
-		// getline(inFile, inputLine);
+	if (!inFile)
+	{
+		std::string currentTurn = this->currentGameDirectory + "turn" + std::to_string(this->currentFileNumber) + ".txt";
+		cerr << "ERROR READING: " << currentTurn << endl;
+		throw;
+	}
 
-		if (!inFile)
-		{
-			// getline(inFile, inputLine);
-			/*if (inFile.eof())
-				break;*/
-
-			cerr << "ERROR READING TURN-SOMETHING.TXT" << endl;
-			throw;
-		}
-
-		string boardState;
-		istringstream iss(inputLine);
-		iss >> boardState;
-
-		//allBoardStates.push_back(boardState);
-	//}
-
-		/***DEBUG***/
-		 /*std::cout << "RECEIVED BOARD: " << boardState << std::endl;
-		 std::cout << "INTERPRETATION: \n";
-		 print({ boardState });*/
+	string boardState;
+	istringstream iss(inputLine);
+	iss >> boardState;
 
 	return boardState;
 }
@@ -205,27 +222,12 @@ int IOHandler::outputNewBoardState(const vector<Board> & validMoves)
 	ofstream shadowOutFile(shadowState);
 	ofstream boardStateOutFile(boardState, std::ofstream::trunc);
 
-	/***DEBUG***/
-	 // std::cout << "Black Center Move Generations: \n" << std::endl;
-
-
-	 // TODO: CHANGE QUALITY CHECKING TO WEIGHT CHECKING
-
-
-
-
 	random_device rd;
 	mt19937 gen(rd());
 	uniform_int_distribution<> dis(0, validMoves.size() - 1);
 
 	int choice = dis(gen);
 
-	/***DEBUG***/
-	/*std::cout << "INDEX USED: " << choice << "\nSENT BOARD: " << validMoves[choice].getBoardStateString() << std::endl;
-	std::cout << "INTERPRETATION: \n";
-	print(validMoves[choice]);
-	std::cout << "Black Kings: " << validMoves[choice].getBlackKingCount() << "\nRed Kings: " << validMoves[choice].getRedKingCount() << "\nBlack Pieces: " << validMoves[choice].getBlackPieceCount() << "\nRed Pieces: " << validMoves[choice].getRedPieceCount() << std::endl;
-*/
 	boardStateOutFile << validMoves[choice].getBoardStateString();
 
 	return choice;

@@ -81,34 +81,6 @@ Neuron & Neuron::operator=(Neuron & other)
 
 unsigned int evals = 0;
 
-// void Neuron::spawnChildren(int depth) {
-// 	MoveGenerator moveGenerator;
-// 	auto validMoves = moveGenerator.generateRandomMoves(*_board);
-// 		for (auto board : validMoves) {
-// 			evals++;
-// 			_children.push_back(make_shared<Neuron>(board));
-// 		}
-//
-// 		int originalSize = _children.size();
-// 		for (int i = 0; i < originalSize; i++)
-// 		{
-// 			auto blackGen = moveGenerator.generateRandomMoves(_flipColor({ *_children[i]->_board })[0]);
-// 			for (auto n : blackGen)
-// 			{
-// 				evals++;
-// 				_children.push_back(make_shared<Neuron>(n));
-// 			}
-// 		}
-//
-// 		depth--;
-// 		if (depth > 0) {
-// 			for (int k = 0; k < originalSize; k++) {
-// 				_children[k]->spawnChildren(depth);
-// 			}
-// 		}
-//
-// }
-
 void Neuron::spawnChildrenBlackFirst(int depth) {
 	auto firstMoveSet = spawnBlack(*_board);
 

@@ -24,11 +24,14 @@ front_run:
 run_ai:
 	$(TARGET) $(depth)
 
-run :
+run:
 	electron $(GUI_TARGET) &
 	$(TARGET) $(depth)
 
-ai_test: $(TEST_SOURCES)
+run_tests:
+	$(TEST_TARGET)
+
+tests: $(TEST_SOURCES)
 	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES) $(filter-out src/backendMain.cpp, $(SOURCES))
 
 .PHONY : clean

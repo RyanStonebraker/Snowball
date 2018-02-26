@@ -6,6 +6,9 @@
 
 class IOHandler {
 public:
+	IOHandler(bool cleanup = false);
+	~IOHandler();
+
 	std::string readBoardState();
 	int outputNewBoardState(const std::vector<Board> & validMoves);
 	std::string updateFileName();
@@ -13,9 +16,22 @@ public:
 	bool startGame(int startingDetails);
 	std::ifstream test(std::string pathName);
 	void print(const Board & b);
-	int getFileIncrementer();
+	int getCurrentFileNumber();
+
+	std::string getFirstHandshakeLocation();
+	std::string getSecondHandshakeLocation();
+	std::string getCurrentGameDirectory();
+
 private:
-	int fileIncrementer = 1;
+	void removeDirectoryFiles();
+
+	std::string shadowState;
+	std::string boardState;
+	std::string handshake0;
+	std::string handshake1;
+	std::string currentGameDirectory;
+	int currentFileNumber;
+	bool _cleanUp;
 };
 
 #endif
