@@ -34,8 +34,21 @@ public:
 	float getRiskFactor() const;
 	Board getBoard();
 
+    void setWeight(float weight);
+    void setAverageWeight(float averageWeight);
+    void setRiskFactor(float riskFactor);
+
 	//[] overloads
 	std::shared_ptr<Neuron> & operator[](int index);
+    friend std::ostream & operator<<(std::ostream&, const Neuron&);
+    friend std::istream& operator>>(std::istream &, Neuron&);
+
+    //transforms for new class
+    float randomNumber(float Min, float Max);
+    float kingWeightPrime(float oldKingWeight);
+    float sigmaWeightPrime(float oldSigmaWeight, int numberOfWeights);
+    float nodeWeightPrime(float oldNodeWeight, float sigmaWeight);
+    Neuron& evolveChild(Neuron&);
 
 private:
 	std::vector<Board> spawnBlack (Board & initBoard);

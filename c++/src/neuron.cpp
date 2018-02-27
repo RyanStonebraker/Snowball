@@ -2,10 +2,12 @@
 #include "moveGenerator.h"
 #include "constants.h"
 #include <vector>
+#include <math.h>
 #include <memory>
 using std::shared_ptr;
 using std::make_shared;
 using std::weak_ptr;
+#include <fstream>
 #include <iostream>
 using std::vector;
 #include <string>
@@ -199,6 +201,18 @@ Board Neuron::getBoard()
 	return *_board;
 }
 
+void Neuron::setWeight(float weight){
+    _weight = weight;
+}
+
+void Neuron::setAverageWeight(float averageWeight){
+    _averageWeight = averageWeight;
+}
+
+void Neuron::setRiskFactor(float riskFactor){
+    _riskFactor = riskFactor;
+}
+
 size_t Neuron::size() const
 {
 	return _children.size();
@@ -207,6 +221,63 @@ size_t Neuron::size() const
 std::shared_ptr<Neuron> & Neuron::operator[](int index)
 {
 	return _children[index];
+}
+
+std::ostream &operator<<(std::ostream& strm, const Neuron& obj){
+    strm << obj.getWeight() << " "  << obj.getAverageWeight() << " "  << obj.getRiskFactor();
+    return strm;
+}
+
+std::istream& operator>>(std::istream &input, Neuron& obj){
+    float weight;
+    float averageWeight;
+    float riskFactor;
+
+    input >> weight;
+    input >> averageWeight;
+    input >> riskFactor;
+
+    obj.setWeight(weight);
+    obj.setAverageWeight(averageWeight);
+    obj.setRiskFactor(riskFactor);
+
+    return input;
+}
+
+float Neuron::randomNumber(float Min, float Max)
+{
+    return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
+}
+
+float Neuron::kingWeightPrime(float oldKingWeight){
+    float kingWeight;
+    kingWeight = oldKingWeight + randomNumber(-.1, .1);
+    return kingWeight;
+}
+
+float Neuron::sigmaWeightPrime(float oldSigmaWeight, int numberOfWeights){
+    float sigmaWeight;
+    double tau = 1/(sqrt(2*sqrt(numberOfWeights)));
+    sigmaWeight = oldSigmaWeight*(exp(tau*tanh(oldSigmaWeight)));
+    return sigmaWeight;
+}
+
+float Neuron::nodeWeightPrime(float oldNodeWeight, float sigmaWeight){
+    float nodeWeight;
+    nodeWeight = oldNodeWeight + (sigmaWeight+tanh(oldNodeWeight));
+    return nodeWeight;
+}
+
+//parameters are not correct for nodeWeightPrime() need to add sigma values
+//using risk factor in place of sigma weights for the time being and 1 for number of weights
+//using averageWeight for kingWeight currently
+Neuron& evolveChild(Neuron& obj){
+    Neuron evolvedChild;
+    float evolvedWeight = obj.nodeWeightPrime(obj.getWeight(), obj.getRiskFactor());
+    float evolvedSigmaWeight = obj.sigmaWeightPrime(obj.getRiskFactor(), 1);
+    float evolvedKingWeight = obj.kingWeightPrime(obj.getAverageWeight());
+
+    return evolvedChild;
 }
 
 bool operator==(Neuron & lhs, Neuron & rhs)
