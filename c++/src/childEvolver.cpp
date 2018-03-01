@@ -9,6 +9,7 @@
 #include "childEvolver.h"
 #include "WeightedNode.h"
 #include <math.h>
+#include <random>
 
 childEvolver::childEvolver(){
 
@@ -16,7 +17,12 @@ childEvolver::childEvolver(){
 
 float randomNumber(float Min, float Max)
 {
-    return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
+    std::random_device rd{};
+    std::mt19937 engine{rd()};
+    std::uniform_real_distribution<double> dist{-0.1, 0.1};
+
+    double randomReal = dist(engine);
+    return randomReal;
 }
 
 float childEvolver::kingWeightPrime(WeightedNode &node){
@@ -36,8 +42,8 @@ float childEvolver::sigmaWeightPrime(WeightedNode &node, int numberOfWeights){
 
 float childEvolver::nodeWeightPrime(WeightedNode &node){
     float sigmaWeight = node.sigmaWeight;
-    float oldNodeWeight;
+    float oldNodeWeight = node.weight;
     float nodeWeight;
-    nodeWeight = oldNodeWeight + (sigmaWeight+tanh(oldNodeWeight));
+    nodeWeight = oldNodeWeight + (sigmaWeight*tanh(oldNodeWeight));
     return nodeWeight;
 }
