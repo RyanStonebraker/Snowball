@@ -3,9 +3,18 @@
 
 // Weighted Node Structure meant to contain all scaling factor weights for current branch
 struct WeightedNode {
+
+  // Individual weight of each node?
+  // -0.20f - 0.20f
+  float weight;
+
   // How much does the number of kings a certain branch could generate affect decision?
-  // 0.00f - 1.00f
+  // 1.00f - 3.00f
   float kingingWeight;
+
+  //Initial value for sigma for each weight(bias factor)
+  //Always set to .05
+  float sigmaWeight = .05;
 
   // How much does the number of pieces captured per branch affect decision?
   // 0.00f - 1.00f
