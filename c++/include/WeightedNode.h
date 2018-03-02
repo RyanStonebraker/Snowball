@@ -1,6 +1,8 @@
 #ifndef WEIGHTED_NODE_H
 #define WEIGHTED_NODE_H
 
+#include <fstream>
+
 // Weighted Node Structure meant to contain all scaling factor weights for current branch
 struct WeightedNode {
 

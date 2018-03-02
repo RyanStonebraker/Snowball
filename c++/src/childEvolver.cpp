@@ -22,6 +22,7 @@ using std::to_string;
 #include <iostream>
 using std::cout;
 using std::endl;
+#include <random>
 
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights){
     _childrenPerGeneration = childrenPerGeneration;
@@ -116,7 +117,12 @@ void ChildEvolver::evolve(const WeightedNode & startWeights, const int depth, co
 
 float randomNumber(float Min, float Max)
 {
-    return ((float(rand()) / float(RAND_MAX)) * (Max - Min)) + Min;
+    std::random_device rd{};
+    std::mt19937 engine{rd()};
+    std::uniform_real_distribution<double> dist{-0.1, 0.1};
+
+    double randomReal = dist(engine);
+    return randomReal;
 }
 
 float ChildEvolver::kingWeightPrime(const WeightedNode &node){
@@ -138,6 +144,6 @@ float ChildEvolver::nodeWeightPrime(const WeightedNode &node){
     float sigmaWeight = node.sigmaWeight;
     float oldNodeWeight = node.weight;
     float nodeWeight;
-    nodeWeight = oldNodeWeight + (sigmaWeight+tanh(oldNodeWeight));
+    nodeWeight = oldNodeWeight + (sigmaWeight*tanh(oldNodeWeight));
     return nodeWeight;
 }
