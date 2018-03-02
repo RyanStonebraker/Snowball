@@ -125,6 +125,13 @@ float randomNumber(float Min, float Max)
     return randomReal;
 }
 
+float randomGausian(){
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(.5,.25);
+    float randNum = distribution(generator);
+    return randNum;
+}
+
 float ChildEvolver::kingWeightPrime(const WeightedNode &node){
     float oldKingWeight = node.kingingWeight;
     float kingWeight;
