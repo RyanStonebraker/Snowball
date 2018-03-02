@@ -13,14 +13,24 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
-class childEvolver{
-private:
+#include <vector>
 
+class ChildEvolver{
+private:
+    int _childrenPerGeneration;
+    enum class Player {NONE, FIRST, SECOND};
+    std::vector<WeightedNode> _children;
+
+    void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
+    Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
+    void writeWeightsToFile(const int generation);
+    void writeTestCSV();
 public:
-    childEvolver();
-    float kingWeightPrime(WeightedNode &);
-    float sigmaWeightPrime(WeightedNode &, int numberOfWeights);
-    float nodeWeightPrime(WeightedNode &);
+    ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights);
+    void evolve(const WeightedNode &startWeights, const int depth, const int generations, const int minGamesPerChild);
+    float kingWeightPrime(const WeightedNode &);
+    float sigmaWeightPrime(const WeightedNode &, int numberOfWeights);
+    float nodeWeightPrime(const WeightedNode &);
 
 };
 #endif /* childEvolver_h */

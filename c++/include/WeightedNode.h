@@ -6,11 +6,11 @@ struct WeightedNode {
 
   // Individual weight of each node?
   // -0.20f - 0.20f
-  float weight;
+  float weight = 0;
 
   // How much does the number of kings a certain branch could generate affect decision?
   // 1.00f - 3.00f
-  float kingingWeight;
+  float kingingWeight = 0;
 
   //Initial value for sigma for each weight(bias factor)
   //Always set to .05
@@ -18,28 +18,28 @@ struct WeightedNode {
 
   // How much does the number of pieces captured per branch affect decision?
   // 0.00f - 1.00f
-  float qualityWeight;
+  float qualityWeight = 0;
 
   // How much does the freedom of movement per branch affect decision?
   // 0.00f - 1.00f
-  float availableMovesWeight;
+  float availableMovesWeight = 0;
 
   // How much does the distance from the current move affect decision?
   // 0.00f - 1.00f
-  float depthWeight;
+  float depthWeight = 0;
 
   // How much should the maximum values of certain weights in comparison to
   // other same level branches affect decisions?
   // 0.00f - 1.00f
-  float riskFactor;
+  float riskFactor = 0;
 
   // How much should positive gains (in each weighting category) for the enemy
   // affect the move decision?
   // 0.00f - 1.00f
-  float enemyFactor;
+  float enemyFactor = 0;
 
   // What depth should this branch be calculated to?
-  int depth;
+  int depth = 0;
 };
 
 #endif
