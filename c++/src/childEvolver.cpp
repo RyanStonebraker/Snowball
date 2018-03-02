@@ -139,18 +139,18 @@ float ChildEvolver::kingWeightPrime(const WeightedNode &node){
     return kingWeight;
 }
 
-float ChildEvolver::sigmaWeightPrime(const WeightedNode &node, int numberOfWeights){
+float childEvolver::sigmaWeightPrime(WeightedNode &node, int numberOfWeights){
     float oldSigmaWeight = node.sigmaWeight;
     float sigmaWeight;
     double tau = 1/(sqrt(2*sqrt(numberOfWeights)));
-    sigmaWeight = oldSigmaWeight*(exp(tau*tanh(oldSigmaWeight)));
+    sigmaWeight = oldSigmaWeight*(exp(tau*randomGausian()));
     return sigmaWeight;
 }
 
-float ChildEvolver::nodeWeightPrime(const WeightedNode &node){
+float childEvolver::nodeWeightPrime(WeightedNode &node){
     float sigmaWeight = node.sigmaWeight;
     float oldNodeWeight = node.weight;
     float nodeWeight;
-    nodeWeight = oldNodeWeight + (sigmaWeight*tanh(oldNodeWeight));
+    nodeWeight = oldNodeWeight + (sigmaWeight*randomGausian());
     return nodeWeight;
 }
