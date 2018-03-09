@@ -24,6 +24,20 @@ using std::cout;
 using std::endl;
 #include <random>
 
+std::random_device rd{};
+std::mt19937 engine{rd()};
+std::uniform_real_distribution<double> dist{-0.1, 0.1};
+
+
+
+std::default_random_engine generator;
+std::normal_distribution<> distribution{0.5,(0.5/3)};
+
+float randomGausian(){
+    float randNum = distribution(engine);
+    return randNum;
+}
+
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights){
     _childrenPerGeneration = childrenPerGeneration;
     _children = vector<WeightedNode>(childrenPerGeneration);
@@ -98,7 +112,7 @@ void ChildEvolver::writeTestCSV() {
     outFile.open("../weights.csv");
     outFile << "Weight, Kinging Weight, Sigma Weight" << endl;
     for (int i = 0; i < _childrenPerGeneration; ++i) {
-        outFile << _children[i].weight << "," << _children[i].kingingWeight << "," << _children[i].sigmaWeight << endl;
+        outFile << _children[i].weight << "," << _children[i].kingingWeight << "," << _children[i].sigmaWeight << "," <<  i << endl;
     }
     outFile.close();
 }
@@ -117,20 +131,10 @@ void ChildEvolver::evolve(const WeightedNode & startWeights, const int depth, co
 
 float randomNumber(float Min, float Max)
 {
-    std::random_device rd{};
-    std::mt19937 engine{rd()};
-    std::uniform_real_distribution<double> dist{-0.1, 0.1};
-
     double randomReal = dist(engine);
     return randomReal;
 }
 
-float randomGausian(){
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(.5,.25);
-    float randNum = distribution(generator);
-    return randNum;
-}
 
 float ChildEvolver::kingWeightPrime(const WeightedNode &node){
     float oldKingWeight = node.kingingWeight;
@@ -142,7 +146,7 @@ float ChildEvolver::kingWeightPrime(const WeightedNode &node){
 float ChildEvolver::sigmaWeightPrime(const WeightedNode &node, int numberOfWeights){
     float oldSigmaWeight = node.sigmaWeight;
     float sigmaWeight;
-    double tau = 1/(sqrt(2*sqrt(numberOfWeights)));
+    float tau = 1/(sqrt(2*sqrt(numberOfWeights)));
     sigmaWeight = oldSigmaWeight*(exp(tau*randomGausian()));
     return sigmaWeight;
 }
