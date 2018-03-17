@@ -74,19 +74,33 @@ int main (int argc, char* argv[]) {
 
 	aiPlayer.setMoveColor(startingPlayer);
 
+	bool playedFirstMove = false;
 	while(true) {
-		gameController.updateFileName();
+		if (startingPlayer == COMPUTER_BLACK || playedFirstMove)
+			gameController.updateFileName();
+
 		auto currentBoard = gameController.readBoardState();
 
 		aiPlayer.receiveMove(currentBoard);
 		std::cout << "Move Received: " << currentBoard << std::endl;
+
+		auto previousMovesGenerated = MoveGenerator::totalMoveGens;
+		auto startGenMoves = system_clock::now();
+
 		auto nextMove = aiPlayer.getBestMove();
 
-		// std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
+		auto endGenMoves = system_clock::now();
+		duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves;
+		auto boardsEvaluated = MoveGenerator::totalMoveGens - previousMovesGenerated;
+		std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
+		std::cout << "Boards Evaluated: " << boardsEvaluated << " boards" << std::endl;
+		std::cout << "Time To Move: " << elapsedMoveGenTime.count() << " seconds" << std::endl;
+		std::cout << "Evaluation Speed: " << boardsEvaluated / elapsedMoveGenTime.count() << " Boards/Sec" << std::endl;
 
+		playedFirstMove = true;
 		gameController.updateFileName();
 		gameController.outputNewBoardState(nextMove);
-		
+
 		if (aiPlayer.gameIsOver()) {
 			std::cout << "Game Ended! " << aiPlayer.getWinner() << std::endl;
 			break;

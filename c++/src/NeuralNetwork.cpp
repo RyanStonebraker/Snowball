@@ -201,7 +201,7 @@ void NeuralNetwork::evaluateChildren(int depth) {
     _children[possibleMove] = recurseSpawning(depth - 1, node, _startingColor);
     _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
 
-    std::cout << "Potential Move " << possibleMove << ": " << node.board << " Weight: " << _children[possibleMove]->weight << std::endl;
+    // std::cout << "Potential Move " << possibleMove << ": " << node.board << " Weight: " << _children[possibleMove]->weight << std::endl;
 
     if (_children[possibleMove]->weight >= _bestMoveWeight) {
       _bestMoveWeight = _children[possibleMove]->weight;
@@ -219,6 +219,7 @@ void NeuralNetwork::evaluateChildren(int depth) {
 }
 
 bool NeuralNetwork::splitTie() {
+  return false;
   random_device rdev;
   mt19937 rand_gen(rdev());
 
