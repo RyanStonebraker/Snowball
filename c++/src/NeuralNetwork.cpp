@@ -235,6 +235,8 @@ bool NeuralNetwork::splitTie() {
 
 // TODO: could do alpha-beta pruning by adding a "bestBoard at this level" parameter and
 // then only continuing if its >= to the child
+// OR, could just say if <= depthLeft X (could assign a percentage of the way to depth) and weight is
+// greater than 1 standard deviation less than bestMove, then end
 std::shared_ptr<NeuronLinkedList> NeuralNetwork::recurseSpawning(int depth, NeuronLinkedList parent, int color) {
   auto nextMoveSet = (color == COMPUTER_BLACK) ? spawnRed(parent.board) : spawnBlack(parent.board);
   auto nextColor = (color == COMPUTER_BLACK) ? COMPUTER_RED : COMPUTER_BLACK;
@@ -248,6 +250,14 @@ std::shared_ptr<NeuronLinkedList> NeuralNetwork::recurseSpawning(int depth, Neur
 
     parent.children.push_back(std::make_shared<NeuronLinkedList>(nextChild));
     if (depth > 0) {
+
+      // ALPHA-BETA PRUNING - More of a heuristic since doesn't DEFINITELY guarantee this
+      // move cant be the best. Also, using sigmoid this much hurts.
+      // auto startAlphaBetaDepth = 0.5;
+      // auto cutOffPercentage = 0.5;
+      // if (depth <= int(startAlphaBetaDepth * _weights.depth) && sigmoid(parent.weight) <= cutOffPercentage * _bestMoveWeight)
+      //   break;
+
       parent.children[parent.children.size() - 1] = recurseSpawning(depth - 1, nextChild, nextColor);
     }
   }
