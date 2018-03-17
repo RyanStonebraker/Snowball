@@ -66,6 +66,7 @@ int main (int argc, char* argv[]) {
 	// *** For Loading Generations: ***
 	// aiPlayer.writeWeightsToFile("gen0.txt");
 	// aiPlayer.loadStartingWeightsFromFile("gen0.txt");
+
 	IOHandler gameController(CLEAN_UP_TEMP_FILES);
 
 	auto startingPlayer = gameController.setupGame();
@@ -80,7 +81,7 @@ int main (int argc, char* argv[]) {
 		aiPlayer.receiveMove(currentBoard);
 		// std::cout << "Move Received: " << currentBoard << std::endl;
 		auto nextMove = aiPlayer.getBestMove();
-		// std::cout << "Playing Move: " << nextMove << std::endl;
+		// std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
 
 		gameController.updateFileName();
 		gameController.outputNewBoardState(nextMove);

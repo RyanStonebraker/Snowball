@@ -31,7 +31,7 @@ class NeuralNetwork {
 public:
   static WeightedNode generateRandomWeights();
 public:
-  NeuralNetwork() : _startingColor(COMPUTER_BLACK), _bestMoveWeight(0), _currentMove(STARTING_BOARD_STRING) {}
+  NeuralNetwork() : _startingColor(COMPUTER_BLACK), _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING) {}
 public:
   void loadStartingWeightsFromFile(const std::string & readLocation);
   void loadStartingWeights(WeightedNode & startWeights); // use std::move to move weighted node to NN
@@ -39,6 +39,7 @@ public:
   void setMoveColor(int startingPlayer);
   void receiveMove(const std::string & currentMove);
   std::string getBestMove();
+  double getBestWeight() const;
 private:
   bool splitTie();
   double sigmoid(double weight);

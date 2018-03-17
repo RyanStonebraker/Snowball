@@ -233,6 +233,12 @@ std::vector<Board> NeuralNetwork::spawnRed (const std::string & initBoard) {
 
 
 std::string NeuralNetwork::getBestMove() {
+  _bestMoveWeight = 0;
+  _children.clear();
   evaluateChildren(_weights.depth);
   return _currentMove;
+}
+
+double NeuralNetwork::getBestWeight() const {
+  return _bestMoveWeight;
 }
