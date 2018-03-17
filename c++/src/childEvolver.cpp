@@ -10,7 +10,6 @@
 #include "WeightedNode.h"
 #include "board.h"
 #include "constants.h"
-#include "BranchTracker.h"
 #include "util.h"
 #include <math.h>
 #include <vector>
@@ -23,6 +22,7 @@ using std::to_string;
 using std::cout;
 using std::endl;
 #include <random>
+#include "NeuralNetwork.h"
 
 std::random_device rd{};
 std::mt19937 engine{rd()};
@@ -70,11 +70,18 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
     Board board(STARTING_BOARD_STRING);
     Player winner = Player::NONE;
 
-    // Play game (only allow 70 moves)
-    for (int i = 0; i < 35; ++i) {
-        // Player 1 is always red, player 2 is always black. We might want to change this, not sure if it matters?
-        BranchTracker branchTracker1(board, player1Weights);
-        board = branchTracker1.getBestMove(BranchTracker::Color::RED_PIECE);
+    NeuralNetwork player1;
+    player1.loadStartingWeights(player1Weights);
+    player1.setMoveColor(COMPUTER_RED);
+
+    NeuralNetwork player2;
+    player2.loadStartingWeights(player2Weights);
+    player1.setMoveColor(COMPUTER_BLACK);
+
+    // Play game (only allow 100 moves)
+    for (int i = 0; i < 200; ++i) {
+        player1.receiveMove(board.getBoardStateString());
+        board = {player1.getBestMove()};
         // Did player 1 win?
         if (board.getBlackPieceCount() == 0) {
             winner = Player::FIRST;
@@ -82,8 +89,8 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         }
 
         // Player 2 turn
-        BranchTracker branchTracker2(board, player2Weights);
-        board = branchTracker2.getBestMove(BranchTracker::Color::BLACK_PIECE);
+        player2.receiveMove(board.getBoardStateString());
+        board = {player2.getBestMove()};
         // Did player 2 win?
         if (board.getRedPieceCount() == 0) {
             winner = Player::SECOND;
@@ -123,7 +130,9 @@ void ChildEvolver::evolve(const WeightedNode & startWeights, const int depth, co
     for (int i = 0; i < _childrenPerGeneration; ++i) {
         for (int i = 0; i < minGamesPerChild; ++i) {
             auto opponent = _children[Util::randInt(_childrenPerGeneration - 1)];
-            auto result = playGame(_children[i], opponent);
+            // auto result = playGame(_children[i], opponent);
+            // Just to silence that result not used warning...
+            playGame(_children[i], opponent);
             // NEEDS TO BE FINISHED FOR ASSIGNMENT 4
         }
     }

@@ -27,6 +27,7 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   currentWeights.availableMovesWeight = rand_weight(rand_gen);
   currentWeights.riskFactor = rand_weight(rand_gen);
   currentWeights.enemyFactor = rand_weight(rand_gen);
+  currentWeights.splitTieFactor = rand_weight(rand_gen);
 
   return currentWeights;
 }
@@ -278,7 +279,12 @@ std::vector<Board> NeuralNetwork::spawnRed (const std::string & initBoard) {
 std::string NeuralNetwork::getBestMove() {
   _bestMoveWeight = -1;
   _children.clear();
+
+  auto startMoveEval = std::chrono::system_clock::now();
   evaluateChildren(_weights.depth);
+  auto endMoveEval = std::chrono::system_clock::now();
+  _bpsTiming += endMoveEval - startMoveEval;
+
   return _currentMove;
 }
 
@@ -297,4 +303,12 @@ std::string NeuralNetwork::getWinner() const {
     return "Draw!";
   else
     return (_gameState == RED_WON) ? "RED WON!" : "BLACK WON!";
+}
+
+double NeuralNetwork::getEvaluationTime() const {
+  return _bpsTiming.count();
+}
+
+void NeuralNetwork::clearEvaluationTime() {
+  _bpsTiming = std::chrono::duration<double>::zero();
 }

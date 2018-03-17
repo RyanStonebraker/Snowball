@@ -47,6 +47,16 @@ using std::uniform_real_distribution;
 #include "childEvolver.h"
 #include "NeuralNetwork.h"
 
+void printStatistics(NeuralNetwork & aiPlayer, unsigned previousMovesGenerated, const std::string & nextMove) {
+	auto elapsedMoveGenTime = aiPlayer.getEvaluationTime();
+	auto boardsEvaluated = MoveGenerator::totalMoveGens - previousMovesGenerated;
+	std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
+	std::cout << "Boards Evaluated: " << boardsEvaluated << " boards" << std::endl;
+	std::cout << "Time To Move: " << elapsedMoveGenTime << " seconds" << std::endl;
+	std::cout << "Evaluation Speed: " << boardsEvaluated / elapsedMoveGenTime << " Boards/Sec" << std::endl;
+	aiPlayer.clearEvaluationTime();
+}
+
 int main (int argc, char* argv[]) {
 	auto currentWeights = NeuralNetwork::generateRandomWeights();
 
@@ -65,7 +75,7 @@ int main (int argc, char* argv[]) {
 
 	// *** For Loading Generations: ***
 	// aiPlayer.writeWeightsToFile("gen0.txt");
-	// aiPlayer.loadStartingWeightsFromFile("gen0.txt");
+	aiPlayer.loadStartingWeightsFromFile("../comm/tempWeights.txt");
 
 	IOHandler gameController(CLEAN_UP_TEMP_FILES);
 
@@ -82,20 +92,13 @@ int main (int argc, char* argv[]) {
 		auto currentBoard = gameController.readBoardState();
 
 		aiPlayer.receiveMove(currentBoard);
-		std::cout << "Move Received: " << currentBoard << std::endl;
 
 		auto previousMovesGenerated = MoveGenerator::totalMoveGens;
-		auto startGenMoves = system_clock::now();
 
+		std::cout << "Move Received: " << currentBoard << std::endl;
 		auto nextMove = aiPlayer.getBestMove();
-
-		auto endGenMoves = system_clock::now();
-		duration<double> elapsedMoveGenTime = endGenMoves - startGenMoves;
-		auto boardsEvaluated = MoveGenerator::totalMoveGens - previousMovesGenerated;
 		std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
-		std::cout << "Boards Evaluated: " << boardsEvaluated << " boards" << std::endl;
-		std::cout << "Time To Move: " << elapsedMoveGenTime.count() << " seconds" << std::endl;
-		std::cout << "Evaluation Speed: " << boardsEvaluated / elapsedMoveGenTime.count() << " Boards/Sec" << std::endl;
+		printStatistics(aiPlayer, previousMovesGenerated, nextMove);
 
 		playedFirstMove = true;
 		gameController.updateFileName();

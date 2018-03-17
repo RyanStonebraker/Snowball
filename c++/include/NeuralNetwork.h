@@ -32,7 +32,9 @@ class NeuralNetwork {
 public:
   static WeightedNode generateRandomWeights();
 public:
-  NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK), _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING) {}
+  NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK),
+                    _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING),
+                    _bpsTiming(std::chrono::duration<double>::zero())  {}
 public:
   void loadStartingWeightsFromFile(const std::string & readLocation);
   void loadStartingWeights(WeightedNode & startWeights);
@@ -43,6 +45,8 @@ public:
   double getBestWeight() const;
   bool gameIsOver();
   std::string getWinner() const;
+  double getEvaluationTime() const;
+  void clearEvaluationTime();
 private:
   bool splitTie();
   double sigmoid(double weight);
@@ -66,6 +70,8 @@ private:
   double _bestMoveWeight;
   std::string _currentMove;
   ExpandedWeights _topLevelWeights;
+
+  std::chrono::duration<double> _bpsTiming;
 
   std::vector<std::shared_ptr<NeuronLinkedList>> _children;
 };

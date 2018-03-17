@@ -10,23 +10,28 @@
 #include "WeightedNode.h"
 
 std::ostream &operator<<(std::ostream& stream, const WeightedNode& node){
-    stream << node.weight << " " << node.kingingWeight << " " << node.sigmaWeight << " " << node.qualityWeight << " " << node.availableMovesWeight << " " << node.depthWeight << " " << node.riskFactor << " " << node.enemyFactor << " " << node.depth;
+    stream << node.weight << " " << node.kingingWeight << " " << node.sigmaWeight
+    << " " << node.qualityWeight << " " << node.availableMovesWeight << " "
+    << node.depthWeight << " " << node.riskFactor << " " << node.enemyFactor
+    << " " << node.splitTieFactor << " " << node.depth;
     return stream;
 }
 
 std::istream &operator>>(std::istream& stream, WeightedNode& node){
-    float newWeight;
-    float newKingingWeight;
-    float newSigmaWeight;
-    float newQualityWeight;
-    float newAvailableMovesWeight;
-    float newDepthWeight;
-    float newRiskFactor;
-    float newEnemyFactor;
-    float newDepth;
+    double newWeight;
+    double newKingingWeight;
+    double newSigmaWeight;
+    double newQualityWeight;
+    double newAvailableMovesWeight;
+    double newDepthWeight;
+    double newRiskFactor;
+    double newEnemyFactor;
+    double newSplitTieFactor;
+    double newDepth;
 
-    stream >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newEnemyFactor >> newDepth;
-
+    stream >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight
+    >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newEnemyFactor
+    >> newSplitTieFactor >> newDepth;
 
     node.weight = newWeight;
     node.kingingWeight = newKingingWeight;
@@ -36,6 +41,7 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.depthWeight = newDepthWeight;
     node.riskFactor = newRiskFactor;
     node.enemyFactor = newEnemyFactor;
+    node.splitTieFactor = newSplitTieFactor;
     node.depth = newDepth;
 
     return stream;
