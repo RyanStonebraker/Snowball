@@ -37,6 +37,6 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.riskFactor = newRiskFactor;
     node.enemyFactor = newEnemyFactor;
     node.depth = newDepth;
-    
+
     return stream;
 }

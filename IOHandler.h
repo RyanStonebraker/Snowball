@@ -1,9 +1,6 @@
 #ifndef IOHANDLER_H_INCLUDED
 #define IOHANDLER_H_INCLUDED
 
-#define CLEAN_UP_TEMP_FILES 1
-#define AVG_SLEEP_BLOCK 10
-
 #include <string>
 #include "board.h"
 
@@ -14,8 +11,6 @@ public:
 
 	std::string readBoardState();
 	int outputNewBoardState(const std::vector<Board> & validMoves);
-	void outputNewBoardState(const std::string & nextMove);
-
 	std::string updateFileName();
 	int setupGame();
 	bool startGame(int startingDetails);

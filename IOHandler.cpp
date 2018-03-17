@@ -38,6 +38,8 @@ using std::uniform_int_distribution;
 	#include <unistd.h>
 #endif
 
+#define AVG_SLEEP_BLOCK 10
+
 
 IOHandler::IOHandler (bool cleanup) : _cleanUp(cleanup) {
 	this->shadowState = "../comm/shadowstate.txt";
@@ -213,12 +215,6 @@ string IOHandler::readBoardState()
 	iss >> boardState;
 
 	return boardState;
-}
-
-void IOHandler::outputNewBoardState(const string & nextMove) {
-	ofstream boardStateOutFile(boardState, std::ofstream::trunc);
-
-	boardStateOutFile << nextMove;
 }
 
 int IOHandler::outputNewBoardState(const vector<Board> & validMoves)

@@ -74,12 +74,6 @@ var game = {
   "winner": ""
 };
 
-// Player vs Player
-// game.redPlayer = true;
-// game.whitePlayer = true;
-// game.redFile = false;
-// game.whiteFile = false;
-
 // Global object literal for keeping track of scoring and turns
 var scoreboard = {
 	"red":
@@ -110,7 +104,6 @@ var scoreboard = {
 
 // Default loaded board. If this string is changed before runtime, the game will start in this state.
 var DEFAULT_BOARD = "11111111111100000000222222222222";
-// var DEFAULT_BOARD = "11111111101101000220000222222022";
 
 // Main "class"/start function
 function GameBoard(div, start_board, start_mode)
