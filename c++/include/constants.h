@@ -3,10 +3,16 @@
 
 #define RED 1
 #define BLACK	2
+
 #define RED_KING 3
 #define BLACK_KING 4
 #define COMPUTER_RED 0
 #define COMPUTER_BLACK 1
+
+#define BLACK_WON -1
+#define GAME_RUNNING 0
+#define STALEMATE 1
+#define RED_WON 2
 
 #define STARTING_BOARD_STRING "11111111111100000002222222222222"
 

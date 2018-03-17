@@ -156,8 +156,38 @@ ExpandedWeights NeuralNetwork::getBoardInfo(const std::string & minimalBoard) {
   return boardWeighting;
 }
 
+bool NeuralNetwork::checkIfGameIsEnded(const std::string & currentMove) const {
+  auto blackWon = currentMove.find("1") == std::string::npos && currentMove.find("3") == std::string::npos;
+  if (blackWon)
+    return true;
+
+  auto redWon = currentMove.find("2") == std::string::npos && currentMove.find("4") == std::string::npos;
+  if (redWon)
+    return true;
+
+  return false;
+}
+
+void NeuralNetwork::setEndCondition(const std::string & currentMove) {
+  Board endBoard {currentMove};
+  if (endBoard.getBlackPieceCount() == 0) {
+    _gameState = RED_WON;
+  }
+  else if (endBoard.getRedPieceCount() == 0) {
+    _gameState = BLACK_WON;
+  }
+  else {
+    _gameState = STALEMATE;
+  }
+}
+
 void NeuralNetwork::evaluateChildren(int depth) {
   auto firstMoveSet = (_startingColor == COMPUTER_BLACK) ? spawnBlack(_currentMove) : spawnRed(_currentMove);
+
+  if (firstMoveSet.size() == 0) {
+    setEndCondition(_currentMove);
+    return;
+  }
 
   _topLevelWeights = getBoardInfo(_currentMove);
 
@@ -169,24 +199,36 @@ void NeuralNetwork::evaluateChildren(int depth) {
     _children.push_back(std::make_shared<NeuronLinkedList>(node));
 
     _children[possibleMove] = recurseSpawning(depth - 1, node, _startingColor);
+    _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
+
+    std::cout << "Potential Move " << possibleMove << ": " << node.board << " Weight: " << _children[possibleMove]->weight << std::endl;
 
     if (_children[possibleMove]->weight >= _bestMoveWeight) {
       _bestMoveWeight = _children[possibleMove]->weight;
       _currentMove = _children[possibleMove]->board;
       if (_children[possibleMove]->weight == _bestMoveWeight && _currentMove != enemyPlayedMove) {
-        if (_children[possibleMove]->board != _currentMove)
+        if (_children[possibleMove]->board != _currentMove) {
           _currentMove = (splitTie()) ? _currentMove : _children[possibleMove]->board;
+
+          if (checkIfGameIsEnded(_currentMove))
+            setEndCondition(_currentMove);
+        }
       }
     }
   }
 }
 
 bool NeuralNetwork::splitTie() {
-  // random_device rdev;
-  // mt19937 rand_gen(rdev());
-  //
-  // uniform_real_distribution<double> rand_weight(0, 1);
-  return false;
+  random_device rdev;
+  mt19937 rand_gen(rdev());
+
+  uniform_real_distribution<double> randomChoice(0, 1);
+  auto chosenSide = randomChoice(rand_gen);
+  if (chosenSide >= _weights.splitTieFactor) {
+    return false;
+  }
+  else
+    return true;
 }
 
 // TODO: could do alpha-beta pruning by adding a "bestBoard at this level" parameter and
@@ -200,14 +242,14 @@ std::shared_ptr<NeuronLinkedList> NeuralNetwork::recurseSpawning(int depth, Neur
     nextChild.board = nextMove.getBoardStateString();
 
     nextChild.weight = evaluateBoard(nextMove, depth);
-    parent.weight += nextChild.weight / nextMoveSet.size();
+    parent.weight += nextChild.weight;
 
     parent.children.push_back(std::make_shared<NeuronLinkedList>(nextChild));
     if (depth > 0) {
       parent.children[parent.children.size() - 1] = recurseSpawning(depth - 1, nextChild, nextColor);
     }
   }
-  parent.weight = sigmoid(parent.weight);
+  parent.weight /= nextMoveSet.size();
   return std::make_shared<NeuronLinkedList>(parent);
 }
 
@@ -233,7 +275,7 @@ std::vector<Board> NeuralNetwork::spawnRed (const std::string & initBoard) {
 
 
 std::string NeuralNetwork::getBestMove() {
-  _bestMoveWeight = 0;
+  _bestMoveWeight = -1;
   _children.clear();
   evaluateChildren(_weights.depth);
   return _currentMove;
@@ -241,4 +283,17 @@ std::string NeuralNetwork::getBestMove() {
 
 double NeuralNetwork::getBestWeight() const {
   return _bestMoveWeight;
+}
+
+bool NeuralNetwork::gameIsOver() {
+  if (checkIfGameIsEnded(_currentMove))
+    setEndCondition(_currentMove);
+  return _gameState != 0;
+}
+
+std::string NeuralNetwork::getWinner() const {
+  if (_gameState == STALEMATE)
+    return "Draw!";
+  else
+    return (_gameState == RED_WON) ? "RED WON!" : "BLACK WON!";
 }

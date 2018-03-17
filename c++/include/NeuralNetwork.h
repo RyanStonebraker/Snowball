@@ -18,6 +18,7 @@ struct ExpandedWeights {
   int numberOfRedPieces;
   int numberOfBlackPieces;
 
+  // Future Weighting Parameters:
   // int numberOfPreferredFormations;
 };
 
@@ -31,15 +32,17 @@ class NeuralNetwork {
 public:
   static WeightedNode generateRandomWeights();
 public:
-  NeuralNetwork() : _startingColor(COMPUTER_BLACK), _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING) {}
+  NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK), _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING) {}
 public:
   void loadStartingWeightsFromFile(const std::string & readLocation);
-  void loadStartingWeights(WeightedNode & startWeights); // use std::move to move weighted node to NN
+  void loadStartingWeights(WeightedNode & startWeights);
   void writeWeightsToFile(const std::string & writeLocation);
   void setMoveColor(int startingPlayer);
   void receiveMove(const std::string & currentMove);
   std::string getBestMove();
   double getBestWeight() const;
+  bool gameIsOver();
+  std::string getWinner() const;
 private:
   bool splitTie();
   double sigmoid(double weight);
@@ -52,7 +55,11 @@ private:
   std::shared_ptr<NeuronLinkedList> recurseSpawning(int depth, NeuronLinkedList parent, int color);
   std::string flipBoardColor(const std::string & board);
   std::vector<Board> flipAllColor(std::vector<Board> validMoves);
+  bool checkIfGameIsEnded(const std::string & _currentMove) const;
+  void setEndCondition(const std::string & _currentMove);
 private:
+  int _gameState;
+
   int _startingColor;
   WeightedNode _weights;
 

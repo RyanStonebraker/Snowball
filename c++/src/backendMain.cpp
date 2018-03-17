@@ -79,11 +79,17 @@ int main (int argc, char* argv[]) {
 		auto currentBoard = gameController.readBoardState();
 
 		aiPlayer.receiveMove(currentBoard);
-		// std::cout << "Move Received: " << currentBoard << std::endl;
+		std::cout << "Move Received: " << currentBoard << std::endl;
 		auto nextMove = aiPlayer.getBestMove();
+
 		// std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
 
 		gameController.updateFileName();
 		gameController.outputNewBoardState(nextMove);
+		
+		if (aiPlayer.gameIsOver()) {
+			std::cout << "Game Ended! " << aiPlayer.getWinner() << std::endl;
+			break;
+		}
 	}
 }
