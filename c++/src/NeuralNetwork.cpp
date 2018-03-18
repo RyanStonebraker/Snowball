@@ -19,7 +19,7 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   random_device rdev;
   mt19937 rand_gen(rdev());
 
-  uniform_real_distribution<> rand_weight(0, 1);
+  uniform_real_distribution<double> rand_weight(-1, 1);
 
   WeightedNode currentWeights;
   currentWeights.kingingWeight = rand_weight(rand_gen);
@@ -282,6 +282,9 @@ std::vector<Board> NeuralNetwork::spawnRed (const std::string & initBoard) {
 		MoveGenerator moveGen;
     Board flippedInitBoard = flipBoardColor(initBoard);
 		auto flippedBoardMoves = moveGen.generateRandomMoves(flippedInitBoard);
+
+    // TODO: This needs to be replaced with a generateRandomMoves that generates for
+    // flippedBoards as flipping ALL red boards is really expensive.
     return flipAllColor(flippedBoardMoves);
 }
 

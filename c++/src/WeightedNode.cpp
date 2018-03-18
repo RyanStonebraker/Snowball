@@ -10,14 +10,16 @@
 #include "WeightedNode.h"
 
 std::ostream &operator<<(std::ostream& stream, const WeightedNode& node){
-    stream << node.weight << " " << node.kingingWeight << " " << node.sigmaWeight
-    << " " << node.qualityWeight << " " << node.availableMovesWeight << " "
-    << node.depthWeight << " " << node.riskFactor << " " << node.enemyFactor
-    << " " << node.splitTieFactor << " " << node.depth;
+    stream << node.fitness << " " << node.weight << " " << node.kingingWeight
+    << " " << node.sigmaWeight << " " << node.qualityWeight << " "
+    << node.availableMovesWeight << " " << node.depthWeight << " " << node.riskFactor
+    << " " << node.enemyFactor << " " << node.splitTieFactor << " " << node.depth
+    << " " << node.gamesPlayed;
     return stream;
 }
 
 std::istream &operator>>(std::istream& stream, WeightedNode& node){
+    double newFitness;
     double newWeight;
     double newKingingWeight;
     double newSigmaWeight;
@@ -28,11 +30,13 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     double newEnemyFactor;
     double newSplitTieFactor;
     double newDepth;
+    unsigned gamesPlayed;
 
-    stream >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight
+    stream >> newFitness >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight
     >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newEnemyFactor
-    >> newSplitTieFactor >> newDepth;
+    >> newSplitTieFactor >> newDepth >> gamesPlayed;
 
+    node.fitness = newFitness;
     node.weight = newWeight;
     node.kingingWeight = newKingingWeight;
     node.sigmaWeight = newSigmaWeight;
@@ -43,6 +47,7 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.enemyFactor = newEnemyFactor;
     node.splitTieFactor = newSplitTieFactor;
     node.depth = newDepth;
+    node.gamesPlayed = gamesPlayed;
 
     return stream;
 }

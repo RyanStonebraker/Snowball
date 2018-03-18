@@ -66,7 +66,11 @@ int main (int argc, char* argv[]) {
 
 	if (argc >= 3) {
 		if (strncmp(argv[2], "evolve", 6) == 0) {
-			ChildEvolver evolver(1000, currentWeights);
+			ChildEvolver evolver(10, currentWeights);
+			evolver.setMutationRate(0.2);
+			evolver.startGeneration();
+
+			return 0;
 		}
 	}
 
@@ -75,7 +79,7 @@ int main (int argc, char* argv[]) {
 
 	// *** For Loading Generations: ***
 	// aiPlayer.writeWeightsToFile("gen0.txt");
-	aiPlayer.loadStartingWeightsFromFile("../comm/tempWeights.txt");
+	// aiPlayer.loadStartingWeightsFromFile("../comm/tempWeights.txt");
 
 	IOHandler gameController(CLEAN_UP_TEMP_FILES);
 
@@ -97,10 +101,11 @@ int main (int argc, char* argv[]) {
 
 		std::cout << "Move Received: " << currentBoard << std::endl;
 		auto nextMove = aiPlayer.getBestMove();
-		std::cout << "Playing Move : " << nextMove << " with weight: " << aiPlayer.getBestWeight() << std::endl;
 		printStatistics(aiPlayer, previousMovesGenerated, nextMove);
 
-		playedFirstMove = true;
+		if (!playedFirstMove)
+			playedFirstMove = true;
+
 		gameController.updateFileName();
 		gameController.outputNewBoardState(nextMove);
 

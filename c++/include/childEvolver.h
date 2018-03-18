@@ -16,21 +16,30 @@
 #include <vector>
 
 class ChildEvolver{
+public:
+    ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights);
+    void evolve(WeightedNode &startWeights, const int minGamesPerChild);
+    void startGeneration();
+    void setMutationRate(double mutationRate);
+    void setDepth(unsigned depth);
+    double kingWeightPrime(const WeightedNode &);
+    double sigmaWeightPrime(const WeightedNode &, int numberOfWeights);
+    double nodeWeightPrime(const WeightedNode &);
 private:
-    int _childrenPerGeneration;
     enum class Player {NONE, FIRST, SECOND};
+    int _childrenPerGeneration;
+    unsigned _depth;
+    WeightedNode _bestChild;
+    WeightedNode _parent;
     std::vector<WeightedNode> _children;
-
+    double _mutationRate;
+private:
+    double varyWeightBy(double weight, double varyAmount);
+    double randomNumber(double Min, double Max);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
     void writeWeightsToFile(const int generation);
+    void writeBestMoveForGeneration(const int generation);
     void writeTestCSV();
-public:
-    ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights);
-    void evolve(const WeightedNode &startWeights, const int depth, const int generations, const int minGamesPerChild);
-    float kingWeightPrime(const WeightedNode &);
-    float sigmaWeightPrime(const WeightedNode &, int numberOfWeights);
-    float nodeWeightPrime(const WeightedNode &);
-
 };
-#endif /* childEvolver_h */
+#endif

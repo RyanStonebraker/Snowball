@@ -8,9 +8,11 @@ TARGET := bin/ai_run
 GUI_TARGET := ../index.js
 TEST_TARGET := bin/ai_test
 TEMP_OBJECTS := $(wildcard ../comm/currentgame/turn*.txt) $(wildcard ../comm/handshake*.txt)
+GENS := $(wildcard ../training/*)
 
 # User Vars
 depth = 2
+evolve = "evolve"
 
 build: $(SOURCES)
 	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
@@ -28,6 +30,9 @@ run:
 	electron $(GUI_TARGET) &
 	$(TARGET) $(depth)
 
+evolve:
+	$(TARGET) $(depth) $(evolve)
+
 run_tests:
 	$(TEST_TARGET)
 
@@ -37,3 +42,6 @@ tests: $(TEST_SOURCES)
 .PHONY : clean
 clean :
 	-rm $(TEMP_OBJECTS)
+
+remove_all_generations :
+	-rm -r $(GENS)

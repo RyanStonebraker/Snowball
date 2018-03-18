@@ -8,6 +8,9 @@ struct WeightedNode {
   friend std::ostream &operator<<(std::ostream& stream, const WeightedNode& node);
   friend std::istream &operator>>(std::istream& stream, WeightedNode& node);
 
+  // How does this child neural network stack up against others in its generation?
+  double fitness = 0;
+
   // Individual weight of each node?
   // -0.20f - 0.20f
   double weight = 0;
@@ -48,6 +51,9 @@ struct WeightedNode {
 
   // What depth should this branch be calculated to?
   int depth = 0;
+
+  // Keep track of the amount of games this neural network has been trained on
+  unsigned gamesPlayed = 0;
 };
 
 #endif

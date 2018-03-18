@@ -352,8 +352,7 @@ GameBoard.prototype.refreshBoard = function() {
     this.drawBackground();
 
     if (scoreboard.totalMoveCount == 1 && game.redFile && game.whiteFile && fs.existsSync(path.join(game.communicationLocation, "/comm/handshake1.txt"))) {
-      // NOTE: Spawning a process WOULD work if the C++ code ran slower (took up 15 secs) Problem is they are trying to write at same times
-      // var spawn = require('child_process').spawn;
+      // var execSync = require('child_process').execSync;
       fs.unlinkSync(path.join(game.communicationLocation, "/comm/handshake1.txt"));
       fs.writeFileSync(path.join(game.communicationLocation, "/comm/handshake0.txt"),
         "1", (err) => {
@@ -364,7 +363,7 @@ GameBoard.prototype.refreshBoard = function() {
           }
         });
 
-      // var enemyAI = spawn('make', ['run_ai']);
+      // var enemyAI = execSync('make', ['run_ai', 'depth=4']);
     }
 
     if (!game.passiveStepMode) {
