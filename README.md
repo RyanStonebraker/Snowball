@@ -17,7 +17,7 @@ $ npm install electron-prompt
 
 $ electron index.js
 ```
-Example backend build setup:
+Backend Make Options:
 
 ```
 $ make -C c++ // to build the C++ backend
@@ -27,7 +27,15 @@ $ make -C c++ run // for running AI vs Player games
 $ make -C c++ front_run // Player vs Player games
 
 $ make -C c++ run (and in another console make -C c++ run_ai after AI vs AI selected) // for AI vs AI games
-```
+
+$ make -C c++ clean // delete all GUI game data in the "comm" folder
+
+$ make -C c++ remove_all_generations // delete all training generations (careful)
+
+$ make -C c++ evolve // Evolve the neural network in the "training" folder.
+ ```
+
+
 Running tests:
 
 ```
