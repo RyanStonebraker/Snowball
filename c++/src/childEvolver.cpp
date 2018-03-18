@@ -22,6 +22,7 @@ using std::to_string;
 using std::cout;
 using std::endl;
 #include <random>
+#include <algorithm>
 #include "NeuralNetwork.h"
 
 #ifdef _WIN32
@@ -40,7 +41,7 @@ std::uniform_real_distribution<double> dist{-0.1, 0.1};
 
 
 std::default_random_engine generator;
-std::normal_distribution<> distribution{0.5,(0.5/3)};
+std::normal_distribution<> distribution{0,(0.5/3)};
 
 double randomGausian(){
     double randNum = distribution(engine);
@@ -67,7 +68,7 @@ void ChildEvolver::startGeneration() {
   std::cout << "Starting Generation 0:" << std::endl;
   // Generate gen0 completely random children
   setMutationRate(1);
-  for (int i = 0; i < _childrenPerGeneration; ++i) {
+  for (int i = 0; i < _children.size(); ++i) {
       _children[i].depth = _depth;
       mutate(_parent, _children[i]);
   }
@@ -76,14 +77,28 @@ void ChildEvolver::startGeneration() {
   setMutationRate(saveMutationRate);
 
   for (auto currentGen = 1; currentGen <= _generations; ++currentGen) {
-    _bestChild.fitness = 0;
+    WeightedNode blankNode;
+    _bestChild = blankNode;
     std::cout << "Starting Generation " << currentGen << ":" << std::endl;
-    // Evolve First Generation
-    for (int i = 0; i < _childrenPerGeneration; ++i) {
-        _children[i].depth = _depth;
+
+    // Slightly mutate the best 50% of children
+    std::sort(_children.begin(), _children.end(), [](auto child1, auto child2) {
+      return child1.fitness >= child2.fitness;
+    });
+    for (int i = 0; i >= _children.size() / 2; ++i) {
         mutate(_children[i], _children[i]);
     }
-    for (int i = 0; i < _childrenPerGeneration; ++i) {
+
+    // Kill the last 50% of the children and replace with random.
+    // spawning based off of _parent allows a controlled bias to be introduced
+    setMutationRate(1);
+    for (int i = floor(_children.size() / 2); i < _children.size(); ++i) {
+      _children[i] = _parent;
+      mutate(_parent, _children[i]);
+    }
+    setMutationRate(saveMutationRate);
+
+    for (int i = 0; i < _children.size(); ++i) {
       evolve(_children[i], 5);
       std::cout << "Child " << i << " Fitness: " << _children[i].fitness
       << " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
@@ -94,8 +109,8 @@ void ChildEvolver::startGeneration() {
   // writeTestCSV(); // Only uncomment to test gaussian distribution
 }
 
-double ChildEvolver::varyWeightBy(double weight, double varyAmount){
-  return weight + randomNumber(-varyAmount, varyAmount);
+double ChildEvolver::shiftWeight(double weight){
+  return weight + randomNumber(-_mutationRate, _mutationRate);
 }
 
 void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &resultWeights) {
@@ -103,12 +118,12 @@ void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &result
     resultWeights.sigmaWeight = sigmaWeightPrime(startWeights, 6);
     resultWeights.weight = nodeWeightPrime(startWeights);
     // These will need to be changed at some point
-    resultWeights.qualityWeight = varyWeightBy(startWeights.qualityWeight, _mutationRate);
-    resultWeights.availableMovesWeight = varyWeightBy(startWeights.availableMovesWeight, _mutationRate);
-    resultWeights.depthWeight = varyWeightBy(startWeights.availableMovesWeight, _mutationRate);
-    resultWeights.riskFactor = varyWeightBy(startWeights.riskFactor, _mutationRate);
-    resultWeights.enemyFactor = varyWeightBy(startWeights.enemyFactor, _mutationRate);
-    resultWeights.splitTieFactor = varyWeightBy(startWeights.splitTieFactor, _mutationRate);
+    resultWeights.qualityWeight = shiftWeight(startWeights.qualityWeight);
+    resultWeights.availableMovesWeight = shiftWeight(startWeights.availableMovesWeight);
+    resultWeights.depthWeight = shiftWeight(startWeights.availableMovesWeight);
+    resultWeights.riskFactor = shiftWeight(startWeights.riskFactor);
+    resultWeights.enemyFactor = shiftWeight(startWeights.enemyFactor);
+    resultWeights.splitTieFactor = shiftWeight(startWeights.splitTieFactor);
 }
 
 ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, WeightedNode &player2Weights) {
@@ -224,10 +239,12 @@ void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChil
 }
 
 // ??? min, max not used?
-double ChildEvolver::randomNumber(double Min, double Max)
+double ChildEvolver::randomNumber(double min, double max)
 {
-    double randomReal = dist(engine);
-    return randomReal;
+  std::mt19937 randomNumber{rd()};
+  std::uniform_real_distribution<double> betweenRange(min, max);
+  double randomReal = betweenRange(randomNumber);
+  return randomReal;
 }
 
 

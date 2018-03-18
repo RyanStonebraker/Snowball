@@ -36,7 +36,7 @@ private:
     std::vector<WeightedNode> _children;
     double _mutationRate;
 private:
-    double varyWeightBy(double weight, double varyAmount);
+    double shiftWeight(double weight);
     double randomNumber(double Min, double Max);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
