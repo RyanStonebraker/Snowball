@@ -1,6 +1,8 @@
 #include "util.h"
 #include <cstdlib>
+#include <time.h>
 
 int Util::randInt(const int max) {
-	return rand() % max + 1;
+	srand(time(NULL));
+	return (rand() / RAND_MAX) % max;
 }

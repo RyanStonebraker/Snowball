@@ -12,7 +12,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-using std::string; 
+using std::string;
 
 MoveTable::MoveTable() {
     for(int i = 0; i < tableSize; i++){
@@ -58,7 +58,7 @@ void MoveTable::addMove(string position, int moveOne, int moveTwo){
         while (Ptr->next != NULL) {
             Ptr = Ptr->next;
         }
-        Ptr->next = n; 
+        Ptr->next = n;
     }
 }
 
@@ -69,14 +69,14 @@ int MoveTable::numberOfItemsInIndex(int index){
         return count;
     }
     else{
-        count++; 
+        count++;
         move* Ptr = hashTable[index];
         while (Ptr->next != NULL) {
             count++;
             Ptr = Ptr->next;
         }
     }
-    return count; 
+    return count;
 }
 
 void MoveTable::printTable(){
@@ -103,7 +103,7 @@ void MoveTable::printItemsInIndex(int index){
             std::cout << "Position: "<< Ptr->position << std::endl;
             std::cout << Ptr->moveOne << std::endl;
             std::cout << Ptr->moveTwo << std::endl << std::endl;
-            Ptr = Ptr->next; 
+            Ptr = Ptr->next;
         }
     }
 }
@@ -298,7 +298,7 @@ void MoveTable::generateShadowState(string currentBoardState, MoveTable blackTab
                 else {
                     shadowState << piece << " " << movesPair.first << movesPair.second;
                 }
-                
+
                 movesPair = redTable.findMove(std::to_string(i+1));
                 if (movesPair.first == -1 && movesPair.second == -1 ) {
                     shadowState << std::endl;
@@ -313,8 +313,8 @@ void MoveTable::generateShadowState(string currentBoardState, MoveTable blackTab
                     shadowState << movesPair.first << movesPair.second << std::endl;
                 }
                 break;
-                
-                
+
+
             default:
                 break;
         }
@@ -329,9 +329,3 @@ void MoveTable::updateTables(){
 
 
 }
-
-
-
-
-
-

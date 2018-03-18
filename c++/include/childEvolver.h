@@ -25,9 +25,11 @@ public:
     double kingWeightPrime(const WeightedNode &);
     double sigmaWeightPrime(const WeightedNode &, int numberOfWeights);
     double nodeWeightPrime(const WeightedNode &);
+    void setGenerationAmount(unsigned gens);
 private:
     enum class Player {NONE, FIRST, SECOND};
     int _childrenPerGeneration;
+    unsigned _generations;
     unsigned _depth;
     WeightedNode _bestChild;
     WeightedNode _parent;

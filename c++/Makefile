@@ -12,7 +12,9 @@ GENS := $(wildcard ../training/*)
 
 # User Vars
 depth = 2
+wFile = ""
 evolve = "evolve"
+generations = 2
 
 build: $(SOURCES)
 	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
@@ -24,14 +26,14 @@ front_run:
 	electron $(GUI_TARGET)
 
 run_ai:
-	$(TARGET) $(depth)
+	$(TARGET) $(depth) $(wFile)
 
 run:
 	electron $(GUI_TARGET) &
-	$(TARGET) $(depth)
+	$(TARGET) $(depth) $(wFile)
 
 evolve:
-	$(TARGET) $(depth) $(evolve)
+	$(TARGET) $(depth) $(evolve) $(generations)
 
 run_tests:
 	$(TEST_TARGET)

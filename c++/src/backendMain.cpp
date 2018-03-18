@@ -36,8 +36,6 @@ using std::string;
 #include <chrono>
 using std::chrono::system_clock;
 using std::chrono::duration;
-#include "neuron.h"
-#include "BranchTracker.h"
 #include "WeightedNode.h"
 #include <random>
 using std::random_device;
@@ -59,6 +57,7 @@ void printStatistics(NeuralNetwork & aiPlayer, unsigned previousMovesGenerated, 
 
 int main (int argc, char* argv[]) {
 	auto currentWeights = NeuralNetwork::generateRandomWeights();
+	string loadFromHere = "";
 
 	if (argc >= 2) {
 		currentWeights.depth = atoi(argv[1]);
@@ -66,16 +65,27 @@ int main (int argc, char* argv[]) {
 
 	if (argc >= 3) {
 		if (strncmp(argv[2], "evolve", 6) == 0) {
+			auto generations = 2;
+			if (argc >= 4) {
+				generations = atoi(argv[3]);
+			}
 			ChildEvolver evolver(10, currentWeights);
 			evolver.setMutationRate(0.2);
+			evolver.setGenerationAmount(generations);
 			evolver.startGeneration();
 
 			return 0;
 		}
+		else {
+			loadFromHere = argv[2];
+		}
 	}
 
 	NeuralNetwork aiPlayer;
-	aiPlayer.loadStartingWeights(currentWeights);
+	if (loadFromHere.size() > 0)
+		aiPlayer.loadStartingWeightsFromFile(loadFromHere);
+	else
+		aiPlayer.loadStartingWeights(currentWeights);
 
 	// *** For Loading Generations: ***
 	// aiPlayer.writeWeightsToFile("gen0.txt");

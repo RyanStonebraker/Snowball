@@ -48,11 +48,17 @@ double randomGausian(){
 }
 
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights)
-  : _childrenPerGeneration(childrenPerGeneration), _depth(2), _parent(startWeights),
-    _children(childrenPerGeneration), _mutationRate(0.2) {}
+  : _childrenPerGeneration(childrenPerGeneration), _generations(3), _parent(startWeights),
+    _children(childrenPerGeneration), _mutationRate(0.2) {
+      _depth = startWeights.depth;
+    }
 
 void ChildEvolver::setMutationRate(double mutationRate) {
   _mutationRate = mutationRate;
+}
+
+void ChildEvolver::setGenerationAmount(unsigned gens) {
+  _generations = gens;
 }
 
 void ChildEvolver::startGeneration() {
@@ -67,16 +73,24 @@ void ChildEvolver::startGeneration() {
   }
   writeWeightsToFile(0);
 
-  std::cout << "Starting Generation 1:" << std::endl;
-  // Evolve First Generation
   setMutationRate(saveMutationRate);
-  for (int i = 0; i < _childrenPerGeneration; ++i) {
-    evolve(_children[i], 5);
-    std::cout << "Child " << i << " Fitness: " << _children[i].fitness
-    << " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
-    << _children[i].gamesPlayed << std::endl;
+
+  for (auto currentGen = 1; currentGen <= _generations; ++currentGen) {
+    _bestChild.fitness = 0;
+    std::cout << "Starting Generation " << currentGen << ":" << std::endl;
+    // Evolve First Generation
+    for (int i = 0; i < _childrenPerGeneration; ++i) {
+        _children[i].depth = _depth;
+        mutate(_children[i], _children[i]);
+    }
+    for (int i = 0; i < _childrenPerGeneration; ++i) {
+      evolve(_children[i], 5);
+      std::cout << "Child " << i << " Fitness: " << _children[i].fitness
+      << " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
+      << _children[i].gamesPlayed << std::endl;
+    }
+    writeWeightsToFile(currentGen);
   }
-  writeWeightsToFile(1);
   // writeTestCSV(); // Only uncomment to test gaussian distribution
 }
 
@@ -166,7 +180,7 @@ void ChildEvolver::writeWeightsToFile(const int generation) {
         // outFile.close();
     }
     if (_bestChild.gamesPlayed > 0)
-      writeBestMoveForGeneration(1);
+      writeBestMoveForGeneration(generation);
 }
 
 void ChildEvolver::writeBestMoveForGeneration(const int gen) {
@@ -196,8 +210,7 @@ void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChil
     // vector<int> wins;
     // for (int i = 0; i < _childrenPerGeneration; ++i) {
       for (int i = 0; i < minGamesPerChild; ++i) {
-        // Util::randInt(_childrenPerGeneration - 1)
-          auto opponent = _children[(int(randomNumber(0, _children.size()))) % _children.size()];
+          auto opponent = _children[unsigned(randomNumber(0, 0) * 100) % _children.size()];
           // auto result = playGame(_children[i], opponent);
           // Just to silence that result not used warning...
           playGame(startWeights, opponent);

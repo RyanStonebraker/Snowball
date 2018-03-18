@@ -19,7 +19,7 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   random_device rdev;
   mt19937 rand_gen(rdev());
 
-  uniform_real_distribution<double> rand_weight(-1, 1);
+  uniform_real_distribution<double> rand_weight(-0.5, 1);
 
   WeightedNode currentWeights;
   currentWeights.kingingWeight = rand_weight(rand_gen);
