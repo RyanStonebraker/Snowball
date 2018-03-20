@@ -7,6 +7,8 @@
 struct WeightedNode {
   friend std::ostream &operator<<(std::ostream& stream, const WeightedNode& node);
   friend std::istream &operator>>(std::istream& stream, WeightedNode& node);
+  double & operator[](size_t index);
+  size_t size();
 
   // How does this child neural network stack up against others in its generation?
   double fitness = 0;

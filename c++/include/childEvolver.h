@@ -34,10 +34,12 @@ private:
     WeightedNode _bestChild;
     WeightedNode _parent;
     std::vector<WeightedNode> _children;
+    unsigned _numberOfWeights;
     double _mutationRate;
 private:
     double shiftWeight(double weight);
     double randomNumber(double Min, double Max);
+    void selectiveMutate(WeightedNode & parent);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
     void writeWeightsToFile(const int generation);

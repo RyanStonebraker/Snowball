@@ -6,8 +6,9 @@
 //  Copyright © 2018 Thatcher Lane. All rights reserved.
 //
 
-#include <stdio.h>
 #include "WeightedNode.h"
+#include <stdio.h>
+#include <stdexcept>
 
 std::ostream &operator<<(std::ostream& stream, const WeightedNode& node){
     stream << node.fitness << " " << node.weight << " " << node.kingingWeight
@@ -50,4 +51,29 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.gamesPlayed = gamesPlayed;
 
     return stream;
+}
+
+size_t WeightedNode::size() {
+  return 7;
+}
+
+double & WeightedNode::operator[](size_t index) {
+  switch(index) {
+    case 0:
+      return kingingWeight;
+    case 1:
+      return qualityWeight;
+    case 2:
+      return availableMovesWeight;
+    case 3:
+      return depthWeight;
+    case 4:
+      return riskFactor;
+    case 5:
+      return enemyFactor;
+    case 6:
+      return splitTieFactor;
+    default:
+      throw (std::out_of_range("double & WeightedNode::operator[](size_t index) : index must be between 0 and " + std::to_string(size())));
+  }
 }

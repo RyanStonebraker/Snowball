@@ -50,7 +50,7 @@ double randomGausian(){
 
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights)
   : _childrenPerGeneration(childrenPerGeneration), _generations(3), _parent(startWeights),
-    _children(childrenPerGeneration), _mutationRate(0.2) {
+    _children(childrenPerGeneration), _numberOfWeights(7), _mutationRate(0.2) {
       _depth = startWeights.depth;
     }
 
@@ -86,7 +86,7 @@ void ChildEvolver::startGeneration() {
       return child1.fitness >= child2.fitness;
     });
     for (int i = 0; i >= _children.size() / 2; ++i) {
-        mutate(_children[i], _children[i]);
+        selectiveMutate(_children[i]);
     }
 
     // Kill the last 50% of the children and replace with random.
@@ -100,13 +100,31 @@ void ChildEvolver::startGeneration() {
 
     for (int i = 0; i < _children.size(); ++i) {
       evolve(_children[i], 5);
-      std::cout << "Child " << i << " Fitness: " << _children[i].fitness
-      << " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
-      << _children[i].gamesPlayed << std::endl;
+      std::cout << "Child " << i << " Fitness: " << _children[i].fitness / _children[i].gamesPlayed
+      << " Best Child Fitness: " << _bestChild.fitness / _bestChild.gamesPlayed << " Games Played: "
+      << _children[i].gamesPlayed;
+			if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].kingingWeight == _bestChild.kingingWeight)
+				std::cout << " - BEST CHILD";
+			std::cout << std::endl;
     }
     writeWeightsToFile(currentGen);
   }
   // writeTestCSV(); // Only uncomment to test gaussian distribution
+}
+
+// Generate a child for every weight (only changing one weight), then play against
+// parent. Cross-Breed those that beat the parent (if none beat the parent,
+// the parent moves on unchanged)
+void ChildEvolver::selectiveMutate(WeightedNode & parent) {
+	for (unsigned i = 0; i < parent.size(); ++i) {
+		WeightedNode potentialChild = parent;
+		potentialChild[i] = shiftWeight(potentialChild[i]);
+		auto winner = playGame(potentialChild, parent);
+
+		// Cross Breeding - add winning trait to parent
+		if (winner == Player::FIRST)
+			parent[i] = potentialChild[i];
+	}
 }
 
 double ChildEvolver::shiftWeight(double weight){
@@ -147,7 +165,7 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         // Did player 1 win?
         if (board.getBlackPieceCount() == 0) {
             player1Weights.fitness += 1;
-            player2Weights.fitness -= 2;
+            player2Weights.fitness -= 1;
             ++player1Weights.gamesPlayed;
             ++player2Weights.gamesPlayed;
             return Player::FIRST;
@@ -161,12 +179,18 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         // Did player 2 win?
         if (board.getRedPieceCount() == 0) {
             player2Weights.fitness += 1;
-            player1Weights.fitness -= 2;
+            player1Weights.fitness -= 1;
             ++player1Weights.gamesPlayed;
             ++player2Weights.gamesPlayed;
             return Player::SECOND;
         }
     }
+
+		// 'A' for effort...
+		if (board.getBlackPieceCount() > board.getRedPieceCount())
+			player1Weights.fitness += 0.5;
+		else if (board.getRedPieceCount() > board.getBlackPieceCount())
+			player2Weights.fitness += 0.5;
 
     player1Weights.fitness -= 1;
     player2Weights.fitness -= 1;

@@ -110,8 +110,6 @@ std::string NeuralNetwork::flipBoardColor(const std::string & board) {
 	return flippedBoard;
 }
 
-// TODO: Compare board at depth X with best board at depth X, if weight < best board, STOP
-
 double NeuralNetwork::evaluateBoard(const Board & futureState, int depthToLimit) {
   auto futureBoardInfo = getBoardInfo(futureState);
   auto computerIsBlack =  _startingColor == COMPUTER_BLACK;
@@ -201,8 +199,6 @@ void NeuralNetwork::evaluateChildren(int depth) {
 
     _children[possibleMove] = recurseSpawning(depth - 1, node, _startingColor);
     _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
-
-    // std::cout << "Potential Move " << possibleMove << ": " << node.board << " Weight: " << _children[possibleMove]->weight << std::endl;
 
     if (_children[possibleMove]->weight >= _bestMoveWeight) {
       _bestMoveWeight = _children[possibleMove]->weight;

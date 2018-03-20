@@ -70,7 +70,7 @@ int main (int argc, char* argv[]) {
 				generations = atoi(argv[3]);
 			}
 			ChildEvolver evolver(10, currentWeights);
-			evolver.setMutationRate(0.2);
+			evolver.setMutationRate(0.05);
 			evolver.setGenerationAmount(generations);
 			evolver.startGeneration();
 
