@@ -58,9 +58,9 @@ void printStatistics(NeuralNetwork & aiPlayer, unsigned previousMovesGenerated, 
 int main (int argc, char* argv[]) {
 	auto currentWeights = NeuralNetwork::generateRandomWeights();
 	string loadFromHere = "";
-
+	auto userDefinedDepth = -1;
 	if (argc >= 2) {
-		currentWeights.depth = atoi(argv[1]);
+		userDefinedDepth = atoi(argv[1]);
 	}
 
 	if (argc >= 3) {
@@ -87,9 +87,8 @@ int main (int argc, char* argv[]) {
 	else
 		aiPlayer.loadStartingWeights(currentWeights);
 
-	// *** For Loading Generations: ***
-	// aiPlayer.writeWeightsToFile("gen0.txt");
-	// aiPlayer.loadStartingWeightsFromFile("../comm/tempWeights.txt");
+	if (userDefinedDepth > 0)
+		aiPlayer.setDepth(userDefinedDepth);
 
 	IOHandler gameController(CLEAN_UP_TEMP_FILES);
 
@@ -121,6 +120,7 @@ int main (int argc, char* argv[]) {
 
 		if (aiPlayer.gameIsOver()) {
 			std::cout << "Game Ended! " << aiPlayer.getWinner() << std::endl;
+			std::cout << "Ending Board: " << currentBoard << " : " << nextMove << std::endl;
 			break;
 		}
 	}

@@ -17,9 +17,6 @@ struct ExpandedWeights {
 
   int numberOfRedPieces;
   int numberOfBlackPieces;
-
-  // Future Weighting Parameters:
-  // int numberOfPreferredFormations;
 };
 
 struct NeuronLinkedList {
@@ -32,14 +29,13 @@ class NeuralNetwork {
 public:
   static WeightedNode generateRandomWeights();
 public:
-  NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK),
-                    _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING),
-                    _bpsTiming(std::chrono::duration<double>::zero())  {}
+  NeuralNetwork();
 public:
   void loadStartingWeightsFromFile(const std::string & readLocation);
   void loadStartingWeights(WeightedNode & startWeights);
   void writeWeightsToFile(const std::string & writeLocation);
   void setMoveColor(int startingPlayer);
+  void setDepth(unsigned depth);
   void receiveMove(const std::string & currentMove);
   std::string getBestMove();
   double getBestWeight() const;

@@ -32,6 +32,10 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   return currentWeights;
 }
 
+NeuralNetwork::NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK),
+                  _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING),
+                  _bpsTiming(std::chrono::duration<double>::zero())  {}
+
 void NeuralNetwork::loadStartingWeightsFromFile(const std::string & readLocation) {
   std::ifstream weightReader (readLocation);
   weightReader >> _weights;
@@ -320,4 +324,8 @@ double NeuralNetwork::getEvaluationTime() const {
 
 void NeuralNetwork::clearEvaluationTime() {
   _bpsTiming = std::chrono::duration<double>::zero();
+}
+
+void NeuralNetwork::setDepth(unsigned depth) {
+  _weights.depth = depth;
 }

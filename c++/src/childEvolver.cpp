@@ -38,8 +38,6 @@ std::random_device rd{};
 std::mt19937 engine{rd()};
 std::uniform_real_distribution<double> dist{-0.1, 0.1};
 
-
-
 std::default_random_engine generator;
 std::normal_distribution<> distribution{0,(0.5/3)};
 
@@ -54,6 +52,7 @@ ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &
       _depth = startWeights.depth;
     }
 
+// TODO: make mutation rate a weight and have AI decide how random it wants to be
 void ChildEvolver::setMutationRate(double mutationRate) {
   _mutationRate = mutationRate;
 }
@@ -103,7 +102,7 @@ void ChildEvolver::startGeneration() {
       std::cout << "Child " << i << " Fitness: " << _children[i].fitness / _children[i].gamesPlayed
       << " Best Child Fitness: " << _bestChild.fitness / _bestChild.gamesPlayed << " Games Played: "
       << _children[i].gamesPlayed;
-			if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].kingingWeight == _bestChild.kingingWeight)
+			if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].weight == _bestChild.weight)
 				std::cout << " - BEST CHILD";
 			std::cout << std::endl;
     }
@@ -119,11 +118,12 @@ void ChildEvolver::selectiveMutate(WeightedNode & parent) {
 	for (unsigned i = 0; i < parent.size(); ++i) {
 		WeightedNode potentialChild = parent;
 		potentialChild[i] = shiftWeight(potentialChild[i]);
-		auto winner = playGame(potentialChild, parent);
+		auto winner = playGame(parent, potentialChild);
 
 		// Cross Breeding - add winning trait to parent
-		if (winner == Player::FIRST)
+		if (winner == Player::SECOND) {
 			parent[i] = potentialChild[i];
+		}
 	}
 }
 
@@ -147,7 +147,6 @@ void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &result
 ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, WeightedNode &player2Weights) {
     Board board(STARTING_BOARD_STRING);
 
-    // std::cout << "Player 1 Weights: \n" << player1Weights << "\n Player 2 Weights: \n" << player2Weights << std::endl;
     NeuralNetwork player1;
     player1.loadStartingWeights(player1Weights);
     player1.setMoveColor(COMPUTER_RED);
@@ -159,10 +158,7 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
     // Play game (only allow 100 moves)
     for (int i = 0; i < 200; ++i) {
         player1.receiveMove(board.getBoardStateString());
-        // std::cout << "Player 1 Received Move: " << board.getBoardStateString() << std::endl;
         board = {player1.getBestMove()};
-        // std::cout << "Player 1 Playing Move: " << board.getBoardStateString() << " with weight: " << player1.getBestWeight() << std::endl;
-        // Did player 1 win?
         if (board.getBlackPieceCount() == 0) {
             player1Weights.fitness += 1;
             player2Weights.fitness -= 1;
@@ -172,11 +168,8 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         }
 
         // Player 2 turn
-        // std::cout << "Player 2 Received Move: " << board.getBoardStateString() << std::endl;
         player2.receiveMove(board.getBoardStateString());
-        // std::cout << "Player 2 Playing Move: " << board.getBoardStateString() << " with weight: " << player2.getBestWeight() << std::endl;
         board = {player2.getBestMove()};
-        // Did player 2 win?
         if (board.getRedPieceCount() == 0) {
             player2Weights.fitness += 1;
             player1Weights.fitness -= 1;
@@ -201,22 +194,17 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
 
 void ChildEvolver::writeWeightsToFile(const int generation) {
     cout << "Writing generation " << generation << endl;
-    // This function desperately needs to be improved to make its own directories, this is an extremely minimal implementation
     auto genFolder = "../training/gen" + to_string(generation) + "/";
     system((MKDIR + genFolder).c_str());
     auto genChildWeights = genFolder + "childWeights/";
     system((MKDIR + genChildWeights).c_str());
 
     for (int i = 0; i < _childrenPerGeneration; ++i) {
-        // cout << "- Writing child " << i << endl;
 
         // NOTE: easiest to use text format until were sure everything is working
         ofstream outFile(genChildWeights + "child_" + to_string(i) + ".txt");
         outFile << _children[i];
 
-        // ofstream outFile(genChildWeights + to_string(i), std::ios::binary);
-        // outFile.write((char *)&_children[i], sizeof(WeightedNode));
-        // outFile.close();
     }
     if (_bestChild.gamesPlayed > 0)
       writeBestMoveForGeneration(generation);
@@ -246,28 +234,24 @@ void ChildEvolver::writeTestCSV() {
 void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChild) {
 // Each child plays a minimum of [minGamesPerChild] games against a random opponent
 // (potentially plays more)
-    // vector<int> wins;
-    // for (int i = 0; i < _childrenPerGeneration; ++i) {
       for (int i = 0; i < minGamesPerChild; ++i) {
-          auto opponent = _children[unsigned(randomNumber(0, 0) * 100) % _children.size()];
-          // auto result = playGame(_children[i], opponent);
-          // Just to silence that result not used warning...
+          auto opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
           playGame(startWeights, opponent);
       }
-      // TODO: randomly split ties
+      // TODO: randomly split ties so that sometimes _bestChild = startWeights if fitness is equal
       if (_bestChild.gamesPlayed == 0)
         _bestChild = startWeights;
-      else if (startWeights.fitness / startWeights.gamesPlayed >= _bestChild.fitness / _bestChild.gamesPlayed)
-        _bestChild = startWeights;
-    // }
+      else if ((startWeights.fitness / startWeights.gamesPlayed) > (_bestChild.fitness / _bestChild.gamesPlayed)) {
+			  _bestChild = startWeights;
+			}
 }
 
-// ??? min, max not used?
 double ChildEvolver::randomNumber(double min, double max)
 {
   std::mt19937 randomNumber{rd()};
   std::uniform_real_distribution<double> betweenRange(min, max);
   double randomReal = betweenRange(randomNumber);
+	// std::cout << "Random between (" << min << "," << max << "): " << randomReal << std::endl;
   return randomReal;
 }
 

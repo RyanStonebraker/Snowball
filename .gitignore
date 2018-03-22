@@ -4,3 +4,4 @@ ai_test
 node_modules
 .clang_complete
 *.cson
+training_old
