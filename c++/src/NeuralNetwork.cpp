@@ -15,6 +15,9 @@ using std::uniform_real_distribution;
 
 #include <iostream>
 
+// TODO: If moves are within certain threshold (weighted value bounded between 0,1 - a percentage)
+// then choose random move (out of moves within threshold range)
+
 WeightedNode NeuralNetwork::generateRandomWeights() {
   random_device rdev;
   mt19937 rand_gen(rdev());
@@ -204,7 +207,12 @@ void NeuralNetwork::evaluateChildren(int depth) {
     _children[possibleMove] = recurseSpawning(depth - 1, node, _startingColor);
     _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
 
+    // TODO: Randomly break tie based on weight
+    // if (within threshold)
+    //   generate random number
+    //   auto chooseLeft = randomNumber > 0.5
     if (_children[possibleMove]->weight >= _bestMoveWeight) {
+
       _bestMoveWeight = _children[possibleMove]->weight;
       _currentMove = _children[possibleMove]->board;
       if (_children[possibleMove]->weight == _bestMoveWeight && _currentMove != enemyPlayedMove) {

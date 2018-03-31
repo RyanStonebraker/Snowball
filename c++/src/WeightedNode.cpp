@@ -77,3 +77,15 @@ double & WeightedNode::operator[](size_t index) {
       throw (std::out_of_range("double & WeightedNode::operator[](size_t index) : index must be between 0 and " + std::to_string(size())));
   }
 }
+
+bool WeightedNode::operator==(WeightedNode & rhs) {
+  for (auto i = 0; i < size(); ++i) {
+      if (rhs[i] != (*this)[i])
+        return false;
+  }
+  return true;
+}
+
+bool WeightedNode::operator!=(WeightedNode & rhs) {
+  return !(*this == rhs);
+}

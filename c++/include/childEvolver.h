@@ -41,6 +41,7 @@ private:
     double randomNumber(double Min, double Max);
     void selectiveMutate(WeightedNode & parent);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
+    void evolveAll();
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
     void writeWeightsToFile(const int generation);
     void writeBestMoveForGeneration(const int generation);

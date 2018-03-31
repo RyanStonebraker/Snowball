@@ -69,8 +69,12 @@ int main (int argc, char* argv[]) {
 			if (argc >= 4) {
 				generations = atoi(argv[3]);
 			}
-			ChildEvolver evolver(10, currentWeights);
-			evolver.setMutationRate(0.05);
+
+			WeightedNode defaultWeights;
+			if (userDefinedDepth > 0)
+				defaultWeights.depth = userDefinedDepth;
+			ChildEvolver evolver(10, defaultWeights);
+			evolver.setMutationRate(1);
 			evolver.setGenerationAmount(generations);
 			evolver.startGeneration();
 

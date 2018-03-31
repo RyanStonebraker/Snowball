@@ -34,6 +34,19 @@ using std::endl;
   #define MKDIR "mkdir "
 #endif
 
+#define WIN_POINTS 1
+#define LOSE_POINTS -1.5
+#define TIE_POINTS -1
+#define GREATER_PIECE_TIE 0.5
+
+
+// TODO: Evolution Design Ideas:
+// - More emphasis needs to be put on prefering fitness levels > than previous _generations
+// 		- this could be done by having smaller mutation rates for children with greater fitness levels
+// - Killing 50% of children every generation makes the population too random
+// 		- A better selection method needs to be implemented that still "punishes" lower fitness levels
+// 		- One Idea: Only allow child to exist if it has a greater fitness level than its predecessor
+
 std::random_device rd{};
 std::mt19937 engine{rd()};
 std::uniform_real_distribution<double> dist{-0.1, 0.1};
@@ -61,6 +74,18 @@ void ChildEvolver::setGenerationAmount(unsigned gens) {
   _generations = gens;
 }
 
+void ChildEvolver::evolveAll() {
+	for (int i = 0; i < _children.size(); ++i) {
+		evolve(_children[i], 5);
+		std::cout << "Child " << i << " Fitness: " << _children[i].fitness
+		<< " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
+		<< _children[i].gamesPlayed;
+		if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].weight == _bestChild.weight)
+			std::cout << " - BEST CHILD";
+		std::cout << std::endl;
+	}
+}
+
 void ChildEvolver::startGeneration() {
   auto saveMutationRate = _mutationRate;
 
@@ -71,41 +96,38 @@ void ChildEvolver::startGeneration() {
       _children[i].depth = _depth;
       mutate(_parent, _children[i]);
   }
+	evolveAll();
   writeWeightsToFile(0);
-
   setMutationRate(saveMutationRate);
 
   for (auto currentGen = 1; currentGen <= _generations; ++currentGen) {
-    WeightedNode blankNode;
-    _bestChild = blankNode;
+    // WeightedNode blankNode;
+    // _bestChild = blankNode;
     std::cout << "Starting Generation " << currentGen << ":" << std::endl;
 
     // Slightly mutate the best 50% of children
     std::sort(_children.begin(), _children.end(), [](auto child1, auto child2) {
       return child1.fitness >= child2.fitness;
     });
-    for (int i = 0; i >= _children.size() / 2; ++i) {
-        selectiveMutate(_children[i]);
-    }
+		if (currentGen > 1) {
+	    for (int i = 0; i >= _children.size() / 2; ++i) {
+	        selectiveMutate(_children[i]);
+	    }
+		}
 
     // Kill the last 50% of the children and replace with random.
     // spawning based off of _parent allows a controlled bias to be introduced
     setMutationRate(1);
-    for (int i = floor(_children.size() / 2); i < _children.size(); ++i) {
+
+
+		auto plebians = floor(_children.size() / 2);
+    for (auto i = plebians; i < _children.size(); ++i) {
       _children[i] = _parent;
       mutate(_parent, _children[i]);
     }
     setMutationRate(saveMutationRate);
 
-    for (int i = 0; i < _children.size(); ++i) {
-      evolve(_children[i], 5);
-      std::cout << "Child " << i << " Fitness: " << _children[i].fitness / _children[i].gamesPlayed
-      << " Best Child Fitness: " << _bestChild.fitness / _bestChild.gamesPlayed << " Games Played: "
-      << _children[i].gamesPlayed;
-			if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].weight == _bestChild.weight)
-				std::cout << " - BEST CHILD";
-			std::cout << std::endl;
-    }
+    evolveAll();
     writeWeightsToFile(currentGen);
   }
   // writeTestCSV(); // Only uncomment to test gaussian distribution
@@ -144,8 +166,15 @@ void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &result
     resultWeights.splitTieFactor = shiftWeight(startWeights.splitTieFactor);
 }
 
-ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, WeightedNode &player2Weights) {
+ChildEvolver::Player ChildEvolver::playGame(WeightedNode &child1Weights, WeightedNode &child2Weights) {
     Board board(STARTING_BOARD_STRING);
+
+		auto player1Weights = child1Weights;
+		auto player2Weights = child2Weights;
+
+
+		// child1Weights.gamesPlayed = (child1Weights.gamesPlayed == 0) ? 1 : child1Weights.gamesPlayed;
+		// child2Weights.gamesPlayed = (child2Weights.gamesPlayed == 0) ? 1 : child2Weights.gamesPlayed;
 
     NeuralNetwork player1;
     player1.loadStartingWeights(player1Weights);
@@ -160,10 +189,14 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         player1.receiveMove(board.getBoardStateString());
         board = {player1.getBestMove()};
         if (board.getBlackPieceCount() == 0) {
-            player1Weights.fitness += 1;
-            player2Weights.fitness -= 1;
+            player1Weights.fitness += WIN_POINTS;
+            player2Weights.fitness += LOSE_POINTS;
             ++player1Weights.gamesPlayed;
             ++player2Weights.gamesPlayed;
+						// if (player1Weights.fitness >= child1Weights.fitness)
+							child1Weights = player1Weights;
+						// if (player2Weights.fitness >= child2Weights.fitness)
+							child2Weights = player2Weights;
             return Player::FIRST;
         }
 
@@ -171,24 +204,33 @@ ChildEvolver::Player ChildEvolver::playGame(WeightedNode &player1Weights, Weight
         player2.receiveMove(board.getBoardStateString());
         board = {player2.getBestMove()};
         if (board.getRedPieceCount() == 0) {
-            player2Weights.fitness += 1;
-            player1Weights.fitness -= 1;
+            player2Weights.fitness += WIN_POINTS;
+            player1Weights.fitness += LOSE_POINTS;
             ++player1Weights.gamesPlayed;
             ++player2Weights.gamesPlayed;
+						// if (player1Weights.fitness >= child1Weights.fitness)
+							child1Weights = player1Weights;
+						// if (player2Weights.fitness >= child2Weights.fitness)
+							child2Weights = player2Weights;
             return Player::SECOND;
         }
     }
 
 		// 'A' for effort...
 		if (board.getBlackPieceCount() > board.getRedPieceCount())
-			player1Weights.fitness += 0.5;
+			player1Weights.fitness += GREATER_PIECE_TIE;
 		else if (board.getRedPieceCount() > board.getBlackPieceCount())
-			player2Weights.fitness += 0.5;
+			player2Weights.fitness += GREATER_PIECE_TIE;
 
-    player1Weights.fitness -= 1;
-    player2Weights.fitness -= 1;
+    player1Weights.fitness += TIE_POINTS;
+    player2Weights.fitness += TIE_POINTS;
     ++player1Weights.gamesPlayed;
     ++player2Weights.gamesPlayed;
+
+		// if (player1Weights.fitness / player1Weights.gamesPlayed >= child1Weights.fitness / child1Weights.gamesPlayed)
+			child1Weights = player1Weights;
+		// if (player2Weights.fitness / player2Weights.gamesPlayed >= child2Weights.fitness / child2Weights.gamesPlayed)
+			child2Weights = player2Weights;
     return Player::NONE;
 }
 
@@ -235,13 +277,22 @@ void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChil
 // Each child plays a minimum of [minGamesPerChild] games against a random opponent
 // (potentially plays more)
       for (int i = 0; i < minGamesPerChild; ++i) {
-          auto opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
-          playGame(startWeights, opponent);
+				auto opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
+				while(true) {
+					if (opponent != startWeights)
+						break;
+          opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
+				}
+        playGame(startWeights, opponent);
       }
       // TODO: randomly split ties so that sometimes _bestChild = startWeights if fitness is equal
-      if (_bestChild.gamesPlayed == 0)
-        _bestChild = startWeights;
-      else if ((startWeights.fitness / startWeights.gamesPlayed) > (_bestChild.fitness / _bestChild.gamesPlayed)) {
+      // if (_bestChild.gamesPlayed == 0)
+      //   _bestChild = startWeights;
+
+			// this prevents division by 0
+			if (_bestChild.gamesPlayed == 0)
+				_bestChild.gamesPlayed = 1;
+      if (startWeights.fitness > _bestChild.fitness) {
 			  _bestChild = startWeights;
 			}
 }
