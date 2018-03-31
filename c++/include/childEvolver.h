@@ -38,10 +38,11 @@ private:
     double _mutationRate;
 private:
     double shiftWeight(double weight);
+    double cappedShiftWeight(double weight, double startRange, double endRange);
     double randomNumber(double Min, double Max);
     void selectiveMutate(WeightedNode & parent);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
-    void evolveAll();
+    void evolveAll(bool firstGen);
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
     void writeWeightsToFile(const int generation);
     void writeBestMoveForGeneration(const int generation);

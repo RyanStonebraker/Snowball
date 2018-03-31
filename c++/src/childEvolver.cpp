@@ -39,6 +39,8 @@ using std::endl;
 #define TIE_POINTS -1
 #define GREATER_PIECE_TIE 0.5
 
+static size_t MIN_EVOLVE_GAMES = 5;
+
 
 // TODO: Evolution Design Ideas:
 // - More emphasis needs to be put on prefering fitness levels > than previous _generations
@@ -63,6 +65,7 @@ ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &
   : _childrenPerGeneration(childrenPerGeneration), _generations(3), _parent(startWeights),
     _children(childrenPerGeneration), _numberOfWeights(7), _mutationRate(0.2) {
       _depth = startWeights.depth;
+			MIN_EVOLVE_GAMES = _children.size()-1;
     }
 
 // TODO: make mutation rate a weight and have AI decide how random it wants to be
@@ -74,13 +77,18 @@ void ChildEvolver::setGenerationAmount(unsigned gens) {
   _generations = gens;
 }
 
-void ChildEvolver::evolveAll() {
+void ChildEvolver::evolveAll(bool firstGen = false) {
 	for (int i = 0; i < _children.size(); ++i) {
-		evolve(_children[i], 5);
+		evolve(_children[i], MIN_EVOLVE_GAMES);
+		// if (firstGen) {
+		// 	std::cout << "DEFAULT BEST - ";
+		// 	_bestChild = _children[i];
+		// 	firstGen = false;
+		// }
 		std::cout << "Child " << i << " Fitness: " << _children[i].fitness
 		<< " Best Child Fitness: " << _bestChild.fitness << " Games Played: "
 		<< _children[i].gamesPlayed;
-		if (_children[i].fitness == _bestChild.fitness && _children[i].gamesPlayed == _bestChild.gamesPlayed && _children[i].weight == _bestChild.weight)
+		if (_children[i] == _bestChild)
 			std::cout << " - BEST CHILD";
 		std::cout << std::endl;
 	}
@@ -96,7 +104,8 @@ void ChildEvolver::startGeneration() {
       _children[i].depth = _depth;
       mutate(_parent, _children[i]);
   }
-	evolveAll();
+	auto firstGen = true;
+	evolveAll(firstGen);
   writeWeightsToFile(0);
   setMutationRate(saveMutationRate);
 
@@ -137,11 +146,16 @@ void ChildEvolver::startGeneration() {
 // parent. Cross-Breed those that beat the parent (if none beat the parent,
 // the parent moves on unchanged)
 void ChildEvolver::selectiveMutate(WeightedNode & parent) {
+	const size_t randomMoveThreshold = 6;
 	for (unsigned i = 0; i < parent.size(); ++i) {
 		WeightedNode potentialChild = parent;
-		potentialChild[i] = shiftWeight(potentialChild[i]);
+		if (i == randomMoveThreshold)
+				potentialChild[i] = cappedShiftWeight(potentialChild[i], 0, 1);
+		else
+			potentialChild[i] = shiftWeight(potentialChild[i]);
 		auto winner = playGame(parent, potentialChild);
 
+		// TODO: Check to make sure cross breeding is working
 		// Cross Breeding - add winning trait to parent
 		if (winner == Player::SECOND) {
 			parent[i] = potentialChild[i];
@@ -153,17 +167,26 @@ double ChildEvolver::shiftWeight(double weight){
   return weight + randomNumber(-_mutationRate, _mutationRate);
 }
 
+double ChildEvolver::cappedShiftWeight(double weight, double startRange, double endRange) {
+	double adjustedWeight = weight;
+	while (true) {
+		adjustedWeight = shiftWeight(weight);
+		if (adjustedWeight <= endRange && adjustedWeight >= startRange)
+			break;
+	}
+	return adjustedWeight;
+}
+
 void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &resultWeights) {
     resultWeights.kingingWeight = kingWeightPrime(startWeights);
     resultWeights.sigmaWeight = sigmaWeightPrime(startWeights, 6);
     resultWeights.weight = nodeWeightPrime(startWeights);
-    // These will need to be changed at some point
     resultWeights.qualityWeight = shiftWeight(startWeights.qualityWeight);
     resultWeights.availableMovesWeight = shiftWeight(startWeights.availableMovesWeight);
     resultWeights.depthWeight = shiftWeight(startWeights.availableMovesWeight);
     resultWeights.riskFactor = shiftWeight(startWeights.riskFactor);
     resultWeights.enemyFactor = shiftWeight(startWeights.enemyFactor);
-    resultWeights.splitTieFactor = shiftWeight(startWeights.splitTieFactor);
+    resultWeights.randomMoveThreshold = cappedShiftWeight(startWeights.randomMoveThreshold, 0, 1);
 }
 
 ChildEvolver::Player ChildEvolver::playGame(WeightedNode &child1Weights, WeightedNode &child2Weights) {
@@ -263,38 +286,45 @@ void ChildEvolver::writeBestMoveForGeneration(const int gen) {
 
 // This function is only useful for generating the spreadsheet required for assignment 3.
 void ChildEvolver::writeTestCSV() {
-    cout << "Writing test CSV..." << endl;
-    ofstream outFile;
-    outFile.open("../weights.csv");
-    outFile << "Weight, Kinging Weight, Sigma Weight" << endl;
-    for (int i = 0; i < _childrenPerGeneration; ++i) {
-        outFile << _children[i].weight << "," << _children[i].kingingWeight << "," << _children[i].sigmaWeight << "," <<  i << endl;
-    }
-    outFile.close();
+  cout << "Writing test CSV..." << endl;
+  ofstream outFile;
+  outFile.open("../weights.csv");
+  outFile << "Weight, Kinging Weight, Sigma Weight" << endl;
+  for (int i = 0; i < _childrenPerGeneration; ++i) {
+      outFile << _children[i].weight << "," << _children[i].kingingWeight << "," << _children[i].sigmaWeight << "," <<  i << endl;
+  }
+  outFile.close();
 }
 
 void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChild) {
 // Each child plays a minimum of [minGamesPerChild] games against a random opponent
 // (potentially plays more)
-      for (int i = 0; i < minGamesPerChild; ++i) {
-				auto opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
-				while(true) {
-					if (opponent != startWeights)
-						break;
-          opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
-				}
-        playGame(startWeights, opponent);
-      }
-      // TODO: randomly split ties so that sometimes _bestChild = startWeights if fitness is equal
-      // if (_bestChild.gamesPlayed == 0)
-      //   _bestChild = startWeights;
 
-			// this prevents division by 0
-			if (_bestChild.gamesPlayed == 0)
-				_bestChild.gamesPlayed = 1;
-      if (startWeights.fitness > _bestChild.fitness) {
-			  _bestChild = startWeights;
-			}
+
+  for (int i = 0; i < minGamesPerChild; ++i) {
+
+		// NOTE: This is code to choose a random opponent, just going to play against ALL for now
+		// auto opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
+		// while(true) {
+		// 	if (opponent != startWeights)
+		// 		break;
+    //   opponent = _children[unsigned(randomNumber(0, _children.size())) % _children.size()];
+		// }
+
+		auto opponent = _children[(i+1)%_children.size()];
+
+    playGame(startWeights, opponent);
+  }
+  // TODO: randomly split ties so that sometimes _bestChild = startWeights if fitness is equal
+  // if (_bestChild.gamesPlayed == 0)
+  //   _bestChild = startWeights;
+
+	// this prevents division by 0
+	if (_bestChild.gamesPlayed == 0)
+		_bestChild.gamesPlayed = 1;
+  if (startWeights.fitness > _bestChild.fitness) {
+	  _bestChild = startWeights;
+	}
 }
 
 double ChildEvolver::randomNumber(double min, double max)

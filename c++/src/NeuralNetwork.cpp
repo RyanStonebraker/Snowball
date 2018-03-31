@@ -22,7 +22,8 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   random_device rdev;
   mt19937 rand_gen(rdev());
 
-  uniform_real_distribution<double> rand_weight(-0.5, 1);
+  uniform_real_distribution<double> rand_weight(-1, 1);
+  uniform_real_distribution<double> capped_weight(0, 1);
 
   WeightedNode currentWeights;
   currentWeights.kingingWeight = rand_weight(rand_gen);
@@ -30,7 +31,7 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   currentWeights.availableMovesWeight = rand_weight(rand_gen);
   currentWeights.riskFactor = rand_weight(rand_gen);
   currentWeights.enemyFactor = rand_weight(rand_gen);
-  currentWeights.splitTieFactor = rand_weight(rand_gen);
+  currentWeights.randomMoveThreshold = capped_weight(rand_gen);
 
   return currentWeights;
 }
@@ -211,7 +212,11 @@ void NeuralNetwork::evaluateChildren(int depth) {
     // if (within threshold)
     //   generate random number
     //   auto chooseLeft = randomNumber > 0.5
-    if (_children[possibleMove]->weight >= _bestMoveWeight) {
+    auto isBestMove = _children[possibleMove]->weight >= _bestMoveWeight;
+    if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold * _bestMoveWeight) {
+      isBestMove = splitTie();
+    }
+    if (isBestMove) {
 
       _bestMoveWeight = _children[possibleMove]->weight;
       _currentMove = _children[possibleMove]->board;
@@ -228,13 +233,12 @@ void NeuralNetwork::evaluateChildren(int depth) {
 }
 
 bool NeuralNetwork::splitTie() {
-  return false;
   random_device rdev;
   mt19937 rand_gen(rdev());
 
   uniform_real_distribution<double> randomChoice(0, 1);
   auto chosenSide = randomChoice(rand_gen);
-  if (chosenSide >= _weights.splitTieFactor) {
+  if (chosenSide >= 0.5) {
     return false;
   }
   else

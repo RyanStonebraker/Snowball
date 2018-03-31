@@ -49,9 +49,9 @@ struct WeightedNode {
   // 0.00f - 1.00f
   double enemyFactor = 0;
 
-  // When two moves have the same weight, should left moves be prefered over right moves?
-  // Ex. < 0.5 = left preference, > 0.5 = right preference
-  double splitTieFactor = 0.5;
+  // What threshold for similar best moves should a random top move be chosen in?
+  // 0.00f - 1.00f
+  double randomMoveThreshold = 0;
 
   // What depth should this branch be calculated to?
   int depth = 0;

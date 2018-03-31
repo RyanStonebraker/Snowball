@@ -883,7 +883,9 @@ GameBoard.prototype.jumpRecurse = function(color) {
             }
             // jumpMoves.push({"startRow":3, "startCol":3, "endRow": 5, "endCol": 1, "killSpots":[0]});
             var futureKillSpot = this.spaceOccupied(futureCoordCheck, oppColorPieces);
-            if (futureKillSpot >= 0 && futureKillSpot != killSpot && this.spaceOccupied(futureEmptyCoordCheck, oppColorPieces) === -1) {
+            if (futureKillSpot >= 0 && futureKillSpot != killSpot
+                && this.spaceOccupied(futureEmptyCoordCheck, oppColorPieces) === -1
+                && this.spaceOccupied(futureEmptyCoordCheck, colorPieces) === -1) {
 
               game.futureHighlightSquares.push(futureEmptyCoordCheck);
               game.holdTeamTurn = true;

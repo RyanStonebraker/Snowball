@@ -14,7 +14,7 @@ std::ostream &operator<<(std::ostream& stream, const WeightedNode& node){
     stream << node.fitness << " " << node.weight << " " << node.kingingWeight
     << " " << node.sigmaWeight << " " << node.qualityWeight << " "
     << node.availableMovesWeight << " " << node.depthWeight << " " << node.riskFactor
-    << " " << node.enemyFactor << " " << node.splitTieFactor << " " << node.depth
+    << " " << node.enemyFactor << " " << node.randomMoveThreshold << " " << node.depth
     << " " << node.gamesPlayed;
     return stream;
 }
@@ -29,13 +29,13 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     double newDepthWeight;
     double newRiskFactor;
     double newEnemyFactor;
-    double newSplitTieFactor;
+    double newRandomMoveThreshold;
     double newDepth;
     unsigned gamesPlayed;
 
     stream >> newFitness >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight
     >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newEnemyFactor
-    >> newSplitTieFactor >> newDepth >> gamesPlayed;
+    >> newRandomMoveThreshold >> newDepth >> gamesPlayed;
 
     node.fitness = newFitness;
     node.weight = newWeight;
@@ -46,7 +46,7 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.depthWeight = newDepthWeight;
     node.riskFactor = newRiskFactor;
     node.enemyFactor = newEnemyFactor;
-    node.splitTieFactor = newSplitTieFactor;
+    node.randomMoveThreshold = newRandomMoveThreshold;
     node.depth = newDepth;
     node.gamesPlayed = gamesPlayed;
 
@@ -72,7 +72,7 @@ double & WeightedNode::operator[](size_t index) {
     case 5:
       return enemyFactor;
     case 6:
-      return splitTieFactor;
+      return randomMoveThreshold;
     default:
       throw (std::out_of_range("double & WeightedNode::operator[](size_t index) : index must be between 0 and " + std::to_string(size())));
   }
@@ -83,6 +83,8 @@ bool WeightedNode::operator==(WeightedNode & rhs) {
       if (rhs[i] != (*this)[i])
         return false;
   }
+  if (rhs.gamesPlayed != (*this).gamesPlayed || rhs.weight != (*this).weight)
+    return false;
   return true;
 }
 
