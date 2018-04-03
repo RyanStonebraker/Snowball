@@ -120,7 +120,7 @@ std::string NeuralNetwork::flipBoardColor(const std::string & board) {
 
 double NeuralNetwork::evaluateBoard(const Board & futureState, int depthToLimit) {
   auto futureBoardInfo = getBoardInfo(futureState);
-  auto computerIsBlack =  _startingColor == COMPUTER_BLACK;
+  auto computerIsBlack = _startingColor == COMPUTER_BLACK;
 
   auto redPiecesTaken = _topLevelWeights.numberOfRedPieces - futureBoardInfo.numberOfRedPieces;
   auto blackPiecesTaken = _topLevelWeights.numberOfBlackPieces - futureBoardInfo.numberOfBlackPieces;
@@ -135,11 +135,15 @@ double NeuralNetwork::evaluateBoard(const Board & futureState, int depthToLimit)
   auto kingsMade = (computerIsBlack) ? blackKingsMade : redKingsMade;
 
   auto pieceCaptureWeight = (enemyPiecesTaken - piecesLost) * _weights.qualityWeight;
-  auto kingWeight = (kingsMade - enemyKingsMade) * _weights.kingingWeight;
+  auto kingWeight = kingsMade * _weights.kingingWeight;
+
+  auto enemyKingWeights = enemyKingsMade * _weights.enemyFactor;
 
   auto depthWeight = depthToLimit * _weights.depthWeight;
 
-  auto raw_weight = pieceCaptureWeight + kingWeight + depthWeight;
+  //-
+
+  auto raw_weight = pieceCaptureWeight + kingWeight + depthWeight + enemyKingWeights;
 
   return raw_weight;
 }
@@ -213,11 +217,10 @@ void NeuralNetwork::evaluateChildren(int depth) {
     //   generate random number
     //   auto chooseLeft = randomNumber > 0.5
     auto isBestMove = _children[possibleMove]->weight >= _bestMoveWeight;
-    if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold * _bestMoveWeight) {
+    if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold) {
       isBestMove = splitTie();
     }
     if (isBestMove) {
-
       _bestMoveWeight = _children[possibleMove]->weight;
       _currentMove = _children[possibleMove]->board;
       if (_children[possibleMove]->weight == _bestMoveWeight && _currentMove != enemyPlayedMove) {
@@ -238,11 +241,7 @@ bool NeuralNetwork::splitTie() {
 
   uniform_real_distribution<double> randomChoice(0, 1);
   auto chosenSide = randomChoice(rand_gen);
-  if (chosenSide >= 0.5) {
-    return false;
-  }
-  else
-    return true;
+  return chosenSide >= 0.5;
 }
 
 // TODO: could do alpha-beta pruning by adding a "bestBoard at this level" parameter and
@@ -250,30 +249,40 @@ bool NeuralNetwork::splitTie() {
 // OR, could just say if <= depthLeft X (could assign a percentage of the way to depth) and weight is
 // greater than 1 standard deviation less than bestMove, then end
 std::shared_ptr<NeuronLinkedList> NeuralNetwork::recurseSpawning(int depth, NeuronLinkedList parent, int color) {
-  auto nextMoveSet = (color == COMPUTER_BLACK) ? spawnRed(parent.board) : spawnBlack(parent.board);
   auto nextColor = (color == COMPUTER_BLACK) ? COMPUTER_RED : COMPUTER_BLACK;
-
-  for (auto & nextMove : nextMoveSet) {
-    NeuronLinkedList nextChild;
-    nextChild.board = nextMove.getBoardStateString();
-
-    nextChild.weight = evaluateBoard(nextMove, depth);
-    parent.weight += nextChild.weight;
-
-    parent.children.push_back(std::make_shared<NeuronLinkedList>(nextChild));
-    if (depth > 0) {
-
-      // ALPHA-BETA PRUNING - More of a heuristic since doesn't DEFINITELY guarantee this
-      // move cant be the best. Also, using sigmoid this much hurts.
-      // auto startAlphaBetaDepth = 0.5;
-      // auto cutOffPercentage = 0.5;
-      // if (depth <= int(startAlphaBetaDepth * _weights.depth) && sigmoid(parent.weight) <= cutOffPercentage * _bestMoveWeight)
-      //   break;
-
-      parent.children[parent.children.size() - 1] = recurseSpawning(depth - 1, nextChild, nextColor);
+  if (parent.children.size() > 0) {
+    auto deeperParent = std::make_shared<NeuronLinkedList>(parent);
+    for (auto i = 0; i < parent.children.size(); ++i) {
+      deeperParent->children[i] = recurseSpawning(depth - 1, *(deeperParent->children[i]), nextColor);
     }
+    parent = *deeperParent;
   }
-  parent.weight /= nextMoveSet.size();
+  else {
+    auto nextMoveSet = (color == COMPUTER_BLACK) ? spawnRed(parent.board) : spawnBlack(parent.board);
+
+    for (auto & nextMove : nextMoveSet) {
+      NeuronLinkedList nextChild;
+      nextChild.board = nextMove.getBoardStateString();
+
+      nextChild.weight = evaluateBoard(nextMove, depth);
+      parent.weight += nextChild.weight;
+
+      parent.children.push_back(std::make_shared<NeuronLinkedList>(nextChild));
+      if (depth > 0) {
+
+        // ALPHA-BETA PRUNING - More of a heuristic since doesn't DEFINITELY guarantee this
+        // move cant be the best. Also, using sigmoid this much hurts.
+        // auto startAlphaBetaDepth = 0.5;
+        // auto cutOffPercentage = 0.5;
+        // if (depth <= int(startAlphaBetaDepth * _weights.depth) && sigmoid(parent.weight) <= cutOffPercentage * _bestMoveWeight)
+        //   break;
+
+        parent.children[parent.children.size() - 1] = recurseSpawning(depth - 1, nextChild, nextColor);
+      }
+    }
+    parent.weight /= nextMoveSet.size();
+  }
+
   return std::make_shared<NeuronLinkedList>(parent);
 }
 

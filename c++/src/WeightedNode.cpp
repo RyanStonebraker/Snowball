@@ -14,8 +14,8 @@ std::ostream &operator<<(std::ostream& stream, const WeightedNode& node){
     stream << node.fitness << " " << node.weight << " " << node.kingingWeight
     << " " << node.sigmaWeight << " " << node.qualityWeight << " "
     << node.availableMovesWeight << " " << node.depthWeight << " " << node.riskFactor
-    << " " << node.enemyFactor << " " << node.randomMoveThreshold << " " << node.depth
-    << " " << node.gamesPlayed;
+    << " " << node.riskThreshold << " " << node.enemyFactor << " " << node.randomMoveThreshold
+    << " " << node.depth << " " << node.gamesPlayed;
     return stream;
 }
 
@@ -28,13 +28,14 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     double newAvailableMovesWeight;
     double newDepthWeight;
     double newRiskFactor;
+    double newRiskThreshold;
     double newEnemyFactor;
     double newRandomMoveThreshold;
     double newDepth;
     unsigned gamesPlayed;
 
     stream >> newFitness >> newWeight >> newKingingWeight >> newSigmaWeight >> newQualityWeight
-    >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newEnemyFactor
+    >> newAvailableMovesWeight >> newDepthWeight >> newRiskFactor >> newRiskThreshold >> newEnemyFactor
     >> newRandomMoveThreshold >> newDepth >> gamesPlayed;
 
     node.fitness = newFitness;
@@ -45,6 +46,7 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
     node.availableMovesWeight = newAvailableMovesWeight;
     node.depthWeight = newDepthWeight;
     node.riskFactor = newRiskFactor;
+    node.riskThreshold = newRiskThreshold;
     node.enemyFactor = newEnemyFactor;
     node.randomMoveThreshold = newRandomMoveThreshold;
     node.depth = newDepth;
@@ -54,7 +56,7 @@ std::istream &operator>>(std::istream& stream, WeightedNode& node){
 }
 
 size_t WeightedNode::size() {
-  return 7;
+  return 8;
 }
 
 double & WeightedNode::operator[](size_t index) {
@@ -73,6 +75,8 @@ double & WeightedNode::operator[](size_t index) {
       return enemyFactor;
     case 6:
       return randomMoveThreshold;
+    case 7:
+      return riskThreshold;
     default:
       throw (std::out_of_range("double & WeightedNode::operator[](size_t index) : index must be between 0 and " + std::to_string(size())));
   }

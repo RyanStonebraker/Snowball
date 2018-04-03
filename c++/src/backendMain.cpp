@@ -95,7 +95,7 @@ int main (int argc, char* argv[]) {
 	if (userDefinedDepth > 0)
 		aiPlayer.setDepth(userDefinedDepth);
 
-	IOHandler gameController(CLEAN_UP_TEMP_FILES);
+	IOHandler gameController(0);
 
 	auto startingPlayer = gameController.setupGame();
 	gameController.startGame(startingPlayer);

@@ -44,6 +44,10 @@ struct WeightedNode {
   // 0.00f - 1.00f
   double riskFactor = 0;
 
+  // How much percentage should the player be beating the enemy by before it is
+  // willing to take a risky move?
+  double riskThreshold = 0;
+
   // How much should positive gains (in each weighting category) for the enemy
   // affect the move decision?                                                    Non-used weight.
   // 0.00f - 1.00f
@@ -55,8 +59,6 @@ struct WeightedNode {
 
   // What depth should this branch be calculated to?                              Metaweight
   int depth = 0;
-
-
 
   // Keep track of the amount of games this neural network has been trained on.   Metaweight.
   unsigned gamesPlayed = 0;
