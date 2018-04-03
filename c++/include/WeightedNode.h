@@ -12,10 +12,10 @@ struct WeightedNode {
   bool operator!=(WeightedNode & rhs);
   size_t size();
 
-  // How does this child neural network stack up against others in its generation?
+  // How does this child neural network stack up against others in its generation? Metaweight.
   double fitness = 0;
 
-  // Individual weight of each node?
+  // Individual weight of each node?                                              Metaweight.
   // -0.20f - 0.20f
   double weight = 0;
 
@@ -23,7 +23,7 @@ struct WeightedNode {
   // 1.00f - 3.00f
   double kingingWeight = 0;
 
-  //Initial value for sigma for each weight(bias factor)
+  //Initial value for sigma for each weight(bias factor)                          Non-used Weight.
   //Always set to .05
   double sigmaWeight = .05;
 
@@ -31,7 +31,7 @@ struct WeightedNode {
   // 0.00f - 1.00f
   double qualityWeight = 0;
 
-  // How much does the freedom of movement per branch affect decision?
+  // How much does the freedom of movement per branch affect decision?            Non-used weight.
   // 0.00f - 1.00f
   double availableMovesWeight = 0;
 
@@ -40,12 +40,12 @@ struct WeightedNode {
   double depthWeight = 0;
 
   // How much should the maximum values of certain weights in comparison to
-  // other same level branches affect decisions?
+  // other same level branches affect decisions?                                  Non-used weight.
   // 0.00f - 1.00f
   double riskFactor = 0;
 
   // How much should positive gains (in each weighting category) for the enemy
-  // affect the move decision?
+  // affect the move decision?                                                    Non-used weight.
   // 0.00f - 1.00f
   double enemyFactor = 0;
 
@@ -53,10 +53,12 @@ struct WeightedNode {
   // 0.00f - 1.00f
   double randomMoveThreshold = 0;
 
-  // What depth should this branch be calculated to?
+  // What depth should this branch be calculated to?                              Metaweight
   int depth = 0;
 
-  // Keep track of the amount of games this neural network has been trained on
+
+
+  // Keep track of the amount of games this neural network has been trained on.   Metaweight.
   unsigned gamesPlayed = 0;
 };
 

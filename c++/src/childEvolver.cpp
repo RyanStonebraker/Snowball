@@ -118,8 +118,8 @@ void ChildEvolver::startGeneration() {
     std::sort(_children.begin(), _children.end(), [](auto child1, auto child2) {
       return child1.fitness >= child2.fitness;
     });
-		if (currentGen > 1) {
-	    for (int i = 0; i >= _children.size() / 2; ++i) {
+		if (currentGen >= 1) {
+	    for (int i = 0; i <= _children.size() / 2; ++i) {
 	        selectiveMutate(_children[i]);
 	    }
 		}
@@ -145,7 +145,8 @@ void ChildEvolver::startGeneration() {
 // Generate a child for every weight (only changing one weight), then play against
 // parent. Cross-Breed those that beat the parent (if none beat the parent,
 // the parent moves on unchanged)
-void ChildEvolver::selectiveMutate(WeightedNode & parent) {
+void ChildEvolver::selectiveMutate(WeightedNode & grandparent) {
+	auto parent = grandparent;
 	const size_t randomMoveThreshold = 6;
 	for (unsigned i = 0; i < parent.size(); ++i) {
 		WeightedNode potentialChild = parent;
@@ -160,6 +161,9 @@ void ChildEvolver::selectiveMutate(WeightedNode & parent) {
 		if (winner == Player::SECOND) {
 			parent[i] = potentialChild[i];
 		}
+	}
+	for (auto i = 0; i < grandparent.size(); ++i) {
+		grandparent[i] = parent[i];
 	}
 }
 
