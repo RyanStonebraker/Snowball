@@ -17,6 +17,9 @@ struct ExpandedWeights {
 
   int numberOfRedPieces;
   int numberOfBlackPieces;
+
+  // size_t numberOfAvailableRedOpenSpace;
+  // size_t numberOfAvailableBlackOpenSpace;
 };
 
 struct NeuronLinkedList {
@@ -70,6 +73,9 @@ private:
   std::chrono::duration<double> _bpsTiming;
 
   std::vector<std::shared_ptr<NeuronLinkedList>> _children;
+
+  size_t _lastDepth;
+  std::vector<std::shared_ptr<NeuronLinkedList>> _cachedLeafChildren;
 };
 
 #endif

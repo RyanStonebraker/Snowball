@@ -62,6 +62,8 @@ public:
 	int getBlackPieceCount() const;
 	int getRedPieceCount() const;
 	int getMovesAvailable() const;
+	// size_t getRedOpenSpace() const;
+	// size_t getWhiteOpenSpace() const;
 
 	//mutator functions
 	void setBoardStateString(const std::string & newState);

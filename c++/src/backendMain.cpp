@@ -69,11 +69,17 @@ int main (int argc, char* argv[]) {
 			if (argc >= 4) {
 				generations = atoi(argv[3]);
 			}
-
+			std::string generationLocation;
+			if (argc >= 4) {
+				generationLocation = argv[4];
+			}
 			WeightedNode defaultWeights;
 			if (userDefinedDepth > 0)
 				defaultWeights.depth = userDefinedDepth;
+
 			ChildEvolver evolver(10, defaultWeights);
+			if (generationLocation.size() > 0)
+				evolver = ChildEvolver(10, generationLocation);
 			// We changed this to 10% on April 2nd 2018 in Murie on Level 3 of the back glass classrooms on a clear sunny day. :)
 			evolver.setMutationRate(0.1);
 			evolver.setGenerationAmount(generations);

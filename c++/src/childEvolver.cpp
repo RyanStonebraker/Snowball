@@ -1,10 +1,4 @@
-//
 //  childEvolver.cpp
-//  snowball
-//
-//  Created by Thatcher Lane on 2/28/18.
-//  Copyright © 2018 Thatcher Lane. All rights reserved.
-//
 
 #include "childEvolver.h"
 #include "WeightedNode.h"
@@ -25,6 +19,7 @@ using std::endl;
 #include <algorithm>
 #include "NeuralNetwork.h"
 #include <chrono>
+#include <stdlib.h>
 
 #ifdef _WIN32
 	#include <windows.h>
@@ -69,6 +64,34 @@ ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &
 			MIN_EVOLVE_GAMES = _children.size()-1;
     }
 
+ChildEvolver::ChildEvolver(const int childrenPerGeneration, const std::string &generationLoc)
+	: _childrenPerGeneration(childrenPerGeneration), _generations(3), _children(childrenPerGeneration),
+	 _numberOfWeights(7), _mutationRate(0.2) {
+		 MIN_EVOLVE_GAMES = _children.size()-1;
+
+		 loadGeneration(generationLoc);
+}
+
+void ChildEvolver::loadGeneration (std::string generationLocation) {
+	if (generationLocation[generationLocation.size()-1] == '/')
+		generationLocation = generationLocation.substr(0, generationLocation.size()-1);
+
+	auto genNumber = generationLocation.substr(generationLocation.size()-3, generationLocation.size());
+	_generations = atoi(genNumber.c_str());
+
+	auto bestChildPath = generationLocation + "/" + "bestGen" + genNumber + "Child.txt";
+	std::ifstream readBestChild(bestChildPath);
+
+	readBestChild >> _bestChild;
+
+	auto childLocation = generationLocation + "/childWeights/";
+	for (auto i = 0; i < _children.size(); ++i) {
+		auto currentChildLocation = childLocation + "child_" + to_string(i) + ".txt";
+		std::ifstream readCurrentChild(currentChildLocation);
+		readCurrentChild >> _children[i];
+	}
+}
+
 // TODO: make mutation rate a weight and have AI decide how random it wants to be
 void ChildEvolver::setMutationRate(double mutationRate) {
   _mutationRate = mutationRate;
@@ -96,6 +119,7 @@ void ChildEvolver::startGeneration() {
   std::cout << "Starting Generation 0:" << std::endl;
   // Generate gen0 completely random children
   setMutationRate(1);
+	#pragma omp parallel for
   for (int i = 0; i < _children.size(); ++i) {
       _children[i].depth = _depth;
       mutate(_parent, _children[i]);
@@ -103,7 +127,7 @@ void ChildEvolver::startGeneration() {
 	evolveAll();
   writeWeightsToFile(0);
   setMutationRate(saveMutationRate);
-
+	#pragma omp parallel for
   for (auto currentGen = 1; currentGen <= _generations; ++currentGen) {
     // WeightedNode blankNode;
     // _bestChild = blankNode;
@@ -142,9 +166,12 @@ void ChildEvolver::startGeneration() {
 void ChildEvolver::selectiveMutate(WeightedNode & grandparent) {
 	auto parent = grandparent;
 	const size_t randomMoveThreshold = 6;
+	const size_t riskThreshold = 7;
+
+	#pragma omp parallel for
 	for (unsigned i = 0; i < parent.size(); ++i) {
 		WeightedNode potentialChild = parent;
-		if (i == randomMoveThreshold)
+		if (i == randomMoveThreshold ||  i == riskThreshold)
 				potentialChild[i] = cappedShiftWeight(potentialChild[i], 0, 1);
 		else
 			potentialChild[i] = shiftWeight(potentialChild[i]);
@@ -182,7 +209,7 @@ void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &result
     resultWeights.availableMovesWeight = shiftWeight(startWeights.availableMovesWeight);
     resultWeights.depthWeight = shiftWeight(startWeights.availableMovesWeight);
     resultWeights.riskFactor = shiftWeight(startWeights.riskFactor);
-		resultWeights.riskThreshold = shiftWeight(startWeights.riskThreshold);
+		resultWeights.riskThreshold = cappedShiftWeight(startWeights.riskThreshold, 0, 1);
     resultWeights.enemyFactor = shiftWeight(startWeights.enemyFactor);
     resultWeights.randomMoveThreshold = cappedShiftWeight(startWeights.randomMoveThreshold, 0, 1);
 }

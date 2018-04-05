@@ -15,6 +15,7 @@ depth = 2
 wFile = ""
 evolve = "evolve"
 generations = 2
+gLoc = ""
 
 build: $(SOURCES)
 	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
@@ -33,7 +34,7 @@ run:
 	$(TARGET) $(depth) $(wFile)
 
 evolve:
-	$(TARGET) $(depth) $(evolve) $(generations)
+	$(TARGET) $(depth) $(evolve) $(generations) $(gLoc)
 
 run_tests:
 	$(TEST_TARGET)

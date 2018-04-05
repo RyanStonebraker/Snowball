@@ -18,8 +18,10 @@
 class ChildEvolver{
 public:
     ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights);
+    ChildEvolver(const int childrenPerGeneration, const std::string &generationLoc);
     void evolve(WeightedNode &startWeights, const int minGamesPerChild);
     void startGeneration();
+    void loadGeneration(std::string generationLocation);
     void setMutationRate(double mutationRate);
     void setDepth(unsigned depth);
     double kingWeightPrime(const WeightedNode &);

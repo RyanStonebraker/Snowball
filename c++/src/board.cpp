@@ -69,6 +69,39 @@ int Board::getMovesAvailable() const
 	return 0;
 }
 
+// NOTE: This function just needs to be implemented, should work
+// size_t Board::getRedOpenSpace() const {
+// 	size_t openSpaces = 0;
+// 	for (auto position = 0; position < _boardStateString.size(); ++position) {
+// 		if (_boardStateString[position] == '0') {
+// 			auto enemyAtBottomRight = (position+4)%4 == position % 4 && position+4 == '2' && position+4 == '4';
+// 			auto enemyAtBottomLeft = (position+3)%4 < position % 4 && position+3 == '2' && position+3 == '4';
+// 			auto enemyAtTopRight = (position-4)%4 == position % 4 && position-4 == '2' && position-4 == '4';
+// 			auto enemyAtTopLeft = (position-5)%4 < position % 4 && position-5 == '2' && position-5 == '4';
+//
+// 			if (!enemyAtBottomRight && !enemyAtBottomLeft && !enemyAtTopLeft && !enemyAtTopRight)
+// 				++openSpaces;
+// 		}
+// 	}
+// 	return openSpaces;
+// }
+
+// size_t Board::getWhiteOpenSpace() const {
+// 	size_t openSpaces = 0;
+// 	for (auto i = 0; i < _boardStateString.size(); ++i) {
+// 		if (_boardStateString[i] == '0') {
+// 			int topLeft = ((i / 4) % 2) == 0 ? i - 5 : i - 4;
+// 			int topRight = ((i / 4) % 2) == 0 ? i - 4 : i - 3;
+// 			int bottomLeft = ((i / 4) % 2) == 0 ? i + 3 : i + 4;
+// 			int bottomRight = ((i / 4) % 2) == 0 ? i + 4 : i + 5;
+//
+//
+// 		}
+// 	}
+// 	return openSpaces;
+// }
+
+
 void Board::setBoardStateString(const std::string & newState)
 {
 	_boardStateString = newState;

@@ -38,7 +38,7 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
 
 NeuralNetwork::NeuralNetwork() : _gameState(GAME_RUNNING), _startingColor(COMPUTER_BLACK),
                   _bestMoveWeight(-1), _currentMove(STARTING_BOARD_STRING),
-                  _bpsTiming(std::chrono::duration<double>::zero())  {}
+                  _bpsTiming(std::chrono::duration<double>::zero()), _lastDepth(0)  {}
 
 void NeuralNetwork::loadStartingWeightsFromFile(const std::string & readLocation) {
   std::ifstream weightReader (readLocation);
@@ -141,7 +141,18 @@ double NeuralNetwork::evaluateBoard(const Board & futureState, int depthToLimit)
 
   auto depthWeight = depthToLimit * _weights.depthWeight;
 
-  //-
+  auto playerPieces = (computerIsBlack) ? _topLevelWeights.numberOfBlackPieces : _topLevelWeights.numberOfRedPieces;
+  auto enemyPieces = (computerIsBlack) ? _topLevelWeights.numberOfRedPieces : _topLevelWeights.numberOfBlackPieces;
+
+  auto satisfiesThreshold = (double(enemyPieces) / double(playerPieces) < _weights.riskThreshold);
+
+  if (satisfiesThreshold) {
+    pieceCaptureWeight = (enemyPiecesTaken * 1 / (1 - _weights.riskFactor) - piecesLost) * _weights.qualityWeight;
+  }
+
+  // auto movesAvailable = futureState
+  //
+  // auto moveFreedomWeight =
 
   auto raw_weight = pieceCaptureWeight + kingWeight + depthWeight + enemyKingWeights;
 
@@ -212,10 +223,6 @@ void NeuralNetwork::evaluateChildren(int depth) {
     _children[possibleMove] = recurseSpawning(depth - 1, node, _startingColor);
     _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
 
-    // TODO: Randomly break tie based on weight
-    // if (within threshold)
-    //   generate random number
-    //   auto chooseLeft = randomNumber > 0.5
     auto isBestMove = _children[possibleMove]->weight >= _bestMoveWeight;
     if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold) {
       isBestMove = splitTie();
@@ -269,7 +276,6 @@ std::shared_ptr<NeuronLinkedList> NeuralNetwork::recurseSpawning(int depth, Neur
 
       parent.children.push_back(std::make_shared<NeuronLinkedList>(nextChild));
       if (depth > 0) {
-
         // ALPHA-BETA PRUNING - More of a heuristic since doesn't DEFINITELY guarantee this
         // move cant be the best. Also, using sigmoid this much hurts.
         // auto startAlphaBetaDepth = 0.5;
@@ -315,10 +321,17 @@ std::string NeuralNetwork::getBestMove() {
   _children.clear();
 
   auto startMoveEval = std::chrono::system_clock::now();
-  evaluateChildren(_weights.depth);
+  // std::chrono::duration<double> relativeDuration = std::chrono::duration<double>::zero();
+  // for (auto relDepth = 2; relDepth <= _weights.depth; ++relDepth) {
+  //   if (relativeDuration.count() > MAX_TIME_LIMIT) {
+  //     std::cout << "CALLED\n";
+  //     break;
+  //   }
+    evaluateChildren(_weights.depth);
+    // relativeDuration = std::chrono::system_clock::now() - startMoveEval;
+  // }
   auto endMoveEval = std::chrono::system_clock::now();
   _bpsTiming += endMoveEval - startMoveEval;
-
   return _currentMove;
 }
 
