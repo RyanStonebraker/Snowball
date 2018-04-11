@@ -64,12 +64,22 @@ class Skynet:
 	def currentTurnNumber(self):
 		return len(self.boards)
 
+	def _flipBoard(self, board):
+		flippedBoard = []
+		for i in range(8):
+			row = board[i * 4 : (i + 1) * 4]
+			for j in reversed(row):
+				flippedBoard.append(j)
+		flippedBoard = ''.join(flippedBoard)
+		return flippedBoard
+	
 	def _skynetToSnowballBoard(self, board):
 		board = board.replace('_', '0')
 		board = board.replace('r', '1')
 		board = board.replace('b', '2')
 		board = board.replace('R', '3')
 		board = board.replace('B', '4')
+		board = self._flipBoard(board)
 		return board
 
 	def _snowballToSkynetBoard(self, board):
@@ -78,6 +88,7 @@ class Skynet:
 		board = board.replace('2', 'b')
 		board = board.replace('3', 'R')
 		board = board.replace('4', 'B')
+		board = self._flipBoard(board)
 		return board
 
 def pathForTurn(turn):
