@@ -34,6 +34,7 @@ using std::endl;
 #define LOSE_POINTS -1.5
 #define TIE_POINTS -1
 #define GREATER_PIECE_TIE 0.5
+#define TOURNAMENT_FREQUENCY 2
 
 static size_t MIN_EVOLVE_GAMES = 5;
 
@@ -58,15 +59,15 @@ double randomGausian(){
 }
 
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const WeightedNode &startWeights)
-  : _childrenPerGeneration(childrenPerGeneration), _generations(3), _parent(startWeights),
+  : _startGen(0), _childrenPerGeneration(childrenPerGeneration), _generations(3), _parent(startWeights),
     _children(childrenPerGeneration), _numberOfWeights(7), _mutationRate(0.2) {
       _depth = startWeights.depth;
 			MIN_EVOLVE_GAMES = _children.size()-1;
     }
 
 ChildEvolver::ChildEvolver(const int childrenPerGeneration, const std::string &generationLoc)
-	: _childrenPerGeneration(childrenPerGeneration), _generations(3), _children(childrenPerGeneration),
-	 _numberOfWeights(7), _mutationRate(0.2) {
+	: _startGen(0), _childrenPerGeneration(childrenPerGeneration), _generations(3),
+		_children(childrenPerGeneration), _numberOfWeights(7), _mutationRate(0.2) {
 		 MIN_EVOLVE_GAMES = _children.size()-1;
 
 		 loadGeneration(generationLoc);
@@ -76,8 +77,8 @@ void ChildEvolver::loadGeneration (std::string generationLocation) {
 	if (generationLocation[generationLocation.size()-1] == '/')
 		generationLocation = generationLocation.substr(0, generationLocation.size()-1);
 
-	auto genNumber = generationLocation.substr(generationLocation.size()-3, generationLocation.size());
-	_generations = atoi(genNumber.c_str());
+	auto genNumber = generationLocation.substr(generationLocation.find("gen")+3, generationLocation.size());
+	_startGen = atoi(genNumber.c_str()) + 1;
 
 	auto bestChildPath = generationLocation + "/" + "bestGen" + genNumber + "Child.txt";
 	std::ifstream readBestChild(bestChildPath);
@@ -114,21 +115,23 @@ void ChildEvolver::evolveAll() {
 }
 
 void ChildEvolver::startGeneration() {
-  auto saveMutationRate = _mutationRate;
-
-  std::cout << "Starting Generation 0:" << std::endl;
-  // Generate gen0 completely random children
-  setMutationRate(1);
-	#pragma omp parallel for
-  for (int i = 0; i < _children.size(); ++i) {
-      _children[i].depth = _depth;
-      mutate(_parent, _children[i]);
-  }
-	evolveAll();
-  writeWeightsToFile(0);
-  setMutationRate(saveMutationRate);
-	#pragma omp parallel for
-  for (auto currentGen = 1; currentGen <= _generations; ++currentGen) {
+	auto savedMutationRate = _mutationRate;
+	if (_startGen == 0) {
+	  std::cout << "Starting Generation 0:" << std::endl;
+	  // Generate gen0 completely random children
+	  setMutationRate(1);
+		#pragma omp parallel for
+	  for (int i = 0; i < _children.size(); ++i) {
+	      _children[i].depth = _depth;
+	      mutate(_parent, _children[i]);
+	  }
+		evolveAll();
+	  writeWeightsToFile(0);
+	  setMutationRate(savedMutationRate);
+		++_startGen;
+	}
+	// #pragma omp parallel for
+  for (auto currentGen = _startGen; currentGen <= _generations; ++currentGen) {
     // WeightedNode blankNode;
     // _bestChild = blankNode;
     std::cout << "Starting Generation " << currentGen << ":" << std::endl;
@@ -138,7 +141,8 @@ void ChildEvolver::startGeneration() {
       return child1.fitness >= child2.fitness;
     });
 		if (currentGen >= 1) {
-	    for (int i = 0; i <= _children.size() / 2; ++i) {
+			auto topChildrenThreshold = randomNumber(_children.size() / 4, 3 * _children.size() / 4);
+	    for (int i = 0; i <= topChildrenThreshold; ++i) {
 	        selectiveMutate(_children[i]);
 	    }
 		}
@@ -152,12 +156,27 @@ void ChildEvolver::startGeneration() {
       _children[i] = _parent;
       mutate(_parent, _children[i]);
     }
-    setMutationRate(saveMutationRate);
+    setMutationRate(savedMutationRate);
 
     evolveAll();
+
+		if (currentGen % TOURNAMENT_FREQUENCY == 0)
+			tournamentEvent();
     writeWeightsToFile(currentGen);
   }
-  // writeTestCSV(); // Only uncomment to test gaussian distribution
+}
+
+
+void ChildEvolver::tournamentEvent() {
+	std::cout << "*** PLAYING TOURNAMENT EVENT AGAINST PREVIOUS " + to_string(_bestChildren.size()) + " BEST ***\n";
+	for (auto elderBest : _bestChildren) {
+		for (auto i = 0; i < _children.size() / 2; ++i) {
+			auto winner = playGame(_children[i], elderBest);
+			if (winner == Player::FIRST) {
+				_children[i].fitness += 1.5;
+			}
+		}
+	}
 }
 
 // Generate a child for every weight (only changing one weight), then play against
@@ -207,7 +226,7 @@ void ChildEvolver::mutate(const WeightedNode &startWeights, WeightedNode &result
     resultWeights.weight = nodeWeightPrime(startWeights);
     resultWeights.qualityWeight = shiftWeight(startWeights.qualityWeight);
     resultWeights.availableMovesWeight = shiftWeight(startWeights.availableMovesWeight);
-    resultWeights.depthWeight = shiftWeight(startWeights.availableMovesWeight);
+    resultWeights.depthWeight = shiftWeight(startWeights.depthWeight);
     resultWeights.riskFactor = shiftWeight(startWeights.riskFactor);
 		resultWeights.riskThreshold = cappedShiftWeight(startWeights.riskThreshold, 0, 1);
     resultWeights.enemyFactor = shiftWeight(startWeights.enemyFactor);
@@ -323,6 +342,7 @@ for (int i = 0; i < minGamesPerChild; ++i) {
   }
   if (startWeights.fitness > _bestChild.fitness) {
 	  _bestChild = startWeights;
+		_bestChildren.push_back(_bestChild);
 	}
 }
 

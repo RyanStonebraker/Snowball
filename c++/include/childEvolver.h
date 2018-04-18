@@ -30,12 +30,14 @@ public:
     void setGenerationAmount(unsigned gens);
 private:
     enum class Player {NONE, FIRST, SECOND};
+    unsigned _startGen;
     int _childrenPerGeneration;
     unsigned _generations;
     unsigned _depth;
     WeightedNode _bestChild;
     WeightedNode _parent;
     std::vector<WeightedNode> _children;
+    std::vector<WeightedNode> _bestChildren;
     unsigned _numberOfWeights;
     double _mutationRate;
 private:
@@ -45,6 +47,7 @@ private:
     void selectiveMutate(WeightedNode & parent);
     void mutate(const WeightedNode &startWeights, WeightedNode &resultWeights);
     void evolveAll();
+    void tournamentEvent();
     Player playGame(WeightedNode &player1Weights, WeightedNode &player2Weights);
     void writeWeightsToFile(const int generation);
     void writeBestMoveForGeneration(const int generation);

@@ -80,7 +80,6 @@ int main (int argc, char* argv[]) {
 			ChildEvolver evolver(10, defaultWeights);
 			if (generationLocation.size() > 0)
 				evolver = ChildEvolver(10, generationLocation);
-			// We changed this to 10% on April 2nd 2018 in Murie on Level 3 of the back glass classrooms on a clear sunny day. :)
 			evolver.setMutationRate(0.1);
 			evolver.setGenerationAmount(generations);
 			evolver.startGeneration();

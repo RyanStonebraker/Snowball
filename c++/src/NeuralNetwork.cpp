@@ -32,6 +32,11 @@ WeightedNode NeuralNetwork::generateRandomWeights() {
   currentWeights.riskFactor = rand_weight(rand_gen);
   currentWeights.enemyFactor = rand_weight(rand_gen);
   currentWeights.randomMoveThreshold = capped_weight(rand_gen);
+  currentWeights.depthWeight = rand_weight(rand_gen);
+  currentWeights.riskFactor = rand_weight(rand_gen);
+  currentWeights.riskThreshold = capped_weight(rand_gen);
+  currentWeights.enemyFactor = rand_weight(rand_gen);
+  currentWeights.randomMoveThreshold = capped_weight(rand_gen);
 
   return currentWeights;
 }
@@ -150,10 +155,6 @@ double NeuralNetwork::evaluateBoard(const Board & futureState, int depthToLimit)
     pieceCaptureWeight = (enemyPiecesTaken * 1 / (1 - _weights.riskFactor) - piecesLost) * _weights.qualityWeight;
   }
 
-  // auto movesAvailable = futureState
-  //
-  // auto moveFreedomWeight =
-
   auto raw_weight = pieceCaptureWeight + kingWeight + depthWeight + enemyKingWeights;
 
   return raw_weight;
@@ -224,7 +225,7 @@ void NeuralNetwork::evaluateChildren(int depth) {
     _children[possibleMove]->weight = sigmoid(_children[possibleMove]->weight);
 
     auto isBestMove = _children[possibleMove]->weight >= _bestMoveWeight;
-    if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold) {
+    if (abs(_children[possibleMove]->weight - _bestMoveWeight) < _weights.randomMoveThreshold && _children[possibleMove]->board != _currentMove) {
       isBestMove = splitTie();
     }
     if (isBestMove) {
@@ -317,7 +318,7 @@ std::vector<Board> NeuralNetwork::spawnRed (const std::string & initBoard) {
 
 
 std::string NeuralNetwork::getBestMove() {
-  _bestMoveWeight = -1;
+  _bestMoveWeight = -10;
   _children.clear();
 
   auto startMoveEval = std::chrono::system_clock::now();
