@@ -130,7 +130,7 @@ void ChildEvolver::startGeneration() {
 	  setMutationRate(savedMutationRate);
 		++_startGen;
 	}
-	// #pragma omp parallel for
+	#pragma omp parallel for
   for (auto currentGen = _startGen; currentGen <= _generations; ++currentGen) {
     // WeightedNode blankNode;
     // _bestChild = blankNode;
@@ -169,11 +169,19 @@ void ChildEvolver::startGeneration() {
 
 void ChildEvolver::tournamentEvent() {
 	std::cout << "*** PLAYING TOURNAMENT EVENT AGAINST PREVIOUS " + to_string(_bestChildren.size()) + " BEST ***\n";
-	for (auto elderBest : _bestChildren) {
+	for (unsigned elderBest = 0; elderBest < _bestChildren.size(); ++elderBest) {
 		for (auto i = 0; i < _children.size() / 2; ++i) {
-			auto winner = playGame(_children[i], elderBest);
-			if (winner == Player::FIRST) {
-				_children[i].fitness += 1.5;
+			if (int(_children[i].fitness) % 2 == 0) {
+				auto winner = playGame(_children[i], _bestChildren[elderBest]);
+				if (winner == Player::SECOND) {
+					_children[i].fitness -= 1.5;
+				}
+				else {
+					auto winner = playGame(_bestChildren[elderBest], _children[i]);
+					if (winner == Player::FIRST) {
+						_children[i].fitness -= 1.5;
+					}
+				}
 			}
 		}
 	}
