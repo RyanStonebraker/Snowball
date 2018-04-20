@@ -20,7 +20,7 @@ gLoc = ""
 build: $(SOURCES)
 	$(CC) $(CFLAGS) $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
 
-build-omp: $(SOURCES)
+build_omp: $(SOURCES)
 	$(CC) $(CFLAGS) -fopenmp $(OPTIMALPERF) -o $(TARGET) $(SOURCES)
 
 debug: $(SOURCES)
