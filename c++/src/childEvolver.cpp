@@ -169,22 +169,31 @@ void ChildEvolver::startGeneration() {
 
 void ChildEvolver::tournamentEvent() {
 	std::cout << "*** PLAYING TOURNAMENT EVENT AGAINST PREVIOUS " + to_string(_bestChildren.size()) + " BEST ***\n";
+	unsigned totalLegacyWins = 0;
+	unsigned totalLegacyLosses = 0;
 	for (unsigned elderBest = 0; elderBest < _bestChildren.size(); ++elderBest) {
 		for (auto i = 0; i < _children.size() / 2; ++i) {
 			if (int(_children[i].fitness) % 2 == 0) {
 				auto winner = playGame(_children[i], _bestChildren[elderBest]);
+				if (winner == Player::FIRST) {
+					_children[i].fitness += 1.5;
+					++totalLegacyWins;
+				}
+				else if (winner == Player::SECOND)
+					++totalLegacyLosses;
+			}
+			else {
+				auto winner = playGame(_bestChildren[elderBest], _children[i]);
 				if (winner == Player::SECOND) {
-					_children[i].fitness -= 1.5;
+					_children[i].fitness += 1.5;
+					++totalLegacyWins;
 				}
-				else {
-					auto winner = playGame(_bestChildren[elderBest], _children[i]);
-					if (winner == Player::FIRST) {
-						_children[i].fitness -= 1.5;
-					}
-				}
+				else if (winner == Player::SECOND)
+					++totalLegacyLosses;
 			}
 		}
 	}
+	std::cout << "TOTAL LEGACY WINS: " << totalLegacyWins << " : TOTAL LEGACY LOSSES: " << totalLegacyLosses << std::endl;
 }
 
 // Generate a child for every weight (only changing one weight), then play against
