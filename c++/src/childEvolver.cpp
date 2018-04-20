@@ -353,8 +353,9 @@ void ChildEvolver::writeTestCSV() {
 }
 
 void ChildEvolver::evolve(WeightedNode & startWeights, const int minGamesPerChild) {
-for (int i = 0; i < minGamesPerChild; ++i) {
-		auto * opponent = &_children[(i+1)%_children.size()];
+  #pragma omp parallel for
+  for (int i = 0; i < minGamesPerChild; ++i) {
+    auto * opponent = &_children[(i+1)%_children.size()];
     playGame(startWeights, *opponent);
   }
   if (startWeights.fitness > _bestChild.fitness) {
