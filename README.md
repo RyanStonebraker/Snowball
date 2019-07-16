@@ -1,5 +1,6 @@
 # Snowball
 Snowball: An Artificially Intelligent Checkers player.
+![](media/gameplay.png)
 ____
 
 Developer Dependencies:
