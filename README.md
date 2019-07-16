@@ -1,6 +1,6 @@
 # Snowball
-Snowball: An Artificially Intelligent Checkers player.
-![](media/gameplay.png)
+An Artificially Intelligent Checkers player that implements evolutionary learning, minimax searching, and alpha-beta pruning techniques.
+![Game Play](media/gameplay.png)
 ____
 
 Developer Dependencies:
