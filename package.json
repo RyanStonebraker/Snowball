@@ -41,7 +41,7 @@
     "electron-prompt": "^0.5.0"
   },
   "devDependencies": {
-    "electron": "^5.0.6",
+    "electron": "^9.1.0",
     "electron-builder": "latest"
   },
   "keywords": [],
